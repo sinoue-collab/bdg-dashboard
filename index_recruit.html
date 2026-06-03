@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>BDG 採用サマリー 2026年6月</title>
+<style>
+  @page { size: A4 landscape; margin: 8mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "游ゴシック体","Yu Gothic","Hiragino Kaku Gothic ProN",Arial,sans-serif; font-size: 8.5pt; color: #222; background: #f4f6f9; }
+
+  .tab-nav { display: flex; gap: 0; margin-bottom: 0; align-items: flex-end; }
+  .tab-btn {
+    padding: 5px 16px; font-size: 8pt; font-weight: bold; cursor: pointer;
+    border: 1px solid #c9d4e0; border-bottom: none; border-radius: 4px 4px 0 0;
+    background: #dde3ea; color: #555; margin-right: 3px; transition: all 0.15s;
+  }
+  .tab-btn.active { background: #1A3A5C; color: #fff; border-color: #1A3A5C; padding: 6px 20px; }
+  .tab-btn:hover:not(.active) { background: #c5cedb; }
+  .year-badge { display: inline-block; font-size: 6.5pt; font-weight: normal; margin-left: 4px; opacity: 0.8; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .sheet { background: #fff; border: 1px solid #c9d4e0; border-radius: 0 4px 4px 4px; padding: 6px; }
+
+  .header { background: #1A3A5C; color: #fff; padding: 5px 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-radius: 3px; }
+  .header-title { font-size: 11.5pt; font-weight: bold; letter-spacing: 1px; }
+  .header-title span { color: #0090BA; }
+  .header-sub { font-size: 7pt; opacity: 0.75; margin-top: 1px; }
+  .header-meta { font-size: 7.5pt; opacity: 0.85; text-align: right; line-height: 1.5; }
+  .year-tag { display: inline-block; background: #0090BA; color: #fff; font-size: 7pt; padding: 1px 7px; border-radius: 10px; margin-left: 8px; vertical-align: middle; }
+
+  .grid-top { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 5px; }
+  .grid-bot { display: grid; grid-template-columns: 1.15fr 1fr; gap: 5px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
+
+  .card { border: 1px solid #dde3ea; border-radius: 4px; overflow: hidden; background: #fff; }
+  .card-header { background: #1A3A5C; color: #fff; font-size: 7.5pt; font-weight: bold; padding: 3px 7px; }
+  .card-header.accent { background: #0090BA; }
+  .card-header.green  { background: #2e7d32; }
+  .card-header.orange { background: #b45309; }
+  .card-header.life   { background: #1f5fa6; }
+  .card-body { padding: 5px 7px; }
+
+  .kpi-row { display: flex; gap: 0; }
+  .kpi-box { text-align: center; flex: 1; padding: 4px 2px; border-right: 1px solid #e5e7eb; }
+  .kpi-box:last-child { border-right: none; }
+  .kpi-label { font-size: 6.5pt; color: #555; margin-bottom: 2px; }
+  .kpi-num   { font-size: 16pt; font-weight: bold; color: #1A3A5C; line-height: 1; }
+  .kpi-num.blue  { color: #0090BA; }
+  .kpi-num.green { color: #2e7d32; }
+  .kpi-num.red   { color: #dc2626; }
+  .kpi-sub   { font-size: 6pt; color: #888; margin-top: 1px; }
+
+  .rate-bar { margin-top: 4px; }
+  .rate-bar-track { background: #e5e7eb; border-radius: 2px; height: 5px; }
+  .rate-bar-fill  { border-radius: 2px; height: 5px; }
+  .rate-label { display: flex; justify-content: space-between; font-size: 6.5pt; color: #666; margin-top: 1px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+  th { background: #f0f4f8; font-weight: bold; padding: 2px 4px; text-align: left; border-bottom: 1px solid #c9d4e0; color: #1A3A5C; }
+  td { padding: 2px 4px; border-bottom: 1px solid #eef0f3; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .total-row { background: #f0f4f8; font-weight: bold; }
+
+  .badge { display: inline-block; border-radius: 2px; padding: 0px 4px; font-size: 6.5pt; font-weight: bold; white-space: nowrap; }
+  .badge-blue   { background: #dbeafe; color: #1e40af; }
+  .badge-green  { background: #dcfce7; color: #166534; }
+  .badge-red    { background: #fee2e2; color: #991b1b; }
+  .badge-gray   { background: #f3f4f6; color: #374151; }
+  .badge-orange { background: #fef3c7; color: #92400e; }
+  .badge-teal   { background: #ccfbf1; color: #0f766e; }
+  .badge-life   { background: #dbeafe; color: #1e3a8a; }
+
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 3px; vertical-align: middle; flex-shrink: 0; }
+  .dot-green  { background: #22c55e; }
+  .dot-blue   { background: #0090BA; }
+  .dot-orange { background: #f59e0b; }
+  .dot-gray   { background: #9ca3af; }
+  .dot-red    { background: #dc2626; }
+
+  .outlook-cols { display: flex; gap: 6px; }
+  .outlook-col  { flex: 1; }
+  .outlook-month { font-weight: bold; font-size: 7.5pt; color: #1A3A5C; border-bottom: 2px solid #0090BA; margin-bottom: 3px; padding-bottom: 2px; }
+  .outlook-item { font-size: 7.5pt; color: #333; padding: 2px 0 2px 8px; position: relative; }
+  .outlook-item::before { content: "▸"; color: #0090BA; position: absolute; left: 0; }
+  .alert-box { margin-top: 4px; padding: 3px 6px; border-radius: 3px; font-size: 7pt; }
+  .alert-warn  { background: #fff7ed; border-left: 3px solid #f59e0b; color: #92400e; }
+  .alert-good  { background: #f0fdf4; border-left: 3px solid #22c55e; color: #166534; }
+  .alert-info  { background: #eff6ff; border-left: 3px solid #0090BA; color: #1e40af; }
+
+  .sec-label { font-size: 7pt; font-weight: bold; color: #1A3A5C; margin: 5px 0 2px; padding-left: 4px; border-left: 3px solid #0090BA; }
+
+  .timeline { margin-top: 3px; }
+  .timeline-row { display: flex; align-items: flex-start; gap: 4px; padding: 2px 0; font-size: 7pt; border-bottom: 1px dotted #e5e7eb; }
+  .timeline-row:last-child { border-bottom: none; }
+  .timeline-date { color: #1A3A5C; font-weight: bold; white-space: nowrap; min-width: 52px; }
+  .timeline-text { color: #444; flex: 1; }
+
+  .footer { text-align: right; font-size: 6.5pt; color: #aaa; margin-top: 4px; }
+  .data-src { font-size: 6pt; color: #aaa; margin-top: 2px; text-align: right; }
+
+  @media print {
+    body { background: #fff; }
+    .tab-nav { display: none; }
+    .tab-content { display: none !important; }
+    .tab-content.active { display: block !important; }
+    .sheet { border: none; padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- タブナビ -->
+<div class="tab-nav">
+  <div class="tab-btn" id="tab-all"    onclick="switchTab('all')">グループ全体 <span class="year-badge">全年度</span></div>
+  <div class="tab-btn" id="tab-fy2025" onclick="switchTab('fy2025')">2025年度 <span class="year-badge">1年目・完了</span></div>
+  <div class="tab-btn active" id="tab-fy2026" onclick="switchTab('fy2026')">2026年度 <span class="year-badge">2年目・進行中</span></div>
+  <div class="tab-btn" id="tab-chuto" onclick="switchTab('chuto')" style="background:#1f4e35;color:#fff;border-color:#1f4e35;">中途採用 <span class="year-badge">141名・通年</span></div>
+</div>
+
+<!-- ════ TAB: グループ全体 ════ -->
+<div class="tab-content" id="content-all">
+<div class="sheet">
+  <div class="header">
+    <div>
+      <div class="header-title">BLUE DESIGN <span>GROUP</span>　採用サマリー<span class="year-tag">全年度</span></div>
+      <div class="header-sub">新卒・中途 採用状況レポート｜2025年度〜2026年度 累計</div>
+    </div>
+    <div class="header-meta">データ更新日：2026年6月3日<br>対象：2年間累計｜経営管理部門</div>
+  </div>
+
+  <div class="grid-top">
+    <!-- ① 全体KPI -->
+    <div class="card">
+      <div class="card-header accent">① 全体サマリー（2年間累計）</div>
+      <div class="card-body">
+        <div class="kpi-row">
+          <div class="kpi-box"><div class="kpi-label">総母集団数（名簿獲得数）</div><div class="kpi-num">35</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">面接実施</div><div class="kpi-num blue">2</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">内定数</div><div class="kpi-num green">2</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">入社数</div><div class="kpi-num">1</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">辞退数</div><div class="kpi-num red">2</div><div class="kpi-sub">名</div></div>
+        </div>
+        <div style="margin-top:5px;">
+          <div class="rate-bar"><div class="rate-label"><span>母集団→面接率</span><span style="font-weight:bold;color:#0090BA;">5.7%</span></div><div class="rate-bar-track"><div class="rate-bar-fill" style="width:5.7%;background:#0090BA;"></div></div></div>
+          <div class="rate-bar" style="margin-top:3px;"><div class="rate-label"><span>内定→入社率</span><span style="font-weight:bold;color:#2e7d32;">50%</span></div><div class="rate-bar-track"><div class="rate-bar-fill" style="width:50%;background:#2e7d32;"></div></div></div>
+        </div>
+        <table style="margin-top:5px;">
+          <tr><th></th><th style="text-align:right;">母集団数</th><th style="text-align:right;">内定</th><th style="text-align:right;">入社</th></tr>
+          <tr><td>2025年度（1年目）</td><td class="num">18</td><td class="num">2</td><td class="num">1</td></tr>
+          <tr><td>2026年度（2年目）</td><td class="num">17</td><td class="num">0</td><td class="num">—</td></tr>
+          <tr class="total-row"><td>合計</td><td class="num">35</td><td class="num">2</td><td class="num">1</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ② 媒体別 -->
+    <div class="card">
+      <div class="card-header">② 媒体別 応募数・効果（2年間）</div>
+      <div class="card-body">
+        <table>
+          <tr><th>媒体・経路</th><th style="text-align:right;">母集団数</th><th style="text-align:right;">内定</th><th>評価</th><th>年度</th></tr>
+          <tr><td>会社説明会（西日本工業大）</td><td class="num">4</td><td class="num">1</td><td><span class="badge badge-green">高効果</span></td><td>25年度</td></tr>
+          <tr><td>建築備品デザイン講習（久留米工大）</td><td class="num">9</td><td class="num">0</td><td><span class="badge badge-orange">母集団形成</span></td><td>25年度</td></tr>
+          <tr><td>建設業界セミナー（佐賀大）</td><td class="num">3</td><td class="num">0</td><td><span class="badge badge-orange">インターン済</span></td><td>25年度</td></tr>
+          <tr><td>直接応募（福岡工業高校）</td><td class="num">1</td><td class="num">1</td><td><span class="badge badge-green">入社済</span></td><td>25年度</td></tr>
+          <tr><td>合同説明会 北九州（5/13）</td><td class="num">3</td><td class="num">0</td><td><span class="badge badge-gray">接触中</span></td><td>26年度</td></tr>
+          <tr><td>F LAB（5/19・5/23）</td><td class="num">3</td><td class="num">0</td><td><span class="badge badge-blue">インターン予定</span></td><td>26年度</td></tr>
+          <tr><td>合同説明会 佐賀大（5/31）</td><td class="num">4</td><td class="num">0</td><td><span class="badge badge-gray">フォロー中</span></td><td>26年度</td></tr>
+          <tr><td>大学訪問・個別面談（5/24）</td><td class="num">2</td><td class="num">0</td><td><span class="badge badge-blue">接続中</span></td><td>26年度</td></tr>
+          <tr class="total-row"><td>合計</td><td class="num">35</td><td class="num">2</td><td></td><td></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ③ 年度比較 -->
+    <div class="card">
+      <div class="card-header green">③ 年度別比較 / 2026年度 今後の予定</div>
+      <div class="card-body">
+        <table>
+          <tr><th>指標</th><th style="text-align:right;">2025年度</th><th style="text-align:right;">2026年度</th></tr>
+          <tr><td>母集団数（名簿獲得数）</td><td class="num">18名</td><td class="num">17名</td></tr>
+          <tr><td>面接数</td><td class="num">2名</td><td class="num">0名</td></tr>
+          <tr><td>内定数</td><td class="num">2名</td><td class="num">0名</td></tr>
+          <tr><td>入社数</td><td class="num">1名</td><td class="num">—</td></tr>
+          <tr><td>インターン参加</td><td class="num">5名</td><td class="num">2名希望（6/15・7/13）</td></tr>
+          <tr><td>初任給</td><td class="num">—</td><td class="num">217,000円〜</td></tr>
+        </table>
+        <div class="sec-label" style="margin-top:6px;">📅 2026年度インターン スケジュール</div>
+        <div class="timeline">
+          <div class="timeline-row"><span class="timeline-date">6/15(月)</span><span class="timeline-text">インターン 1day 開催</span></div>
+          <div class="timeline-row"><span class="timeline-date">7/13(月)</span><span class="timeline-text">インターン 2.5day 開催（7/13・14・21）</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">BLUE DESIGN GROUP 経営管理部門｜採用サマリー 2026年6月3日版｜全年度表示</div>
+  <div class="data-src">データソース：採用管理スプレッドシート（Googleスプレッドシート）</div>
+</div>
+</div>
+
+
+<!-- ════ TAB: 2025年度 ════ -->
+<div class="tab-content" id="content-fy2025">
+<div class="sheet">
+  <div class="header">
+    <div>
+      <div class="header-title">BLUE DESIGN <span>GROUP</span>　採用サマリー<span class="year-tag">2025年度（1年目）</span></div>
+      <div class="header-sub">対象期間：2025年4月〜2026年3月｜新卒採用 初年度の記録</div>
+    </div>
+    <div class="header-meta">データ更新日：2026年6月3日<br>活動期間：2025/4〜2026/3｜経営管理部門</div>
+  </div>
+
+  <div class="grid-top">
+    <div class="card">
+      <div class="card-header accent">① 全体サマリー（2025年度）</div>
+      <div class="card-body">
+        <div class="kpi-row">
+          <div class="kpi-box"><div class="kpi-label">総母集団数（名簿獲得数）</div><div class="kpi-num">18</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">面接実施</div><div class="kpi-num blue">2</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">内定数</div><div class="kpi-num green">2</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">入社数</div><div class="kpi-num">1</div><div class="kpi-sub">名</div></div>
+        </div>
+        <div style="margin-top:5px;">
+          <div class="rate-bar"><div class="rate-label"><span>母集団→面接率</span><span style="font-weight:bold;color:#0090BA;">11.1%</span></div><div class="rate-bar-track"><div class="rate-bar-fill" style="width:11.1%;background:#0090BA;"></div></div></div>
+          <div class="rate-bar" style="margin-top:3px;"><div class="rate-label"><span>面接→内定率</span><span style="font-weight:bold;color:#2e7d32;">100%</span></div><div class="rate-bar-track"><div class="rate-bar-fill" style="width:100%;background:#2e7d32;"></div></div></div>
+          <div class="rate-bar" style="margin-top:3px;"><div class="rate-label"><span>内定→入社率</span><span style="font-weight:bold;color:#1A3A5C;">50%</span></div><div class="rate-bar-track"><div class="rate-bar-fill" style="width:50%;background:#1A3A5C;"></div></div></div>
+        </div>
+        <div style="margin-top:4px;padding:3px 5px;background:#f0fdf4;border-left:3px solid #22c55e;border-radius:2px;font-size:7pt;color:#166534;">
+          ✓ 初年度：面接→内定率100%。小規模接触から確実な成果を出した。
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">② 媒体別 応募数・効果</div>
+      <div class="card-body">
+        <table>
+          <tr><th>媒体・経路</th><th style="text-align:right;">母集団数（名簿獲得数）</th><th style="text-align:right;">内定</th><th style="text-align:right;">入社</th><th>評価</th></tr>
+          <tr><td>会社説明会（西日本工業大学）</td><td class="num">4</td><td class="num">1</td><td class="num">0</td><td><span class="badge badge-green">最高効果</span></td></tr>
+          <tr><td>建設業界セミナー（佐賀大学）</td><td class="num">3</td><td class="num">0</td><td class="num">0</td><td><span class="badge badge-orange">インターン済</span></td></tr>
+          <tr><td>建築備品デザイン講習（久留米工大）</td><td class="num">9</td><td class="num">0</td><td class="num">0</td><td><span class="badge badge-orange">母集団形成</span></td></tr>
+          <tr><td>インターンチラシ（福岡大学）</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td><span class="badge badge-gray">接触中</span></td></tr>
+          <tr><td>直接応募（福岡工業高校）</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td><span class="badge badge-green">入社済</span></td></tr>
+          <tr><td>不明・その他</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td><span class="badge badge-gray">—</span></td></tr>
+          <tr class="total-row"><td>合計</td><td class="num">18</td><td class="num">2</td><td class="num">1</td><td></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header green">③ 職種・学校別</div>
+      <div class="card-body">
+        <table>
+          <tr><th>区分</th><th style="text-align:right;">人数</th><th>状況</th></tr>
+          <tr><td>正社員（賃貸営業）</td><td class="num">1</td><td><span class="badge badge-green">入社済</span></td></tr>
+          <tr><td>新卒採用（BLUE DESIGN）</td><td class="num">1</td><td><span class="badge badge-blue">内定応諾済</span></td></tr>
+          <tr><td>インターン参加済み</td><td class="num">5</td><td><span class="badge badge-orange">選考検討中</span></td></tr>
+          <tr><td>接触のみ・検討中</td><td class="num">12</td><td><span class="badge badge-gray">フォロー中</span></td></tr>
+        </table>
+        <div style="font-size:7pt;font-weight:bold;color:#1A3A5C;margin:5px 0 2px;">学校別</div>
+        <table>
+          <tr><th>大学・高校</th><th style="text-align:right;">人数</th><th>経路</th></tr>
+          <tr><td>久留米工業大学</td><td class="num">9</td><td>建築備品デザイン講習</td></tr>
+          <tr><td>西日本工業大学</td><td class="num">4</td><td>会社説明会</td></tr>
+          <tr><td>佐賀大学</td><td class="num">3</td><td>建設業界セミナー</td></tr>
+          <tr><td>福岡大学</td><td class="num">1</td><td>インターンチラシ</td></tr>
+          <tr><td>福岡工業高校</td><td class="num">1</td><td>直接応募</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-bot">
+    <div class="card">
+      <div class="card-header orange">④ 選考中・フォローアップ一覧</div>
+      <div class="card-body">
+        <table>
+          <tr><th>氏名</th><th>学校</th><th>経路</th><th>現ステータス</th><th>次のアクション</th></tr>
+          <tr><td><b>松本 海央</b></td><td>西日本工業大</td><td>会社説明会</td><td><span class="dot dot-green"></span><span class="badge badge-green">内定応諾済</span></td><td>入社日・配属確定</td></tr>
+          <tr><td>寺本 想</td><td>西日本工業大</td><td>会社説明会</td><td><span class="dot dot-orange"></span><span class="badge badge-orange">インターン済</span></td><td>1次面接の可否判断</td></tr>
+          <tr><td>堤 凜音南</td><td>西日本工業大</td><td>会社説明会</td><td><span class="dot dot-orange"></span><span class="badge badge-orange">インターン済</span></td><td>1次面接の可否判断</td></tr>
+          <tr><td>城山 裕来</td><td>佐賀大学</td><td>建設業界セミナー</td><td><span class="dot dot-orange"></span><span class="badge badge-orange">インターン済</span></td><td>1次面接（修士1年）</td></tr>
+          <tr><td>宮本 匠</td><td>佐賀大学</td><td>建設業界セミナー</td><td><span class="dot dot-orange"></span><span class="badge badge-orange">インターン済</span></td><td>1次面接の可否判断</td></tr>
+          <tr><td>吉田 てる</td><td>佐賀大学</td><td>建設業界セミナー</td><td><span class="dot dot-orange"></span><span class="badge badge-orange">インターン済</span></td><td>1次面接の可否判断</td></tr>
+          <tr><td>藤原 輝</td><td>福岡大学</td><td>インターンチラシ</td><td><span class="dot dot-gray"></span><span class="badge badge-gray">メール送信済</span></td><td>インターン参加意向確認</td></tr>
+          <tr><td>久留米工大 9名</td><td>久留米工業大学</td><td>建築備品デザイン講習</td><td><span class="dot dot-gray"></span><span class="badge badge-gray">名刺接触</span></td><td>進路確定者の整理・クローズ推奨</td></tr>
+        </table>
+        <div style="margin-top:4px;padding:3px 6px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:2px;font-size:7pt;color:#92400e;">
+          ⚑ インターン済5名への1次面接打診を6月中旬までに完了しないと他社内定リスクあり
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header accent">⑤ 2025年度 残課題 / 振り返り</div>
+      <div class="card-body">
+        <div class="outlook-cols">
+          <div class="outlook-col">
+            <div class="outlook-month">📋 1年目 振り返り</div>
+            <div class="outlook-item">会社説明会・直接応募が高効果（4名接触→1名内定）</div>
+            <div class="outlook-item">久留米工大講習は母集団形成には有効だが早期接触の仕組みが必要</div>
+            <div class="outlook-item">辞退2名：接触〜内定の期間が長いと意欲低下リスク</div>
+          </div>
+        </div>
+        <div class="alert-box alert-warn" style="margin-top:5px;">⚑ 松本海央さん（内定応諾済）の入社手続きを最優先で進めること</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">BLUE DESIGN GROUP 経営管理部門｜採用サマリー 2026年6月3日版｜2025年度（1年目）</div>
+</div>
+</div>
+
+
+<!-- ════ TAB: 2026年度（新卒） ════ -->
+<div class="tab-content active" id="content-fy2026">
+<div class="sheet">
+  <div class="header">
+    <div>
+      <div class="header-title">BLUE DESIGN <span>GROUP</span>　採用サマリー<span class="year-tag">2026年度（2年目）</span></div>
+      <div class="header-sub">対象期間：2026年4月〜（進行中）｜新卒採用 2年目 + インターン計画</div>
+    </div>
+    <div class="header-meta">データ更新日：2026年6月3日<br>初任給：217,000円〜｜経営管理部門</div>
+  </div>
+
+  <div class="grid-top">
+    <!-- ① KPI -->
+    <div class="card">
+      <div class="card-header accent">① 全体サマリー（2026年度）</div>
+      <div class="card-body">
+        <div class="kpi-row">
+          <div class="kpi-box"><div class="kpi-label">総母集団数（名簿獲得数）</div><div class="kpi-num">17</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">面接実施</div><div class="kpi-num blue">0</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">内定数</div><div class="kpi-num green">0</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">インターン希望</div><div class="kpi-num" style="color:#0090BA;">2</div><div class="kpi-sub">名</div></div>
+        </div>
+        <div style="margin-top:5px;padding:3px 5px;background:#eff6ff;border-left:3px solid #0090BA;border-radius:2px;font-size:7pt;color:#1e40af;">
+          活動2ヶ月（4〜5月）で17名の母集団を形成。F LABという新規チャネル稼動。インターン（7/16-17）に向けた準備段階。
+        </div>
+        <div style="margin-top:3px;padding:3px 5px;background:#f8fafc;border-radius:2px;font-size:7pt;color:#555;">
+          ＊5/24大学訪問（個別面談形式）・5/31佐賀大合説の接触含む。氏名不明者2名はフォロー要。
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 媒体別 -->
+    <div class="card">
+      <div class="card-header">② 媒体別 母集団数（名簿獲得数）（2026年度）</div>
+      <div class="card-body">
+        <table>
+          <tr><th>媒体・経路</th><th style="text-align:right;">母集団数</th><th>ステータス</th><th>評価</th></tr>
+          <tr><td>合同説明会 北九州市大（5/13）</td><td class="num">3</td><td><span class="badge badge-gray">初回接触</span></td><td><span class="badge badge-blue">継続フォロー</span></td></tr>
+          <tr><td>F LAB（5/19）</td><td class="num">2</td><td><span class="badge badge-gray">初回接触</span></td><td><span class="badge badge-blue">新規チャネル</span></td></tr>
+          <tr><td>F LAB（5/23）</td><td class="num">1</td><td><span class="badge badge-teal">インターン受付</span></td><td><span class="badge badge-green">効果確認中</span></td></tr>
+          <tr><td>大学訪問・個別面談（5/24）</td><td class="num">2</td><td><span class="badge badge-gray">接触中</span></td><td><span class="badge badge-blue">2〜3名×30分形式</span></td></tr>
+          <tr><td>合同説明会 佐賀大（5/31）</td><td class="num">4</td><td><span class="badge badge-gray">当日接触</span></td><td><span class="badge badge-blue">フォロー要</span></td></tr>
+          <tr class="total-row"><td>合計</td><td class="num">17</td><td></td><td></td></tr>
+        </table>
+        <div class="sec-label" style="margin-top:5px;">接触校（2026年度）</div>
+        <table style="margin-top:2px;">
+          <tr><th>大学・高校</th><th style="text-align:right;">人数</th><th>学年・備考</th></tr>
+          <tr><td>北九州市立大学</td><td class="num">4</td><td>工学系・経済学科</td></tr>
+          <tr><td>佐賀大学</td><td class="num">4</td><td>理工学部他（5/31合説）</td></tr>
+          <tr><td>福岡大学</td><td class="num">1</td><td>法学部 2年生</td></tr>
+          <tr><td>筑紫丘高校</td><td class="num">1</td><td>3年生</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ③ インターン計画 -->
+    <div class="card">
+      <div class="card-header green">③ 2026年度インターン 計画</div>
+      <div class="card-body">
+        <div style="font-size:8pt;font-weight:bold;color:#1A3A5C;margin-bottom:4px;">まちづくりの仕事を、現場で知る。</div>
+        <table>
+          <tr><th>項目</th><th>内容</th></tr>
+          <tr><td>対象</td><td>2026年卒・2027年卒</td></tr>
+          <tr><td>参加費</td><td>無料（交通費支給）</td></tr>
+          <tr><td>集合場所</td><td>株式会社BLUE DESIGN（唐津市原1471-1）</td></tr>
+        </table>
+        <div class="sec-label" style="margin-top:5px;">1DAY INTERN　定員10名</div>
+        <table style="margin-top:2px;">
+          <tr><th>日時</th><th>内容</th></tr>
+          <tr><td><b>6/15(月)</b><br>10:00-14:00</td><td>社長のメッセージ / 先輩の声 / 青天堂にて食事会（ランチ）</td></tr>
+        </table>
+        <div class="sec-label" style="margin-top:5px;">2.5DAY INTERN　定員6名</div>
+        <table style="margin-top:2px;">
+          <tr><th>日時</th><th>内容</th></tr>
+          <tr><td><b>7/13(月)</b><br>10:00-16:00</td><td>社長のメッセージ / 先輩の声 / まちづくりワークショップ / 青天堂にて食事会</td></tr>
+          <tr><td><b>7/14(火)</b><br>10:00-16:00</td><td>青天堂（自社プロジェクト）お手当 / 継続ワークショップ</td></tr>
+          <tr><td><b>7/21(火)</b><br>AM or PM 1〜2h</td><td>プレゼンテーション（発表・フィードバック）</td></tr>
+        </table>
+        <div class="alert-box alert-info" style="margin-top:5px;">ℹ️ 新卒採用用LINEアカウントを作成し、当日参加者に登録を促す（継続接点として活用）</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-bot">
+    <!-- ④ 選考中一覧 -->
+    <div class="card">
+      <div class="card-header orange">④ 選考中・フォローアップ一覧（2026年度）</div>
+      <div class="card-body">
+        <table>
+          <tr><th>氏名</th><th>学校</th><th>経路</th><th>現ステータス</th><th>次のアクション</th></tr>
+          <tr><td><b>大工原 正幸</b></td><td>北九州市立大</td><td>F LAB 5/23</td><td><span class="dot dot-blue"></span><span class="badge badge-teal">インターン受付</span></td><td>6/15または7/13インターン受け入れ準備</td></tr>
+          <tr><td>大西 暖花</td><td>北九州市立大</td><td>合説 5/13</td><td><span class="dot dot-gray"></span><span class="badge badge-gray">初回接触</span></td><td>フォローメール・会社見学案内</td></tr>
+          <tr><td>北山 拓人</td><td>北九州市立大</td><td>合説 5/13</td><td><span class="dot dot-gray"></span><span class="badge badge-gray">初回接触</span></td><td>フォローメール・会社見学案内</td></tr>
+          <tr><td>衣笠 琳音</td><td>北九州市立大</td><td>合説 5/13</td><td><span class="dot dot-gray"></span><span class="badge badge-gray">初回接触</span></td><td>フォローメール・会社見学案内</td></tr>
+          <tr><td>桑野 櫻子</td><td>福岡大学</td><td>F LAB 5/19</td><td><span class="dot dot-gray"></span><span class="badge badge-gray">初回接触</span></td><td>インターン案内・フォロー</td></tr>
+          <tr><td>塚本 翔太</td><td>筑紫丘高校</td><td>F LAB 5/19</td><td><span class="dot dot-gray"></span><span class="badge badge-gray">初回接触</span></td><td>インターン案内・フォロー</td></tr>
+          <tr><td>久冨 七海 他</td><td>佐賀大学</td><td>合説 5/31</td><td><span class="dot dot-gray"></span><span class="badge badge-gray">当日接触</span></td><td>フォローメール（氏名不明2名を確認）</td></tr>
+          <tr><td>大学訪問 接触者</td><td>—</td><td>大学訪問 5/24</td><td><span class="dot dot-gray"></span><span class="badge badge-gray">接触中</span></td><td>個別フォロー・LINEアカウント登録促進</td></tr>
+        </table>
+        <div style="margin-top:4px;padding:3px 6px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:2px;font-size:7pt;color:#92400e;">
+          ⚑ 5/31合説の氏名不明2名の確認が急務。6/15・7/13インターンへの参加促進を6月中に完了させること
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑤ 6月以降の見通し -->
+    <div class="card">
+      <div class="card-header accent">⑤ 6月・7月の見通し（2026年度）</div>
+      <div class="card-body">
+        <div class="outlook-cols">
+          <div class="outlook-col">
+            <div class="outlook-month">📅 6月 アクション計画</div>
+            <div class="outlook-item">佐賀大5名・北九州市大3名・福岡大1名へ個別フォロー</div>
+            <div class="outlook-item">6/15・7/13インターン参加者を6/30までに確定</div>
+            <div class="outlook-item">新卒採用用LINEアカウント作成・運用開始</div>
+          </div>
+          <div class="outlook-col">
+            <div class="outlook-month">📅 7月 アクション計画</div>
+            <div class="outlook-item">7/13(月) インターン 2.5day 開始（7/13・14・21）</div>
+            <div class="outlook-item">インターン参加者への選考ステップへの移行</div>
+            <div class="outlook-item">2026年度採用目標人数・ポジションを確定（28卒・29卒）</div>
+          </div>
+        </div>
+        <div class="alert-box alert-good" style="margin-top:5px;">✓ F LABチャネルが機能。インターン希望2名を確保。6/15・7/13インターンに向けたプログラム設計が最重要課題。</div>
+        <div class="alert-box alert-warn" style="margin-top:3px;">⚑ 採用ターゲット人数・ポジション未確定。初任給217,000円〜として求人掲載に反映が必要。</div>
+      </div>
+    </div>
+  </div>
+  <!-- ⑥ 採用イベントスケジュール -->
+  <div class="card" style="margin-top:5px;">
+    <div class="card-header accent">⑥ 採用イベントスケジュール（2026年5月〜2027年3月）</div>
+    <div class="card-body">
+      <table>
+        <tr><th style="width:28px;">月</th><th style="width:46px;">日程</th><th>イベント・活動名</th><th style="width:95px;">種別</th><th style="width:38px;">場所</th><th style="width:52px;">ステータス</th></tr>
+        <tr><td rowspan="4" style="font-weight:bold;color:#2e7d32;text-align:center;vertical-align:middle;">5月</td><td>5/13</td><td>北九州市立大学 合同説明会</td><td><span class="badge badge-orange">合同説明会</span></td><td>北九大</td><td><span class="badge badge-green">完了</span></td></tr>
+        <tr><td>5/19</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>博多</td><td><span class="badge badge-green">完了</span></td></tr>
+        <tr><td>5/23</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>博多</td><td><span class="badge badge-green">完了</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>5/31</td><td>佐賀大学 合同説明会</td><td><span class="badge badge-orange">合同説明会</span></td><td>佐賀大</td><td><span class="badge badge-green">完了</span></td></tr>
+        <tr><td rowspan="3" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">6月</td><td><b>6/15(月)</b></td><td><b>インターン 1day</b></td><td><span class="badge badge-blue">インターン</span></td><td>自社</td><td><span class="badge badge-blue">確定</span></td></tr>
+        <tr><td>6/20</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>6/23</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>今泉</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr><td rowspan="5" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">7月</td><td>7/6</td><td>F.LAB AI</td><td><span class="badge badge-life">F.LAB AI</span></td><td>天神</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr><td><b>7/13(月)</b></td><td><b>インターン 2.5day（7/13・14・21）</b></td><td><span class="badge badge-blue">インターン</span></td><td>自社</td><td><span class="badge badge-blue">確定</span></td></tr>
+        <tr><td>7/14</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>今泉</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr><td>7/18</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>7/21</td><td>F.LAB AI</td><td><span class="badge badge-life">F.LAB AI</span></td><td>今泉</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr><td rowspan="5" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">8月</td><td>8/3</td><td>F.LAB AI</td><td><span class="badge badge-life">F.LAB AI</span></td><td>天神</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr><td>8/8</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr><td>8/24</td><td>F.LAB AI</td><td><span class="badge badge-life">F.LAB AI</span></td><td>天神</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr><td>8/28</td><td>インターン 1day</td><td><span class="badge badge-blue">インターン</span></td><td>自社</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>8/●</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td rowspan="4" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">9月</td><td>9/7</td><td>F.LAB AI</td><td><span class="badge badge-life">F.LAB AI</span></td><td>天神</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr><td>9/28</td><td>F.LAB AI</td><td><span class="badge badge-life">F.LAB AI</span></td><td>天神</td><td><span class="badge badge-gray">予定</span></td></tr>
+        <tr><td>9/●</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>9/●</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td rowspan="3" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">10月</td><td>10/●</td><td>インターン 1day</td><td><span class="badge badge-blue">インターン</span></td><td>自社</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td>10/●</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>10/●</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td rowspan="4" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">11月</td><td>11/7</td><td>佐賀大学 建設業セミナー</td><td><span class="badge badge-orange">合同説明会</span></td><td>佐賀大</td><td><span class="badge badge-green">完了</span></td></tr>
+        <tr><td>11/●</td><td>インターン 2.5day</td><td><span class="badge badge-blue">インターン</span></td><td>自社</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td>11/●</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>11/●</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td rowspan="3" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">12月</td><td>12/●</td><td>インターン 1day</td><td><span class="badge badge-blue">インターン</span></td><td>自社</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td>12/●</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>12/●</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td rowspan="2" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">1月</td><td>1/●</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>1/●</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td rowspan="3" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">2月</td><td>2/●</td><td>インターン 1day</td><td><span class="badge badge-blue">インターン</span></td><td>自社</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td>2/●</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr style="border-bottom:2px solid #c9d4e0;"><td>2/●</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td rowspan="3" style="font-weight:bold;color:#1A3A5C;text-align:center;vertical-align:middle;">3月</td><td>3/●</td><td>インターン 2.5day</td><td><span class="badge badge-blue">インターン</span></td><td>自社</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td>3/●</td><td>F.LABビジネス</td><td><span class="badge badge-teal">F.LABビジネス</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+        <tr><td>3/●</td><td>F.LABワークショップ</td><td><span class="badge badge-orange">F.LABワーク</span></td><td>天神</td><td><span class="badge badge-gray">調整中</span></td></tr>
+      </table>
+      <div style="margin-top:4px;font-size:6.5pt;color:#888;">●＝日程調整中　太字＝確定日程　F.LABはFuture Lab（外部連携イベント）</div>
+    </div>
+  </div>
+
+  <div class="footer">BLUE DESIGN GROUP 経営管理部門｜採用サマリー 2026年6月3日版｜2026年度（2年目）</div>
+  <div class="data-src">データソース：採用管理スプレッドシート（Googleスプレッドシート）</div>
+</div>
+</div>
+
+
+<!-- ════ TAB: 中途採用 ════ -->
+<div class="tab-content" id="content-chuto">
+<div class="sheet">
+  <div class="header" style="background:#1f4e35;">
+    <div>
+      <div class="header-title">BLUE DESIGN <span>GROUP</span>　中途採用サマリー<span class="year-tag" style="background:#2e7d32;">通年</span></div>
+      <div class="header-sub">対象期間：2025年6月〜2026年6月｜中途・パート・アルバイト 採用状況レポート</div>
+    </div>
+    <div class="header-meta">データ更新日：2026年6月3日<br>総応募141名｜全社対象｜経営管理部門</div>
+  </div>
+
+  <div class="grid-top">
+    <!-- ① 全体KPI -->
+    <div class="card">
+      <div class="card-header" style="background:#2e7d32;">① 全体サマリー（中途採用）</div>
+      <div class="card-body">
+        <div class="kpi-row">
+          <div class="kpi-box"><div class="kpi-label">総応募数</div><div class="kpi-num" style="color:#1f4e35;">141</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">面接実施</div><div class="kpi-num blue">28</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">内定応諾</div><div class="kpi-num green">30</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">辞退</div><div class="kpi-num red">28</div><div class="kpi-sub">名</div></div>
+          <div class="kpi-box"><div class="kpi-label">不合格</div><div class="kpi-num" style="color:#9ca3af;">80</div><div class="kpi-sub">名</div></div>
+        </div>
+        <div style="margin-top:5px;">
+          <div class="rate-bar"><div class="rate-label"><span>応募→内定率</span><span style="font-weight:bold;color:#2e7d32;">21.3%</span></div><div class="rate-bar-track"><div class="rate-bar-fill" style="width:21.3%;background:#2e7d32;"></div></div></div>
+          <div class="rate-bar" style="margin-top:3px;"><div class="rate-label"><span>辞退率（内定後）</span><span style="font-weight:bold;color:#dc2626;">19.9%</span></div><div class="rate-bar-track"><div class="rate-bar-fill" style="width:19.9%;background:#ef4444;"></div></div></div>
+        </div>
+        <table style="margin-top:4px;">
+          <tr><th></th><th style="text-align:right;">2025年度</th><th style="text-align:right;">2026年度</th></tr>
+          <tr><td>応募数</td><td class="num">115</td><td class="num">26</td></tr>
+          <tr><td>内定応諾</td><td class="num">25</td><td class="num">5</td></tr>
+          <tr><td>選考中</td><td class="num">—</td><td class="num">3名</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ② 媒体別 -->
+    <div class="card">
+      <div class="card-header">② 媒体別 応募数・効果</div>
+      <div class="card-body">
+        <table>
+          <tr><th>媒体・経路</th><th style="text-align:right;">応募</th><th style="text-align:right;">内定</th><th>内定率</th><th>評価</th></tr>
+          <tr><td>Indeed</td><td class="num">80</td><td class="num">15</td><td class="num">19%</td><td><span class="badge badge-blue">主力</span></td></tr>
+          <tr><td>ジョブメドレー</td><td class="num">24</td><td class="num">5</td><td class="num">21%</td><td><span class="badge badge-blue">安定</span></td></tr>
+          <tr><td>エアワーク</td><td class="num">24</td><td class="num">4</td><td class="num">17%</td><td><span class="badge badge-orange">コスト確認要</span></td></tr>
+          <tr><td><b>身内紹介（リファラル）</b></td><td class="num">4</td><td class="num">3</td><td class="num" style="color:#2e7d32;font-weight:bold;">75%</td><td><span class="badge badge-green">最高効果</span></td></tr>
+          <tr><td>ミイダス</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="badge badge-orange">有料化検討中</span></td></tr>
+          <tr><td>HP・その他</td><td class="num">9</td><td class="num">3</td><td class="num">33%</td><td><span class="badge badge-gray">—</span></td></tr>
+          <tr class="total-row"><td>合計</td><td class="num">141+</td><td class="num">30</td><td class="num">21%</td><td></td></tr>
+        </table>
+        <div style="margin-top:4px;padding:3px 6px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:2px;font-size:7pt;color:#92400e;">
+          ⚑ リファラル内定率75%は他媒体の3〜4倍。スタッフへの紹介インセンティブ設計を6月中に検討すること。
+        </div>
+        <div style="margin-top:3px;padding:3px 6px;background:#eff6ff;border-left:3px solid #0090BA;border-radius:2px;font-size:7pt;color:#1e40af;">
+          ℹ️ ミイダス：有料プラン提案依頼中 → プランが出次第 日置さんへ共有
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 職種・雇用形態別 -->
+    <div class="card">
+      <div class="card-header green">③ 雇用形態 / 会社別</div>
+      <div class="card-body">
+        <div class="sec-label">雇用形態別</div>
+        <table style="margin-top:2px;">
+          <tr><th>区分</th><th style="text-align:right;">応募</th><th style="text-align:right;">内定</th><th>内定率</th></tr>
+          <tr><td>正社員</td><td class="num">99</td><td class="num">19</td><td class="num">19%</td></tr>
+          <tr><td>パート</td><td class="num">23</td><td class="num">5</td><td class="num">22%</td></tr>
+          <tr><td>アルバイト</td><td class="num">16</td><td class="num">5</td><td class="num">31%</td></tr>
+          <tr><td>業務委託・その他</td><td class="num">3</td><td class="num">1</td><td class="num">33%</td></tr>
+        </table>
+        <div class="sec-label" style="margin-top:5px;">会社・勤務地別</div>
+        <table style="margin-top:2px;">
+          <tr><th>会社</th><th style="text-align:right;">応募</th><th style="text-align:right;">内定</th><th>内定率</th></tr>
+          <tr><td>BLUE ESTATE</td><td class="num">84</td><td class="num">16</td><td class="num">19%</td></tr>
+          <tr><td>BLUE LIFE（コンパスウォーク）</td><td class="num">28</td><td class="num">7</td><td class="num">25%</td></tr>
+          <tr><td>青天堂（オフィス栗原）</td><td class="num">20</td><td class="num">5</td><td class="num">25%</td></tr>
+          <tr><td>BLUE DESIGN</td><td class="num">7</td><td class="num">2</td><td class="num">29%</td></tr>
+        </table>
+        <div class="sec-label" style="margin-top:5px;">Indeed 月次予算</div>
+        <table style="margin-top:2px;">
+          <tr><th>対象</th><th style="text-align:right;">予算</th><th>設定方法</th></tr>
+          <tr><td>建築（設計）</td><td class="num">40,000円</td><td>個別予算設定</td></tr>
+          <tr><td>建築以外（8求人）</td><td class="num">40,000円</td><td>キャンペーン設定</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLUE LIFE スカウト要件 -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header life">🏥 BLUE LIFE スカウト要件（ジョブメドレー）</div>
+      <div class="card-body">
+        <div style="font-size:7pt;color:#555;margin-bottom:4px;">担当：村井さん（スカウト → 中村さんへ送付・応募者メッセージ・求人票修正）</div>
+        <table>
+          <tr><th>職種</th><th>主要資格要件</th><th>年齢</th><th>免許</th><th>雇用</th><th>スカウト</th></tr>
+          <tr>
+            <td><b>看護師</b></td>
+            <td>看護師資格（准看護師可）</td>
+            <td class="num">〜45歳</td>
+            <td>AT限定可</td>
+            <td>常勤＞非常勤（時短可）</td>
+            <td><span class="badge badge-gray">求人掲載のみ</span></td>
+          </tr>
+          <tr>
+            <td><b>理学療法士</b></td>
+            <td>理学療法士資格</td>
+            <td class="num">〜45歳</td>
+            <td>AT限定可</td>
+            <td>常勤＞非常勤（時短可）</td>
+            <td><span class="badge badge-green">スカウト対象</span></td>
+          </tr>
+          <tr>
+            <td><b>作業療法士</b></td>
+            <td>作業療法士資格</td>
+            <td class="num">〜45歳</td>
+            <td>AT限定可</td>
+            <td>常勤＞非常勤（時短可）</td>
+            <td><span class="badge badge-green">スカウト対象</span></td>
+          </tr>
+          <tr>
+            <td><b>生活相談員</b></td>
+            <td>社会福祉主事任用 / 社会福祉士 / 精神保健福祉士</td>
+            <td class="num">〜45歳</td>
+            <td>AT限定可</td>
+            <td>常勤＞非常勤（時短可）</td>
+            <td><span class="badge badge-green">スカウト対象</span></td>
+          </tr>
+          <tr>
+            <td><b>柔道整復師</b></td>
+            <td>柔道整復師</td>
+            <td class="num">〜45歳</td>
+            <td>AT限定可</td>
+            <td>常勤＞非常勤（時短可）</td>
+            <td><span class="badge badge-green">スカウト対象</span></td>
+          </tr>
+          <tr>
+            <td><b>介護福祉士</b></td>
+            <td>介護福祉士 または 受験資格を有する方</td>
+            <td class="num">〜45歳</td>
+            <td>AT限定可</td>
+            <td>常勤＞非常勤（時短可）</td>
+            <td><span class="badge badge-green">スカウト対象</span></td>
+          </tr>
+          <tr>
+            <td>ヘルパー</td>
+            <td>—</td>
+            <td class="num">—</td>
+            <td>—</td>
+            <td>—</td>
+            <td><span class="badge badge-gray">求人掲載のみ</span></td>
+          </tr>
+        </table>
+        <div style="margin-top:4px;padding:3px 6px;background:#eff6ff;border-left:3px solid #0090BA;border-radius:2px;font-size:7pt;color:#1e40af;">
+          ℹ️ スカウト送付条件：エリアは唐津市を中心として対象者を広げていく。運転免許確認できなくてもスカウト送付OK。男女不問。
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header orange">📋 現在掲載中の求人 / 選考中一覧</div>
+      <div class="card-body">
+        <div class="sec-label">現在掲載中の求人ポジション</div>
+        <table style="margin-top:2px;">
+          <tr><th>ポジション</th><th>雇用形態</th><th>会社</th></tr>
+          <tr><td>料理人</td><td>正社員</td><td>青天堂</td></tr>
+          <tr><td>料理人</td><td>パート</td><td>青天堂</td></tr>
+          <tr><td>物件管理</td><td>正社員</td><td>BLUE ESTATE</td></tr>
+          <tr><td>売買営業</td><td>正社員</td><td>BLUE ESTATE</td></tr>
+          <tr><td>広報アシスタント</td><td>パート</td><td>BLUE ESTATE</td></tr>
+          <tr><td>看護師</td><td>正社員</td><td>BLUE LIFE</td></tr>
+          <tr><td>理学療法士</td><td>正社員</td><td>BLUE LIFE</td></tr>
+          <tr><td>ルームアドバイザー</td><td>正社員</td><td>BLUE ESTATE</td></tr>
+        </table>
+        <div class="sec-label" style="margin-top:5px;">現在選考中</div>
+        <table style="margin-top:2px;">
+          <tr><th>氏名</th><th>会社</th><th>ポジション</th><th>ステータス</th><th>応募日</th></tr>
+          <tr>
+            <td><b>一兜 楓</b></td><td>BLUE ESTATE</td><td>正）物件管理</td>
+            <td><span class="dot dot-blue"></span><span class="badge badge-blue">二次面接確定</span></td>
+            <td>4/21</td>
+          </tr>
+          <tr>
+            <td>高園 めぐみ</td><td>BLUE ESTATE</td><td>正）労務・経理・総務</td>
+            <td><span class="dot dot-orange"></span><span class="badge badge-orange">一次面接確定</span></td>
+            <td>5/1</td>
+          </tr>
+          <tr>
+            <td>有安 咲希子</td><td>BLUE LIFE</td><td>正）柔道整復師</td>
+            <td><span class="dot dot-orange"></span><span class="badge badge-orange">一次面接確定</span></td>
+            <td>5/20</td>
+          </tr>
+        </table>
+        <div class="sec-label" style="margin-top:5px;">ヘッドハンティング対象ポジション（3/31〆）</div>
+        <table style="margin-top:2px;">
+          <tr><th>ポジション</th><th style="text-align:right;">人数</th><th>備考</th></tr>
+          <tr><td>■採用難易度高い（HH）</td><td class="num">1名</td><td>—</td></tr>
+          <tr><td>建築マネージャーorリーダー</td><td class="num">1名</td><td>3/31 内定応諾期日</td></tr>
+          <tr><td>不動産売買マネージャーorリーダー</td><td class="num">1名</td><td>3/31 内定応諾期日</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-bot">
+    <!-- ⑤ 月別推移 -->
+    <div class="card">
+      <div class="card-header" style="background:#1f4e35;">⑤ 月別応募推移（中途）</div>
+      <div class="card-body">
+        <div style="display:flex;gap:2px;align-items:flex-end;height:36px;">
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;position:relative;display:flex;align-items:flex-end;"><div style="width:100%;background:#0090BA;height:32%" title="6月:6件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">6月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#0090BA;height:21%" title="7月:4件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">7月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#0090BA;height:32%" title="8月:6件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">8月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#0090BA;height:21%" title="9月:4件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">9月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#1A3A5C;height:100%" title="10月:19件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">10月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#1A3A5C;height:100%" title="11月:20件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">11月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#1A3A5C;height:89%" title="12月:17件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">12月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#0090BA;height:53%" title="1月:10件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">1月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#0090BA;height:89%" title="2月:17件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">2月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#0090BA;height:47%" title="3月:9件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">3月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#2e7d32;height:95%" title="4月:18件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">4月</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1;"><div style="flex:1;width:100%;background:#e5e7eb;display:flex;align-items:flex-end;"><div style="width:100%;background:#2e7d32;height:42%" title="5月:8件"></div></div><div style="font-size:5.5pt;color:#888;margin-top:1px;">5月</div></div>
+        </div>
+        <div style="margin-top:2px;font-size:6pt;color:#888;display:flex;gap:8px;">
+          <span style="display:inline-flex;align-items:center;gap:2px;"><span style="width:8px;height:8px;background:#1A3A5C;display:inline-block;border-radius:1px;"></span>繁忙期（10〜11月）</span>
+          <span style="display:inline-flex;align-items:center;gap:2px;"><span style="width:8px;height:8px;background:#2e7d32;display:inline-block;border-radius:1px;"></span>2026年度</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑥ 6月アクション -->
+    <div class="card">
+      <div class="card-header" style="background:#2e7d32;">⑥ 6月・担当者別アクション計画</div>
+      <div class="card-body">
+        <div class="outlook-cols">
+          <div class="outlook-col">
+            <div class="outlook-month">📅 6月 確認事項</div>
+            <div class="outlook-item">一兜楓 二次面接 → 合否判断・内定通知</div>
+            <div class="outlook-item">高園めぐみ（BLUE ESTATE 労務経理）一次面接実施</div>
+            <div class="outlook-item">有安咲希子（BLUE LIFE 柔道整復師）一次面接結果確認</div>
+            <div class="outlook-item">ミイダス有料プランの内容確認 → 日置さんへ共有</div>
+          </div>
+          <div class="outlook-col">
+            <div class="outlook-month">👤 担当者分担</div>
+            <div class="outlook-item"><b>村井さん：</b>スカウト送付（→中村さんへ）、応募者メッセージ対応、求人票文章修正</div>
+            <div class="outlook-item"><b>日置さん：</b>ミイダス有料プラン確認・Indeed設定</div>
+            <div class="outlook-item"><b>秋繁忙期に向けて：</b>リファラル報奨制度を6月中に設計（10〜11月 月20件ピーク対策）</div>
+          </div>
+        </div>
+        <div class="alert-box alert-warn" style="margin-top:4px;">
+          ⚑ 繁忙期（10〜11月）に向けて：昨年は月19〜20件の応募ピーク。9月末までに求人票更新・採用基準整理を完了すること
+        </div>
+        <div class="alert-box alert-good" style="margin-top:3px;">
+          ✓ リファラル内定率75%は突出した成果。報奨制度を6月中に設計すれば秋の繁忙期に間に合う。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">BLUE DESIGN GROUP 経営管理部門｜採用サマリー 2026年6月3日版｜中途採用（通年）</div>
+  <div class="data-src">データソース：採用管理スプレッドシート（Googleスプレッドシート）</div>
+</div>
+</div>
+
+<script>
+function switchTab(year) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + year).classList.add('active');
+  document.getElementById('content-' + year).classList.add('active');
+}
+</script>
+</body>
+</html>
