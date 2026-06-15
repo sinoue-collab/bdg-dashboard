@@ -266,6 +266,18 @@ function yoyBadge(pct) {
   return `<span style="color:${col};font-weight:700;font-size:10px">${sign}${pct.toFixed(1)}%</span>`;
 }
 
+function isFiscalYearComplete(co, year) {
+  const today = new Date();
+  const y = parseInt(year);
+  let endDate;
+  if      (co === 'estate') endDate = new Date(y, 11, 31);
+  else if (co === 'design') endDate = new Date(y, 2, 31);
+  else if (co === 'life')   endDate = new Date(y, 4, 31);
+  else if (co === 'seiryu') endDate = new Date(y, 0, 31);
+  else return false;
+  return endDate < today;
+}
+
 // ─── Tab switching ───────────────────────────────────────────
 function showTab(id, btn) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -302,24 +314,9 @@ function renderT1(year) {
   const ytd = k => ytdSum(grp[k], li);
   const grpRev = ytd('rev'), grpGp = ytd('gp'), grpSga = ytd('sga');
   const grpOp  = ytd('op'),  grpOrd= ytd('ord');
-  const curRev = li>=0?grp.rev[li]:0, curOrd=li>=0?grp.ord[li]:0, curOp=li>=0?grp.op[li]:0;
-  const prvRev = pi>=0?grp.rev[pi]:0, prvOp =pi>=0?grp.op[pi]:0;
   const latLbl = li>=0?grp.labels[li]:'—';
   const latM   = li>=0?grp.months[li]:null;
   const priM   = latM?priorYoYMonth(latM):null;
-  const priRevGrp = priM?['estate','design','life','seiryu'].reduce((s,co)=>s+(RAW[co]?.[priM]?.rev??0),0):0;
-  const priOrdGrp = priM?['estate','design','life','seiryu'].reduce((s,co)=>s+(RAW[co]?.[priM]?.ord??0),0):0;
-  const revYoY = priRevGrp>0?yoyPct(curRev,priRevGrp):null;
-  const ordYoY = priOrdGrp!==0?yoyPct(curOrd,priOrdGrp):null;
-  // 前年同月比が取れる場合はメイン比較軸、前月比はサブ表示
-  const revCmpStr = revYoY !== null
-    ? `前年同月比 ${revYoY>=0?'+':''}${revYoY.toFixed(1)}%（前月比 ${manS(revD)}万）`
-    : `前月比 ${manS(revD)}万`;
-  const revCmpUp = revYoY !== null ? revYoY >= 0 : revD >= 0;
-  const ordCmpStr = ordYoY !== null
-    ? `前年同月比 ${ordYoY>=0?'+':''}${ordYoY.toFixed(1)}%（前月比 ${manS(opD)}万）`
-    : `前月比 ${manS(opD)}万`;
-  const ordCmpUp = ordYoY !== null ? ordYoY >= 0 : opD >= 0;
 
   function kpi(lbl, val, unit, sub='', diff='', diffUp=null, neg=false, pos=false) {
     const cls = neg ? ' neg' : (pos ? ' pos' : '');
@@ -332,7 +329,6 @@ function renderT1(year) {
 
   const gpR = pct(grpGp, grpRev);
   const sgaR= pct(grpSga,grpRev);
-  const revD= curRev-prvRev, opD= curOp-prvOp;
 
   let cards = '';
   cards += kpi(`年度累計売上（${year}年）`, grpRev, '万円', `1月〜${latLbl}（${n}ヶ月）`);
@@ -340,8 +336,6 @@ function renderT1(year) {
   cards += kpi('年度累計販管費', grpSga, '万円', `販管費率 ${sgaR.toFixed(1)}%`);
   cards += kpi('年度累計営業利益', grpOp, '万円', '', '', null, grpOp<0, grpOp>=0);
   cards += kpi('年度累計経常利益', grpOrd, '万円', `営業利益 ${manS(grpOp)}万`, '', null, grpOrd<0, grpOrd>=0);
-  cards += kpi(`当月売上（${latLbl}）`, curRev, '万円', '', revCmpStr, revCmpUp);
-  cards += kpi(`当月経常利益（${latLbl}）`, curOrd, '万円', `営業利益 ${manS(curOp)}万`, ordCmpStr, ordCmpUp, curOrd<0, curOrd>=0);
 
   // 損益サマリーテーブル（各社最新月）
   let tRows = '';
@@ -560,7 +554,6 @@ function renderT2(year) {
 // ─── Tab 3: 事業別実績 ───────────────────────────────────────
 function renderT3(year) {
   let cards = '';
-  const ranking = [];
 
   ['estate','design','life','seiryu'].forEach(co => {
     const coD = getCoData(co, year);
@@ -568,13 +561,17 @@ function renderT3(year) {
     const fiscal = CO_FISCAL[co];
 
     if (!coD.hasData) {
+      let noDataMsg = `<div class="placeholder">data/finance/${year}/${co.toUpperCase().replace(' ','-')}/ にCSVを追加してください</div>`;
+      if (co === 'seiryu' && String(year) === '2026') {
+        noDataMsg = `<div class="alert ylw"><div class="alert-ico">ℹ️</div><div>2026年度（2025-02〜2026-01）のデータは現在 .numbers 形式のため読み込めません。<br>Numbersから「CSV形式で書き出す」を実行し <code>data/finance/2026/青天堂/</code> に保存してください。<br>なお、2026-02以降のデータは <strong>2027年度タブ</strong> に表示されています。</div></div>`;
+      }
       cards += `<div class="co-card">
         <div class="co-hdr" style="background:${color}">
           <span>${CO_NAME[co]}</span><span class="badge-gray">データなし</span>
         </div>
         <div class="co-body">
           <p style="color:#888;font-size:10px;margin-bottom:6px">${year}年度（${fiscal}）の実績データがありません。</p>
-          <div class="placeholder">data/finance/${year}/${co.toUpperCase().replace(' ','-')}/ にCSVを追加してください</div>
+          ${noDataMsg}
         </div>
       </div>`; return;
     }
@@ -590,33 +587,83 @@ function renderT3(year) {
     const ytdOp = coD.op.slice(0,ytdN).reduce((s,v)=>s+v,0);
     const ytdOrd= coD.ord.slice(0,ytdN).reduce((s,v)=>s+v,0);
     const ytdGpr= pct(ytdGp,ytdRv);
-    ranking.push({co, ytdGpr, ytdRv, color});
 
     const alIcon = op>0?'🟢':op>=-50?'🟡':'🔴';
     const alCls  = op>0?'grn':op>=-50?'ylw':'red';
     const alTxt  = op>0?'黒字':op>=-50?'要注意':'赤字';
 
-    const recent = coD.months.length >= 4
-      ? coD.months.slice(-4).map((_,i,a) => a[i]).filter(m => (RAW[co]?.[m]?.rev??0)!==0)
-      : coD.months.filter(m => (RAW[co]?.[m]?.rev??0)!==0).slice(-4);
+    const fyComplete = isFiscalYearComplete(co, year);
     let tRows = '';
-    coD.months.slice(Math.max(0,ci-3), ci+1).forEach((m,_,arr) => {
-      if (!m || (RAW[co]?.[m]?.rev??0)===0) return;
-      const mr=RAW[co][m].rev, mg=RAW[co][m].gp, ms=RAW[co][m].sga;
-      const mo=RAW[co][m].op, mord=RAW[co][m].ord;
-      const mgr=pct(mg,mr);
-      const priM5 = priorYoYMonth(m);
-      const priRv5 = RAW[co]?.[priM5]?.rev ?? 0;
-      const rvYoY5 = priRv5 > 0 ? yoyPct(mr, priRv5) : null;
-      tRows+=`<tr>
-        <td class="lbl">${mjp(m)}</td>
-        <td>${man(mr)}万</td>
-        <td>${yoyBadge(rvYoY5)}</td>
-        <td>${mgr.toFixed(1)}%</td><td>${man(ms)}万</td>
-        <td class="${mo<0?'num-neg':''}">${manS(mo)}万</td>
-        <td class="${mord<0?'num-neg':''}">${manS(mord)}万</td>
+    let tableTitle = '';
+    let tableHeader = '';
+
+    if (fyComplete) {
+      tableTitle = '年度結果（四半期別）';
+      tableHeader = `<tr><th>期間</th><th>売上</th><th>前年比</th><th>粗利率</th><th>営業利益</th><th>経常利益</th></tr>`;
+      const fyMs = (FY_MONTHS[year]||{})[co]||[];
+      const quarters = [];
+      const qSize = Math.ceil(fyMs.length / 4);
+      for (let q = 0; q < 4; q++) {
+        const slice = fyMs.slice(q*qSize, (q+1)*qSize).filter(m => (RAW[co]?.[m]?.rev??0)!==0);
+        if (slice.length === 0) continue;
+        const qRev = slice.reduce((s,m)=>s+(RAW[co][m].rev??0),0);
+        const qGp  = slice.reduce((s,m)=>s+(RAW[co][m].gp??0),0);
+        const qOp  = slice.reduce((s,m)=>s+(RAW[co][m].op??0),0);
+        const qOrd = slice.reduce((s,m)=>s+(RAW[co][m].ord??0),0);
+        const qGpr = pct(qGp, qRev);
+        const qLbl = `Q${q+1} (${mjp(slice[0])}〜${mjp(slice[slice.length-1])})`;
+        const priSlice = fyMs.slice(q*qSize, (q+1)*qSize).map(m=>priorYoYMonth(m)).filter(m=>(RAW[co]?.[m]?.rev??0)!==0);
+        const priQRev = priSlice.reduce((s,m)=>s+(RAW[co]?.[m]?.rev??0),0);
+        const qYoY = priQRev > 0 ? yoyPct(qRev, priQRev) : null;
+        quarters.push({qLbl, qRev, qGp, qOp, qOrd, qGpr, qYoY});
+      }
+      const annRev = coD.rev.reduce((s,v)=>s+v,0);
+      const annGp  = coD.gp.reduce((s,v)=>s+v,0);
+      const annOp  = coD.op.reduce((s,v)=>s+v,0);
+      const annOrd = coD.ord.reduce((s,v)=>s+v,0);
+      const annGpr = pct(annGp, annRev);
+      const priAnnMs = ((FY_MONTHS[parseInt(year)-1]||{})[co]||[]).filter(m=>(RAW[co]?.[m]?.rev??0)!==0);
+      const priAnnRev= priAnnMs.reduce((s,m)=>s+(RAW[co]?.[m]?.rev??0),0);
+      const annYoY = priAnnRev > 0 ? yoyPct(annRev, priAnnRev) : null;
+      quarters.forEach(({qLbl,qRev,qGp,qOp,qOrd,qGpr,qYoY}) => {
+        tRows += `<tr>
+          <td class="lbl">${qLbl}</td>
+          <td>${man(qRev)}万</td>
+          <td>${yoyBadge(qYoY)}</td>
+          <td>${qGpr.toFixed(1)}%</td>
+          <td class="${qOp<0?'num-neg':''}">${manS(qOp)}万</td>
+          <td class="${qOrd<0?'num-neg':''}">${manS(qOrd)}万</td>
+        </tr>`;
+      });
+      tRows += `<tr class="total">
+        <td class="lbl">年度計</td>
+        <td>${man(annRev)}万</td>
+        <td>${yoyBadge(annYoY)}</td>
+        <td>${annGpr.toFixed(1)}%</td>
+        <td class="${annOp<0?'num-neg':''}">${manS(annOp)}万</td>
+        <td class="${annOrd<0?'num-neg':''}">${manS(annOrd)}万</td>
       </tr>`;
-    });
+    } else {
+      tableTitle = '月次推移（直近4ヶ月）';
+      tableHeader = `<tr><th>月</th><th>売上</th><th>前年比</th><th>粗利率</th><th>販管費</th><th>営業利益</th><th>経常利益</th></tr>`;
+      coD.months.slice(Math.max(0,ci-3), ci+1).forEach((m) => {
+        if (!m || (RAW[co]?.[m]?.rev??0)===0) return;
+        const mr=RAW[co][m].rev, mg=RAW[co][m].gp, ms=RAW[co][m].sga;
+        const mo=RAW[co][m].op, mord=RAW[co][m].ord;
+        const mgr=pct(mg,mr);
+        const priM5 = priorYoYMonth(m);
+        const priRv5 = RAW[co]?.[priM5]?.rev ?? 0;
+        const rvYoY5 = priRv5 > 0 ? yoyPct(mr, priRv5) : null;
+        tRows+=`<tr>
+          <td class="lbl">${mjp(m)}</td>
+          <td>${man(mr)}万</td>
+          <td>${yoyBadge(rvYoY5)}</td>
+          <td>${mgr.toFixed(1)}%</td><td>${man(ms)}万</td>
+          <td class="${mo<0?'num-neg':''}">${manS(mo)}万</td>
+          <td class="${mord<0?'num-neg':''}">${manS(mord)}万</td>
+        </tr>`;
+      });
+    }
 
     let coSpecificHtml = '';
     const latCoM = ci >= 0 ? coD.months[ci] : null;
@@ -756,32 +803,15 @@ function renderT3(year) {
           <div class="co-kpi"><div class="lbl">累計経常利益</div>
             <div class="val" style="color:${clr(ytdOrd)}">${manS(ytdOrd)}<span style="font-size:9px">万</span></div></div>
         </div>
-        <div class="sec-sub">月次推移（直近4ヶ月）</div>
+        <div class="sec-sub">${tableTitle}</div>
         <div style="overflow-x:auto"><table class="tbl">
-          <thead><tr><th>月</th><th>売上</th><th>前年比</th><th>粗利率</th><th>販管費</th><th>営業利益</th><th>経常利益</th></tr></thead>
+          <thead>${tableHeader}</thead>
           <tbody>${tRows}</tbody>
         </table></div>
         ${coSpecificHtml}
         <p class="note">${year}年度（${fiscal}）/ ${CO_FISCAL_S[co]}</p>
       </div>
     </div>`;
-  });
-
-  // ランキング
-  ranking.sort((a,b) => b.ytdGpr - a.ytdGpr);
-  const maxGpr = Math.max(...ranking.map(r => r.ytdGpr), 1);
-  let rankRows = '';
-  ranking.forEach(({co,ytdGpr,ytdRv,color},i) => {
-    const bw = Math.max(4, Math.round(ytdGpr/maxGpr*220));
-    const med = ['🥇','🥈','🥉'][i]||'';
-    rankRows += `<tr>
-      <td class="lbl">${med} ${CO_NAME[co]}</td>
-      <td style="text-align:left;padding-left:8px">
-        <span class="rank-bar" style="width:${bw}px;background:${color}"></span>
-        <span style="margin-left:8px;font-weight:700;color:${color}">${ytdGpr.toFixed(1)}%</span>
-      </td>
-      <td>売上累計 ${man(ytdRv)}万円</td>
-    </tr>`;
   });
 
   // 予算達成
@@ -812,11 +842,6 @@ function renderT3(year) {
 
   document.getElementById('t3').innerHTML = `
     <div class="co-grid">${cards}</div>
-    <div class="sec">
-      <div class="sec-title">🏆 粗利率ランキング（${year}年度）</div>
-      <table class="tbl"><thead><tr><th class="lft">事業</th><th class="lft">粗利率</th><th>売上規模</th></tr></thead>
-      <tbody>${rankRows}</tbody></table>
-    </div>
     <div class="sec">
       <div class="sec-title">事業別 予算達成状況（最新月）</div>
       ${coStatusHtml}
