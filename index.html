@@ -311,8 +311,15 @@ function renderT1(year) {
   const priOrdGrp = priM?['estate','design','life','seiryu'].reduce((s,co)=>s+(RAW[co]?.[priM]?.ord??0),0):0;
   const revYoY = priRevGrp>0?yoyPct(curRev,priRevGrp):null;
   const ordYoY = priOrdGrp!==0?yoyPct(curOrd,priOrdGrp):null;
-  const revYoYStr = revYoY!==null?` ／ 前年比${revYoY>=0?'+':''}${revYoY.toFixed(1)}%`:'';
-  const ordYoYStr = ordYoY!==null?` ／ 前年比${ordYoY>=0?'+':''}${ordYoY.toFixed(1)}%`:'';
+  // 前年同月比が取れる場合はメイン比較軸、前月比はサブ表示
+  const revCmpStr = revYoY !== null
+    ? `前年同月比 ${revYoY>=0?'+':''}${revYoY.toFixed(1)}%（前月比 ${manS(revD)}万）`
+    : `前月比 ${manS(revD)}万`;
+  const revCmpUp = revYoY !== null ? revYoY >= 0 : revD >= 0;
+  const ordCmpStr = ordYoY !== null
+    ? `前年同月比 ${ordYoY>=0?'+':''}${ordYoY.toFixed(1)}%（前月比 ${manS(opD)}万）`
+    : `前月比 ${manS(opD)}万`;
+  const ordCmpUp = ordYoY !== null ? ordYoY >= 0 : opD >= 0;
 
   function kpi(lbl, val, unit, sub='', diff='', diffUp=null, neg=false, pos=false) {
     const cls = neg ? ' neg' : (pos ? ' pos' : '');
@@ -333,8 +340,8 @@ function renderT1(year) {
   cards += kpi('年度累計販管費', grpSga, '万円', `販管費率 ${sgaR.toFixed(1)}%`);
   cards += kpi('年度累計営業利益', grpOp, '万円', '', '', null, grpOp<0, grpOp>=0);
   cards += kpi('年度累計経常利益', grpOrd, '万円', `営業利益 ${manS(grpOp)}万`, '', null, grpOrd<0, grpOrd>=0);
-  cards += kpi(`当月売上（${latLbl}）`, curRev, '万円', '', `前月比 ${manS(revD)}万${revYoYStr}`, revD>=0);
-  cards += kpi(`当月経常利益（${latLbl}）`, curOrd, '万円', `営業利益 ${manS(curOp)}万`, `前月比 ${manS(opD)}万${ordYoYStr}`, opD>=0, curOrd<0, curOrd>=0);
+  cards += kpi(`当月売上（${latLbl}）`, curRev, '万円', '', revCmpStr, revCmpUp);
+  cards += kpi(`当月経常利益（${latLbl}）`, curOrd, '万円', `営業利益 ${manS(curOp)}万`, ordCmpStr, ordCmpUp, curOrd<0, curOrd>=0);
 
   // 損益サマリーテーブル（各社最新月）
   let tRows = '';
@@ -428,10 +435,12 @@ function renderT2(year) {
   const calMonths = grp.months;
   const latM = li>=0?calMonths[li]:null;
   const prvM = pi>=0?calMonths[pi]:null;
+  const priM2 = latM ? priorYoYMonth(latM) : null; // 前年同月
 
   [...allItems].sort().forEach(item => {
     const cur = ['estate','design','life','seiryu'].reduce((s,co) => s+(RAW_SGA[co]?.[latM]?.[item]??0),0);
     const prv = ['estate','design','life','seiryu'].reduce((s,co) => s+(RAW_SGA[co]?.[prvM]?.[item]??0),0);
+    const pri = priM2 ? ['estate','design','life','seiryu'].reduce((s,co) => s+(RAW_SGA[co]?.[priM2]?.[item]??0),0) : 0;
     if (cur===0 && prv===0) return;
     totCur+=cur; totPrv+=prv;
     const diff=cur-prv;
@@ -440,11 +449,14 @@ function renderT2(year) {
     const arr = diff>0?'▲':diff<0?'▽':'→';
     const ac  = diff>0?'#C0392B':diff<0?'#1E7E3E':'#888';
     const ds  = prv ? `${dp>0?'+':''}${dp.toFixed(1)}%` : (diff>0?'新規':'-');
+    const yoy2 = pri > 0 ? yoyPct(cur, pri) : null;
     rows += `<tr class="${hlCls}">
       <td class="lbl">${item}</td>
       <td>${man(cur)}万</td><td>${man(prv)}万</td>
       <td style="color:${ac};font-weight:700">${arr} ${man(Math.abs(diff))}万</td>
       <td style="color:${ac};font-weight:700">${ds}</td>
+      <td style="color:#888;font-size:10px">${pri?man(pri)+'万':'—'}</td>
+      <td>${yoyBadge(yoy2)}</td>
     </tr>`;
   });
   const td=totCur-totPrv, tac=td>0?'#C0392B':td<0?'#1E7E3E':'#888';
@@ -454,6 +466,7 @@ function renderT2(year) {
     <td>${man(totCur)}万</td><td>${man(totPrv)}万</td>
     <td style="color:${tac};font-weight:700">${tArr} ${man(Math.abs(td))}万</td>
     <td style="color:${tac};font-weight:700">${totPrv?`${(td/totPrv*100>0?'+':'')}${(td/totPrv*100).toFixed(1)}%`:'-'}</td>
+    <td>—</td><td>—</td>
   </tr>`;
 
   // 予算vs実績 SGA
@@ -490,7 +503,8 @@ function renderT2(year) {
     if (coMs.length < 2) return;
     const coLatM = coMs[coMs.length-1];
     const coPrvM = coMs[coMs.length-2];
-    const coLatLbl = mjp(coLatM), coPrvLbl=mjp(coPrvM);
+    const coPriM = priorYoYMonth(coLatM); // 前年同月
+    const coLatLbl = mjp(coLatM), coPrvLbl=mjp(coPrvM), coPriLbl=mjp(coPriM);
     const color = CO_COLOR[co];
     const sga_items = RAW_SGA[co]||{};
     const items = Object.keys(sga_items[coLatM]||{}).sort((a,b) =>
@@ -499,22 +513,27 @@ function renderT2(year) {
     items.forEach(item => {
       const cv = sga_items[coLatM]?.[item]??0;
       const pv = sga_items[coPrvM]?.[item]??0;
+      const priv = sga_items[coPriM]?.[item]??0;
       if(cv===0&&pv===0)return;
       const dv=cv-pv;
       const dc=dv>0?' hl-red':'';
       const da=dv>0?'▲':dv<0?'▽':'→';
       const dac=dv>0?'#C0392B':dv<0?'#1E7E3E':'#888';
+      const yoyV = priv > 0 ? yoyPct(cv, priv) : null;
       coRows+=`<tr class="${dc}">
         <td class="sub">${item}</td>
         <td>${man(cv)}万</td><td>${man(pv)}万</td>
         <td style="color:${dac};font-weight:700">${da} ${man(Math.abs(dv))}万</td>
+        <td style="color:#888;font-size:10px">${priv?man(priv)+'万':'—'}</td>
+        <td>${yoyBadge(yoyV)}</td>
       </tr>`;
     });
     coTables += `<div class="sec" style="border-top:3px solid ${color}">
       <div class="sec-title" style="color:${color}">${CO_NAME[co]}　費目別（${coLatLbl} vs ${coPrvLbl}）</div>
       <div style="overflow-x:auto"><table class="tbl">
         <thead><tr><th class="lft">費目</th>
-          <th>${coLatLbl}</th><th>${coPrvLbl}</th><th>増減</th>
+          <th>${coLatLbl}</th><th>${coPrvLbl}（前月）</th><th>前月比増減</th>
+          <th>${coPriLbl}（前年）</th><th>前年同月比</th>
         </tr></thead><tbody>${coRows}</tbody>
       </table></div>
     </div>`;
@@ -523,10 +542,11 @@ function renderT2(year) {
   document.getElementById('t2').innerHTML = `
     <div class="sec">
       <div class="sec-title">グループ合計 費目別変動（${latLbl} vs ${prvLbl}）</div>
-      <p style="font-size:10px;color:#888;margin-bottom:8px">🔴 赤ハイライト=前月より増加。freee CSVから費目を自動取得。</p>
+      <p style="font-size:10px;color:#888;margin-bottom:8px">🔴 赤ハイライト=前月より増加。前年同月比は12ヶ月以上データがある場合に表示。</p>
       <div style="overflow-x:auto"><table class="tbl">
         <thead><tr><th class="lft">費目</th>
-          <th>${latLbl}</th><th>${prvLbl}</th><th>増減額</th><th>増減率</th>
+          <th>${latLbl}</th><th>${prvLbl}（前月）</th><th>前月比増減</th><th>前月比率</th>
+          <th>${priM2?mjp(priM2)+'（前年）':'前年同月'}</th><th>前年同月比</th>
         </tr></thead><tbody>${rows}</tbody>
       </table></div>
     </div>
