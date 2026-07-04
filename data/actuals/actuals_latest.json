@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-07-05T00:28:33.347005+09:00",
+  "generated_at": "2026-07-05T00:32:58.050772+09:00",
   "note": "各経営単位の最新データ。generate_snapshot.py で生成。",
   "data": {
     "unit_blue_estate": {

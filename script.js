@@ -886,24 +886,23 @@ function renderS5() {
     return;
   }
 
-  // KPI URL（最初の有効URLをiframe元として使用）
-  const kpiUrl = portals
+  // KPI ポータルのベースURL（グループ全体の最初のURLから取得）
+  const kpiBaseUrl = portals
     .flatMap(u => u.depts.flatMap(d => d.kpis))
     .find(k => k.url)?.url ?? null;
 
   let h = '';
 
-  // ── KPIダッシュボード iframe ──
-  if (kpiUrl) {
-    const base = new URL(kpiUrl).origin + new URL(kpiUrl).pathname.split('/').slice(0, 2).join('/') + '/';
-    h += `<div class="s5-iframe-wrap">
-      <div class="s5-iframe-hdr">
-        <span>📊 KPI ダッシュボード（ライブ）</span>
-        <a href="${kpiUrl}" target="_blank" rel="noopener" class="s5-iframe-open">別タブで開く ↗</a>
+  // ── KPIダッシュボード 開くバナー ──
+  if (kpiBaseUrl) {
+    h += `<a class="s5-kpi-banner" href="${kpiBaseUrl}" target="_blank" rel="noopener">
+      <div class="s5-kpi-banner-icon">📊</div>
+      <div class="s5-kpi-banner-body">
+        <div class="s5-kpi-banner-title">KPI ダッシュボード</div>
+        <div class="s5-kpi-banner-sub">部署別達成率・着地予測・月間ランキングを確認</div>
       </div>
-      <iframe src="${kpiUrl}" class="s5-iframe" title="KPIダッシュボード"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
-    </div>`;
+      <div class="s5-kpi-banner-arrow">↗</div>
+    </a>`;
   }
 
   // ── ポータルカード（URLありのみ表示）──
