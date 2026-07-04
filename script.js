@@ -886,9 +886,35 @@ function renderS5() {
     return;
   }
 
-  let h = '<div class="s5-grid">';
+  // KPI URL（最初の有効URLをiframe元として使用）
+  const kpiUrl = portals
+    .flatMap(u => u.depts.flatMap(d => d.kpis))
+    .find(k => k.url)?.url ?? null;
 
+  let h = '';
+
+  // ── KPIダッシュボード iframe ──
+  if (kpiUrl) {
+    const base = new URL(kpiUrl).origin + new URL(kpiUrl).pathname.split('/').slice(0, 2).join('/') + '/';
+    h += `<div class="s5-iframe-wrap">
+      <div class="s5-iframe-hdr">
+        <span>📊 KPI ダッシュボード（ライブ）</span>
+        <a href="${kpiUrl}" target="_blank" rel="noopener" class="s5-iframe-open">別タブで開く ↗</a>
+      </div>
+      <iframe src="${kpiUrl}" class="s5-iframe" title="KPIダッシュボード"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    </div>`;
+  }
+
+  // ── ポータルカード（URLありのみ表示）──
+  h += '<div class="s5-grid">';
   for (const unit of portals) {
+    const linkedDepts = unit.depts
+      .map(dept => ({ ...dept, kpis: dept.kpis.filter(k => k.url) }))
+      .filter(dept => dept.kpis.length > 0);
+
+    if (linkedDepts.length === 0) continue;
+
     const col = unit.color || '#0090BA';
     h += `<div class="s5-unit-card">
       <div class="s5-unit-hdr" style="background:${col}">
@@ -896,25 +922,17 @@ function renderS5() {
       </div>
       <div class="s5-unit-body">`;
 
-    for (const dept of unit.depts) {
+    for (const dept of linkedDepts) {
       h += `<div class="s5-dept">
         <div class="s5-dept-title">${dept.dept}</div>
         <div class="s5-kpi-list">`;
 
       for (const kpi of dept.kpis) {
-        if (kpi.url) {
-          h += `<a class="s5-kpi-btn has-url" href="${kpi.url}" target="_blank" rel="noopener">
-            <span class="s5-kpi-icon">${kpi.icon || '📊'}</span>
-            <span class="s5-kpi-label">${kpi.theme}</span>
-            <span class="s5-kpi-arrow">↗</span>
-          </a>`;
-        } else {
-          h += `<div class="s5-kpi-btn no-url">
-            <span class="s5-kpi-icon">${kpi.icon || '📊'}</span>
-            <span class="s5-kpi-label">${kpi.theme}</span>
-            <span class="s5-kpi-badge">URL未設定</span>
-          </div>`;
-        }
+        h += `<a class="s5-kpi-btn has-url" href="${kpi.url}" target="_blank" rel="noopener">
+          <span class="s5-kpi-icon">${kpi.icon || '📊'}</span>
+          <span class="s5-kpi-label">${kpi.theme}</span>
+          <span class="s5-kpi-arrow">↗</span>
+        </a>`;
       }
 
       h += '</div></div>';
@@ -922,8 +940,8 @@ function renderS5() {
 
     h += '</div></div>';
   }
-
   h += '</div>';
+
   el.innerHTML = h;
 }
 
