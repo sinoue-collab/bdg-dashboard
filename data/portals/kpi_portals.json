@@ -1,0 +1,129 @@
+{
+  "schema_version": "1.0",
+  "note": "KPIポータル設定。url を null から実際のURLに変更すると新タブリンクが有効になります。",
+  "portals": [
+    {
+      "unit": "グループ全体",
+      "unit_id": "group",
+      "color": "#0090BA",
+      "depts": [
+        {
+          "dept": "グループ共通",
+          "kpis": [
+            { "theme": "月次財務サマリー", "icon": "📊", "url": null },
+            { "theme": "グループ売上推移", "icon": "📈", "url": null },
+            { "theme": "グループ利益構造", "icon": "💹", "url": null },
+            { "theme": "キャッシュフロー", "icon": "💰", "url": null }
+          ]
+        },
+        {
+          "dept": "人事・組織",
+          "kpis": [
+            { "theme": "採用進捗・人員推移", "icon": "👥", "url": null },
+            { "theme": "エンゲージメント", "icon": "❤️", "url": null }
+          ]
+        }
+      ]
+    },
+    {
+      "unit": "BLUE ESTATE",
+      "unit_id": "blue_estate",
+      "color": "#1A3A5C",
+      "depts": [
+        {
+          "dept": "不動産部門",
+          "kpis": [
+            { "theme": "物件成約・仲介件数", "icon": "🏠", "url": null },
+            { "theme": "売上・粗利推移", "icon": "📈", "url": null },
+            { "theme": "顧客単価・リピート率", "icon": "🎯", "url": null },
+            { "theme": "在庫・反響管理", "icon": "📋", "url": null }
+          ]
+        },
+        {
+          "dept": "宿泊部門",
+          "kpis": [
+            { "theme": "稼働率・ADR・RevPAR", "icon": "🛏️", "url": null },
+            { "theme": "OTA別予約状況", "icon": "📅", "url": null },
+            { "theme": "顧客満足度（レビュー）", "icon": "⭐", "url": null }
+          ]
+        }
+      ]
+    },
+    {
+      "unit": "BLUE DESIGN",
+      "unit_id": "blue_design",
+      "color": "#0090BA",
+      "depts": [
+        {
+          "dept": "受注・営業",
+          "kpis": [
+            { "theme": "受注状況・パイプライン", "icon": "🏗️", "url": null },
+            { "theme": "受注率・失注分析", "icon": "📊", "url": null },
+            { "theme": "顧客単価推移", "icon": "💴", "url": null }
+          ]
+        },
+        {
+          "dept": "施工・製造",
+          "kpis": [
+            { "theme": "工程進捗・工期遵守率", "icon": "🔨", "url": null },
+            { "theme": "外注費管理", "icon": "👷", "url": null },
+            { "theme": "原価率・粗利管理", "icon": "💹", "url": null }
+          ]
+        },
+        {
+          "dept": "設計",
+          "kpis": [
+            { "theme": "プロジェクト一覧・稼働", "icon": "📐", "url": null },
+            { "theme": "見積精度・修正率", "icon": "📝", "url": null }
+          ]
+        }
+      ]
+    },
+    {
+      "unit": "BLUE LIFE",
+      "unit_id": "blue_life",
+      "color": "#059669",
+      "depts": [
+        {
+          "dept": "介護・福祉事業",
+          "kpis": [
+            { "theme": "利用者数・稼働率", "icon": "🤝", "url": null },
+            { "theme": "サービス別売上", "icon": "📊", "url": null },
+            { "theme": "加算取得状況", "icon": "✅", "url": null },
+            { "theme": "顧客満足度", "icon": "⭐", "url": null }
+          ]
+        },
+        {
+          "dept": "人材・採用",
+          "kpis": [
+            { "theme": "スタッフ数・離職率", "icon": "👥", "url": null },
+            { "theme": "勤務状況・残業", "icon": "⏰", "url": null },
+            { "theme": "採用コスト・進捗", "icon": "🎯", "url": null }
+          ]
+        }
+      ]
+    },
+    {
+      "unit": "青天堂",
+      "unit_id": "seitendo",
+      "color": "#B45309",
+      "depts": [
+        {
+          "dept": "飲食事業",
+          "kpis": [
+            { "theme": "売上推移・客数", "icon": "🍱", "url": null },
+            { "theme": "客単価・時間帯分析", "icon": "📈", "url": null },
+            { "theme": "廃棄率・原価率", "icon": "💹", "url": null }
+          ]
+        },
+        {
+          "dept": "BDG運営サポート",
+          "kpis": [
+            { "theme": "イベント実績", "icon": "🎉", "url": null },
+            { "theme": "スペース稼働率", "icon": "🏢", "url": null }
+          ]
+        }
+      ]
+    }
+  ]
+}

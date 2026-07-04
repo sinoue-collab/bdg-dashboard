@@ -1,0 +1,183 @@
+{
+  "schema_version": "2.1",
+  "generated_at": "2026-07-05T00:10:15.507042+09:00",
+  "data_periods": {
+    "BLUE ESTATE": "2026-07",
+    "BLUE DESIGN": "2026-07",
+    "BLUE LIFE": "2026-05",
+    "青天堂": "2026-05"
+  },
+  "companies": {
+    "BLUE ESTATE": {
+      "latest_month": "2026-07",
+      "prior_month": "2026-06",
+      "latest": {
+        "revenue": 73250,
+        "gross_profit": 73250,
+        "sga_total": 58613,
+        "op_profit": 14637,
+        "ordinary_profit": 25454
+      },
+      "prior": {
+        "revenue": 27540984,
+        "gross_profit": 10971729,
+        "sga_total": 6622333,
+        "op_profit": 4349396,
+        "ordinary_profit": 8894866
+      },
+      "ytd": {
+        "revenue": 130597646,
+        "gross_profit": 63864848,
+        "sga_total": 80769547,
+        "op_profit": -16904699,
+        "ordinary_profit": 1826971
+      }
+    },
+    "BLUE DESIGN": {
+      "latest_month": "2026-07",
+      "prior_month": "2026-06",
+      "latest": {
+        "revenue": 101400,
+        "gross_profit": 101400,
+        "sga_total": 479387,
+        "op_profit": -377987,
+        "ordinary_profit": -377987
+      },
+      "prior": {
+        "revenue": 1605268,
+        "gross_profit": 1531231,
+        "sga_total": 5742124,
+        "op_profit": -4210893,
+        "ordinary_profit": -4084510
+      },
+      "ytd": {
+        "revenue": 50720004,
+        "gross_profit": 9477370,
+        "sga_total": 23362222,
+        "op_profit": -13884852,
+        "ordinary_profit": -13274432
+      }
+    },
+    "BLUE LIFE": {
+      "latest_month": "2026-05",
+      "prior_month": "2026-04",
+      "latest": {
+        "revenue": 3416406,
+        "gross_profit": 3416406,
+        "sga_total": 5346439,
+        "op_profit": -1930033,
+        "ordinary_profit": -2016793
+      },
+      "prior": {
+        "revenue": 2916377,
+        "gross_profit": 2916377,
+        "sga_total": 4293177,
+        "op_profit": -1376800,
+        "ordinary_profit": -1467917
+      },
+      "ytd": {
+        "revenue": 33269225,
+        "gross_profit": 33269225,
+        "sga_total": 40437419,
+        "op_profit": -7168194,
+        "ordinary_profit": -9662860
+      }
+    },
+    "青天堂": {
+      "latest_month": "2026-05",
+      "prior_month": "2026-04",
+      "latest": {
+        "revenue": 2114580,
+        "gross_profit": 1431028,
+        "sga_total": 1030387,
+        "op_profit": 400641,
+        "ordinary_profit": 411905
+      },
+      "prior": {
+        "revenue": 1821160,
+        "gross_profit": 1190875,
+        "sga_total": 1073737,
+        "op_profit": 117138,
+        "ordinary_profit": 123094
+      },
+      "ytd": {
+        "revenue": 7665405,
+        "gross_profit": 5008717,
+        "sga_total": 4050592,
+        "op_profit": 958125,
+        "ordinary_profit": 986801
+      }
+    }
+  },
+  "history": {
+    "BLUE ESTATE": {
+      "2025年": {
+        "revenue": 457045417,
+        "gross_profit": 176774518,
+        "sga_total": 225918751,
+        "op_profit": -49144233,
+        "ordinary_profit": 3143008
+      },
+      "2024年": {
+        "revenue": 459234646,
+        "gross_profit": 190244145,
+        "sga_total": 207844997,
+        "op_profit": -17600852,
+        "ordinary_profit": 35778821
+      },
+      "2023年": {
+        "revenue": 549470954,
+        "gross_profit": 227405826,
+        "sga_total": 197191837,
+        "op_profit": 30213989,
+        "ordinary_profit": 70428011
+      },
+      "2022年": {
+        "revenue": 491013883,
+        "gross_profit": 181659685,
+        "sga_total": 208556886,
+        "op_profit": -26897201,
+        "ordinary_profit": 37564476
+      }
+    },
+    "BLUE DESIGN": {
+      "2025-2026年度": {
+        "revenue": 434153160,
+        "gross_profit": 108151283,
+        "sga_total": 104146659,
+        "op_profit": 4004624,
+        "ordinary_profit": 568822
+      },
+      "2024-2025年度": {
+        "revenue": 629799871,
+        "gross_profit": 137124383,
+        "sga_total": 126109961,
+        "op_profit": 11014422,
+        "ordinary_profit": 20707062
+      },
+      "2023-2024年度": {
+        "revenue": 677406792,
+        "gross_profit": 136096812,
+        "sga_total": 155594631,
+        "op_profit": -19497819,
+        "ordinary_profit": -14385840
+      },
+      "2022-2023年度": {
+        "revenue": 766660272,
+        "gross_profit": 149335148,
+        "sga_total": 188331126,
+        "op_profit": -38995978,
+        "ordinary_profit": -35028550
+      }
+    },
+    "BLUE LIFE": {
+      "2024-2025年度": {
+        "revenue": 7840635,
+        "gross_profit": 7840635,
+        "sga_total": 22580001,
+        "op_profit": -14739366,
+        "ordinary_profit": -14876329
+      }
+    }
+  }
+}

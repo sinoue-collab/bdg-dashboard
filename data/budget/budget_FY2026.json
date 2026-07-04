@@ -1,0 +1,111 @@
+{
+  "note": "各数値を入力してください（単位：円、未設定はnull）",
+  "target_month": "2026-06",
+  "companies": {
+    "BLUE ESTATE": {
+      "budget_monthly": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "budget_ytd": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "py_monthly": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "py_ytd": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "cash": null,
+      "landing_forecast": {
+        "revenue":   null,
+        "op_profit": null
+      }
+    },
+    "BLUE DESIGN": {
+      "budget_monthly": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "budget_ytd": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "py_monthly": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "py_ytd": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "cash": null,
+      "landing_forecast": {
+        "revenue":   null,
+        "op_profit": null
+      }
+    },
+    "BLUE LIFE": {
+      "budget_monthly": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "budget_ytd": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "py_monthly": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "py_ytd": {
+        "revenue":          null,
+        "gross_profit":     null,
+        "sga_total":        null,
+        "op_profit":        null,
+        "ordinary_profit":  null
+      },
+      "cash": null,
+      "landing_forecast": {
+        "revenue":   null,
+        "op_profit": null
+      }
+    }
+  }
+}

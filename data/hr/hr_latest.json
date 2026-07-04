@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0",
+  "period": "2026-06",
+  "note": "人事データ。headcountはダミー値（実データに差し替えてください）。時間当たり生産性はactuals_latest.jsonと組み合わせてJS側で計算。",
+  "data": {
+    "unit_blue_estate": {
+      "period": "2026-06",
+      "headcount": {
+        "total": 10,
+        "full_time": 7,
+        "part_time": 3,
+        "new_hires_ytd": 1,
+        "departures_ytd": 0
+      },
+      "hours": {
+        "avg_overtime_monthly": 8.5,
+        "total_monthly_hours": 1430
+      },
+      "data_status": "dummy"
+    },
+    "unit_blue_design": {
+      "period": "2026-06",
+      "headcount": {
+        "total": 20,
+        "full_time": 18,
+        "part_time": 2,
+        "new_hires_ytd": 2,
+        "departures_ytd": 1
+      },
+      "hours": {
+        "avg_overtime_monthly": 15.0,
+        "total_monthly_hours": 3220
+      },
+      "data_status": "dummy"
+    },
+    "unit_blue_life": {
+      "period": "2026-06",
+      "headcount": {
+        "total": 12,
+        "full_time": 8,
+        "part_time": 4,
+        "new_hires_ytd": 3,
+        "departures_ytd": 2
+      },
+      "hours": {
+        "avg_overtime_monthly": 5.0,
+        "total_monthly_hours": 1680
+      },
+      "data_status": "dummy"
+    },
+    "unit_seitendo": {
+      "period": "2026-04",
+      "headcount": {
+        "total": 7,
+        "full_time": 2,
+        "part_time": 5,
+        "new_hires_ytd": 1,
+        "departures_ytd": 1
+      },
+      "hours": {
+        "avg_overtime_monthly": 3.0,
+        "total_monthly_hours": 740
+      },
+      "data_status": "dummy"
+    }
+  }
+}

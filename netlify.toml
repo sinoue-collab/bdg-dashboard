@@ -1,0 +1,15 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    X-Frame-Options = "SAMEORIGIN"
+
+[[redirects]]
+  from = "/dashboard"
+  to   = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/recruit"
+  to   = "/recruit.html"
+  status = 200

@@ -1,0 +1,1128 @@
+{
+  "schema_version": "1.1",
+  "generated_at": "2026-07-05T00:10:15.507042+09:00",
+  "note": "各経営単位の最新データ。generate_snapshot.py で生成。",
+  "data": {
+    "unit_blue_estate": {
+      "period": "2026-07",
+      "source_file": "BLUEESTATE 損益計算書 2026 .7.csv",
+      "revenue": {
+        "total": 73250,
+        "breakdown": [
+          {
+            "item": "賃貸仲介料",
+            "depth": 1,
+            "amount": 29500
+          },
+          {
+            "item": "賃貸管理付帯売上",
+            "depth": 1,
+            "amount": 43750
+          }
+        ]
+      },
+      "cogs": {
+        "total": 0,
+        "breakdown": []
+      },
+      "sga": {
+        "total": 58613,
+        "breakdown": [
+          {
+            "item": "採用費",
+            "depth": 2,
+            "amount": 5000
+          },
+          {
+            "item": "販売促進費",
+            "depth": 2,
+            "amount": 2537
+          },
+          {
+            "item": "旅費交通費",
+            "depth": 2,
+            "amount": 26820
+          },
+          {
+            "item": "システム利用料",
+            "depth": 2,
+            "amount": 23455
+          },
+          {
+            "item": "租税公課",
+            "depth": 2,
+            "amount": 44
+          },
+          {
+            "item": "支払手数料",
+            "depth": 2,
+            "amount": 757
+          }
+        ]
+      },
+      "non_op_income": {
+        "total": 120000,
+        "breakdown": [
+          {
+            "item": "自社不動産家賃収入（非課税売上）",
+            "depth": 2,
+            "amount": 120000
+          }
+        ]
+      },
+      "non_op_expense": {
+        "total": 109472,
+        "breakdown": [
+          {
+            "item": "WASH BLUE経費",
+            "depth": 2,
+            "amount": 109472
+          }
+        ]
+      },
+      "_summary": {
+        "gross_profit": 73250,
+        "op_profit": 14637,
+        "ordinary_profit": 25165
+      },
+      "ytd": {
+        "period": "2026-01〜2026-07",
+        "source_file": "BLUEESTATE 損益計算書 2026 .7.csv",
+        "revenue": {
+          "total": 130597646,
+          "breakdown": [
+            {
+              "item": "売買売上",
+              "amount": 63307436
+            },
+            {
+              "item": "売買仲介料",
+              "amount": 10599805
+            },
+            {
+              "item": "売買付帯売上",
+              "amount": 3463923
+            },
+            {
+              "item": "売買付帯手数料",
+              "amount": 141755
+            },
+            {
+              "item": "賃貸仲介料",
+              "amount": 15604021
+            },
+            {
+              "item": "賃貸仲介付帯売上",
+              "amount": 1471001
+            },
+            {
+              "item": "賃貸仲介付帯手数料",
+              "amount": 3375325
+            },
+            {
+              "item": "賃貸管理料",
+              "amount": 12299430
+            },
+            {
+              "item": "賃貸管理付帯売上",
+              "amount": 19582516
+            },
+            {
+              "item": "賃貸管理付帯手数料",
+              "amount": 752434
+            }
+          ]
+        },
+        "cogs": {
+          "total": 66732798,
+          "breakdown": [
+            {
+              "item": "売買売上原価",
+              "amount": 46219764
+            },
+            {
+              "item": "売買付帯売上原価",
+              "amount": 50520
+            },
+            {
+              "item": "賃貸仲介付帯売上原価",
+              "amount": 1023904
+            },
+            {
+              "item": "賃貸管理付帯売上原価",
+              "amount": 11438070
+            },
+            {
+              "item": "土地原価",
+              "amount": 8000540
+            }
+          ]
+        },
+        "sga": {
+          "total": 80769547,
+          "breakdown": [
+            {
+              "item": "給料手当",
+              "amount": 36496992
+            },
+            {
+              "item": "法定福利費",
+              "amount": 5294852
+            },
+            {
+              "item": "福利厚生費",
+              "amount": 1215545
+            },
+            {
+              "item": "外注費",
+              "amount": 3101536
+            },
+            {
+              "item": "広告宣伝費",
+              "amount": 5504267
+            },
+            {
+              "item": "ブランディング費",
+              "amount": 777473
+            },
+            {
+              "item": "販売促進費",
+              "amount": 890641
+            },
+            {
+              "item": "商品開発調査研究費",
+              "amount": 537100
+            },
+            {
+              "item": "研修費",
+              "amount": 399901
+            },
+            {
+              "item": "通信費",
+              "amount": 1874466
+            },
+            {
+              "item": "旅費交通費",
+              "amount": 1167225
+            },
+            {
+              "item": "交際費",
+              "amount": 1694552
+            },
+            {
+              "item": "会議費",
+              "amount": 62951
+            },
+            {
+              "item": "地代家賃",
+              "amount": 176000
+            },
+            {
+              "item": "リース料",
+              "amount": 298700
+            },
+            {
+              "item": "修繕費",
+              "amount": 43000
+            },
+            {
+              "item": "車両費",
+              "amount": 1668822
+            },
+            {
+              "item": "システム利用料",
+              "amount": 5234422
+            },
+            {
+              "item": "消耗品費",
+              "amount": 1274544
+            },
+            {
+              "item": "水道光熱費",
+              "amount": 222020
+            },
+            {
+              "item": "保険料",
+              "amount": 2072005
+            },
+            {
+              "item": "租税公課",
+              "amount": 2010279
+            },
+            {
+              "item": "支払手数料",
+              "amount": 1437638
+            },
+            {
+              "item": "管理諸費",
+              "amount": 3785000
+            },
+            {
+              "item": "雑費",
+              "amount": 58447
+            },
+            {
+              "item": "クレーム対応費",
+              "amount": 72000
+            },
+            {
+              "item": "賞与",
+              "amount": 1700000
+            },
+            {
+              "item": "採用費",
+              "amount": 1388169
+            },
+            {
+              "item": "退職金",
+              "amount": 156000
+            },
+            {
+              "item": "諸会費",
+              "amount": 155000
+            }
+          ]
+        },
+        "non_op_income": {
+          "total": 45147970,
+          "breakdown": [
+            {
+              "item": "自社不動産家賃収入（課税）",
+              "amount": 22962236
+            },
+            {
+              "item": "自社不動産家賃収入（非課税売上）",
+              "amount": 17898780
+            },
+            {
+              "item": "WASH BLUE売上",
+              "amount": 4286954
+            }
+          ]
+        },
+        "non_op_expense": {
+          "total": 32392849,
+          "breakdown": [
+            {
+              "item": "営業外土地使用料",
+              "amount": 5122000
+            },
+            {
+              "item": "補助金経費",
+              "amount": 3322110
+            },
+            {
+              "item": "自社不動産経費（外）",
+              "amount": 840625
+            },
+            {
+              "item": "租税公課（外）",
+              "amount": 1470436
+            },
+            {
+              "item": "WASH BLUE経費",
+              "amount": 1814514
+            },
+            {
+              "item": "BLUE HOTELS 経費",
+              "amount": 1085742
+            },
+            {
+              "item": "BLUE STAYS 経費",
+              "amount": 84045
+            },
+            {
+              "item": "新規事業研究開発費",
+              "amount": 7827544
+            },
+            {
+              "item": "保険料（外）",
+              "amount": 7655348
+            },
+            {
+              "item": "支払利息",
+              "amount": 3170485
+            }
+          ]
+        },
+        "_summary": {
+          "gross_profit": 63864848,
+          "op_profit": -16904699,
+          "ordinary_profit": -4149578
+        }
+      }
+    },
+    "unit_blue_design": {
+      "period": "2026-07",
+      "source_file": "BLUEDESIGN 損益計算書 2026.7.csv",
+      "revenue": {
+        "total": 101400,
+        "breakdown": [
+          {
+            "item": "アフター売上",
+            "depth": 1,
+            "amount": 101400
+          }
+        ]
+      },
+      "cogs": {
+        "total": 0,
+        "breakdown": []
+      },
+      "sga": {
+        "total": 479387,
+        "breakdown": [
+          {
+            "item": "商品開発調査研究費",
+            "depth": 2,
+            "amount": 74198
+          },
+          {
+            "item": "システム利用料",
+            "depth": 2,
+            "amount": 1900
+          },
+          {
+            "item": "旅費交通費",
+            "depth": 2,
+            "amount": 13700
+          },
+          {
+            "item": "減価償却費",
+            "depth": 2,
+            "amount": 389461
+          },
+          {
+            "item": "支払手数料",
+            "depth": 2,
+            "amount": 128
+          }
+        ]
+      },
+      "non_op_income": {
+        "total": 0,
+        "breakdown": []
+      },
+      "non_op_expense": {
+        "total": 0,
+        "breakdown": []
+      },
+      "_summary": {
+        "gross_profit": 101400,
+        "op_profit": -377987,
+        "ordinary_profit": -377987
+      },
+      "ytd": {
+        "period": "2026-04〜2026-07",
+        "source_file": "BLUEDESIGN 損益計算書 2026.7.csv",
+        "revenue": {
+          "total": 50720004,
+          "breakdown": [
+            {
+              "item": "住宅売上",
+              "amount": 29903069
+            },
+            {
+              "item": "商業売上",
+              "amount": 5120652
+            },
+            {
+              "item": "外構売上",
+              "amount": 9916464
+            },
+            {
+              "item": "アフター売上",
+              "amount": 4622546
+            },
+            {
+              "item": "企画売上",
+              "amount": 200000
+            },
+            {
+              "item": "紹介料売上",
+              "amount": 957273
+            }
+          ]
+        },
+        "cogs": {
+          "total": 41242634,
+          "breakdown": [
+            {
+              "item": "当期製品製造原価",
+              "amount": 41242634
+            }
+          ]
+        },
+        "sga": {
+          "total": 23362222,
+          "breakdown": [
+            {
+              "item": "給料手当",
+              "amount": 10665221
+            },
+            {
+              "item": "法定福利費",
+              "amount": 1548144
+            },
+            {
+              "item": "福利厚生費",
+              "amount": 73228
+            },
+            {
+              "item": "外注費",
+              "amount": 1544640
+            },
+            {
+              "item": "広告宣伝費",
+              "amount": 1361919
+            },
+            {
+              "item": "ブランディング費",
+              "amount": 40000
+            },
+            {
+              "item": "販売促進費",
+              "amount": 13972
+            },
+            {
+              "item": "商品開発調査研究費",
+              "amount": 716178
+            },
+            {
+              "item": "研修費",
+              "amount": 23219
+            },
+            {
+              "item": "通信費",
+              "amount": 216483
+            },
+            {
+              "item": "システム利用料",
+              "amount": 338557
+            },
+            {
+              "item": "旅費交通費",
+              "amount": 370738
+            },
+            {
+              "item": "交際費",
+              "amount": 573670
+            },
+            {
+              "item": "会議費",
+              "amount": 11560
+            },
+            {
+              "item": "地代家賃",
+              "amount": 600000
+            },
+            {
+              "item": "リース料",
+              "amount": 297637
+            },
+            {
+              "item": "修繕費",
+              "amount": 35480
+            },
+            {
+              "item": "車両費",
+              "amount": 531411
+            },
+            {
+              "item": "消耗品費",
+              "amount": 118752
+            },
+            {
+              "item": "水道光熱費",
+              "amount": 317820
+            },
+            {
+              "item": "保険料",
+              "amount": 845516
+            },
+            {
+              "item": "租税公課",
+              "amount": 1031338
+            },
+            {
+              "item": "減価償却費",
+              "amount": 1557844
+            },
+            {
+              "item": "支払手数料",
+              "amount": 372778
+            },
+            {
+              "item": "諸会費",
+              "amount": 100800
+            },
+            {
+              "item": "採用費",
+              "amount": 40317
+            },
+            {
+              "item": "寄付金",
+              "amount": 15000
+            }
+          ]
+        },
+        "non_op_income": {
+          "total": 894773,
+          "breakdown": [
+            {
+              "item": "受取利息",
+              "amount": 1888
+            },
+            {
+              "item": "有価証券評価益",
+              "amount": -1585114
+            },
+            {
+              "item": "雑収入",
+              "amount": 2477999
+            }
+          ]
+        },
+        "non_op_expense": {
+          "total": 284353,
+          "breakdown": [
+            {
+              "item": "支払利息",
+              "amount": 284353
+            }
+          ]
+        },
+        "_summary": {
+          "gross_profit": 9477370,
+          "op_profit": -13884852,
+          "ordinary_profit": -13274432
+        }
+      }
+    },
+    "unit_blue_life": {
+      "period": "2026-05",
+      "source_file": "BLUELIFE 損益計算書 2026.7.csv",
+      "revenue": {
+        "total": 3416406,
+        "breakdown": [
+          {
+            "item": "佐賀県国保連",
+            "depth": 2,
+            "amount": 3005080
+          },
+          {
+            "item": "(株)シーエスエス",
+            "depth": 2,
+            "amount": 411326
+          }
+        ]
+      },
+      "cogs": {
+        "total": 0,
+        "breakdown": []
+      },
+      "sga": {
+        "total": 5346439,
+        "breakdown": [
+          {
+            "item": "給料手当",
+            "depth": 2,
+            "amount": 2618860
+          },
+          {
+            "item": "法定福利費",
+            "depth": 2,
+            "amount": 380523
+          },
+          {
+            "item": "福利厚生費",
+            "depth": 2,
+            "amount": 72600
+          },
+          {
+            "item": "広告宣伝費",
+            "depth": 2,
+            "amount": 106700
+          },
+          {
+            "item": "通信費",
+            "depth": 2,
+            "amount": 33808
+          },
+          {
+            "item": "システム利用料",
+            "depth": 2,
+            "amount": 29810
+          },
+          {
+            "item": "地代家賃",
+            "depth": 2,
+            "amount": 6600
+          },
+          {
+            "item": "リース料",
+            "depth": 2,
+            "amount": 84150
+          },
+          {
+            "item": "車両費",
+            "depth": 2,
+            "amount": 136765
+          },
+          {
+            "item": "消耗品費",
+            "depth": 2,
+            "amount": 61478
+          },
+          {
+            "item": "水道光熱費",
+            "depth": 2,
+            "amount": 52926
+          },
+          {
+            "item": "保険料",
+            "depth": 2,
+            "amount": 735730
+          },
+          {
+            "item": "租税公課",
+            "depth": 2,
+            "amount": 226519
+          },
+          {
+            "item": "支払手数料",
+            "depth": 2,
+            "amount": 328370
+          },
+          {
+            "item": "管理諸費",
+            "depth": 2,
+            "amount": 93500
+          },
+          {
+            "item": "雑費",
+            "depth": 2,
+            "amount": 12000
+          },
+          {
+            "item": "新店舗立ち上げ費用",
+            "depth": 2,
+            "amount": 366100
+          }
+        ]
+      },
+      "non_op_income": {
+        "total": 126,
+        "breakdown": [
+          {
+            "item": "受取利息",
+            "depth": 2,
+            "amount": 126
+          }
+        ]
+      },
+      "non_op_expense": {
+        "total": 86886,
+        "breakdown": [
+          {
+            "item": "支払利息",
+            "depth": 2,
+            "amount": 86886
+          }
+        ]
+      },
+      "_summary": {
+        "gross_profit": 3416406,
+        "op_profit": -1930033,
+        "ordinary_profit": -2016793
+      },
+      "ytd": {
+        "period": "2025-06〜2026-05",
+        "source_file": "BLUELIFE 損益計算書 2026.7.csv",
+        "revenue": {
+          "total": 33269225,
+          "breakdown": [
+            {
+              "item": "佐賀県国保連",
+              "amount": 29302245
+            },
+            {
+              "item": "(株)シーエスエス",
+              "amount": 3819260
+            },
+            {
+              "item": "佐賀県長寿社会課",
+              "amount": 117945
+            },
+            {
+              "item": "現金入金売上",
+              "amount": 29775
+            }
+          ]
+        },
+        "cogs": {
+          "total": 0,
+          "breakdown": []
+        },
+        "sga": {
+          "total": 40437419,
+          "breakdown": [
+            {
+              "item": "給料手当",
+              "amount": 20170484
+            },
+            {
+              "item": "法定福利費",
+              "amount": 2952048
+            },
+            {
+              "item": "福利厚生費",
+              "amount": 809561
+            },
+            {
+              "item": "広告宣伝費",
+              "amount": 856900
+            },
+            {
+              "item": "通信費",
+              "amount": 347444
+            },
+            {
+              "item": "システム利用料",
+              "amount": 502252
+            },
+            {
+              "item": "旅費交通費",
+              "amount": 7700
+            },
+            {
+              "item": "会議費",
+              "amount": 5488
+            },
+            {
+              "item": "リース料",
+              "amount": 700088
+            },
+            {
+              "item": "修繕費",
+              "amount": 257000
+            },
+            {
+              "item": "車両費",
+              "amount": 1203179
+            },
+            {
+              "item": "消耗品費",
+              "amount": 931598
+            },
+            {
+              "item": "水道光熱費",
+              "amount": 635965
+            },
+            {
+              "item": "保険料",
+              "amount": 1460420
+            },
+            {
+              "item": "租税公課",
+              "amount": 887435
+            },
+            {
+              "item": "支払手数料",
+              "amount": 3260001
+            },
+            {
+              "item": "管理諸費",
+              "amount": 1371334
+            },
+            {
+              "item": "販売促進費",
+              "amount": 55627
+            },
+            {
+              "item": "外注費",
+              "amount": 773589
+            },
+            {
+              "item": "ブランディング費",
+              "amount": 9900
+            },
+            {
+              "item": "交際費",
+              "amount": 50680
+            },
+            {
+              "item": "採用費",
+              "amount": 400434
+            },
+            {
+              "item": "地代家賃",
+              "amount": 36300
+            },
+            {
+              "item": "雑費",
+              "amount": 19000
+            },
+            {
+              "item": "新店舗立ち上げ費用",
+              "amount": 2732992
+            }
+          ]
+        },
+        "non_op_income": {
+          "total": 13367,
+          "breakdown": [
+            {
+              "item": "受取利息",
+              "amount": 4284
+            },
+            {
+              "item": "雑収入",
+              "amount": 9083
+            }
+          ]
+        },
+        "non_op_expense": {
+          "total": 2508033,
+          "breakdown": [
+            {
+              "item": "支払利息",
+              "amount": 508033
+            },
+            {
+              "item": "補助金活用投資費",
+              "amount": 2000000
+            }
+          ]
+        },
+        "_summary": {
+          "gross_profit": 33269225,
+          "op_profit": -7168194,
+          "ordinary_profit": -9662860
+        }
+      }
+    },
+    "unit_seitendo": {
+      "period": "2026-05",
+      "source_file": "月次推移：損益計算書_オフィス栗原株式会社（期間：2026年02月～2027年01月、表示単位：円） (1)2026618.csv",
+      "revenue": {
+        "total": 2114580,
+        "breakdown": [
+          {
+            "item": "売上値引",
+            "depth": 1,
+            "amount": -23000
+          },
+          {
+            "item": "売上高（飲食店）",
+            "depth": 1,
+            "amount": 2137580
+          }
+        ]
+      },
+      "cogs": {
+        "total": 683552,
+        "breakdown": [
+          {
+            "item": "仕入高",
+            "depth": 4,
+            "amount": 683552
+          }
+        ]
+      },
+      "sga": {
+        "total": 1030387,
+        "breakdown": [
+          {
+            "item": "給料手当",
+            "depth": 2,
+            "amount": 332670
+          },
+          {
+            "item": "雑給",
+            "depth": 2,
+            "amount": 467817
+          },
+          {
+            "item": "旅費交通費",
+            "depth": 2,
+            "amount": 26500
+          },
+          {
+            "item": "水道光熱費",
+            "depth": 2,
+            "amount": 96762
+          },
+          {
+            "item": "通信費",
+            "depth": 2,
+            "amount": 1155
+          },
+          {
+            "item": "地代家賃",
+            "depth": 2,
+            "amount": 25000
+          },
+          {
+            "item": "修繕維持費",
+            "depth": 2,
+            "amount": 3000
+          },
+          {
+            "item": "広告宣伝費",
+            "depth": 2,
+            "amount": 432
+          },
+          {
+            "item": "消耗品費",
+            "depth": 2,
+            "amount": 21220
+          },
+          {
+            "item": "リース料",
+            "depth": 2,
+            "amount": 6752
+          },
+          {
+            "item": "雑費",
+            "depth": 2,
+            "amount": 4990
+          },
+          {
+            "item": "支払手数料",
+            "depth": 2,
+            "amount": 44089
+          }
+        ]
+      },
+      "non_op_income": {
+        "total": 11264,
+        "breakdown": [
+          {
+            "item": "雑収入",
+            "depth": 2,
+            "amount": 11264
+          }
+        ]
+      },
+      "non_op_expense": {
+        "total": 0,
+        "breakdown": []
+      },
+      "_summary": {
+        "gross_profit": 1431028,
+        "op_profit": 400641,
+        "ordinary_profit": 411905
+      },
+      "ytd": {
+        "period": "2026-02〜2026-05",
+        "source_file": "月次推移：損益計算書_オフィス栗原株式会社（期間：2026年02月～2027年01月、表示単位：円） (1)2026618.csv",
+        "revenue": {
+          "total": 7665405,
+          "breakdown": [
+            {
+              "item": "売上値引",
+              "amount": -69000
+            },
+            {
+              "item": "売上高（飲食店）",
+              "amount": 7734405
+            }
+          ]
+        },
+        "cogs": {
+          "total": 2656688,
+          "breakdown": [
+            {
+              "item": "仕入高",
+              "amount": 2656688
+            }
+          ]
+        },
+        "sga": {
+          "total": 4050592,
+          "breakdown": [
+            {
+              "item": "給料手当",
+              "amount": 1342975
+            },
+            {
+              "item": "雑給",
+              "amount": 1854115
+            },
+            {
+              "item": "旅費交通費",
+              "amount": 106000
+            },
+            {
+              "item": "水道光熱費",
+              "amount": 261544
+            },
+            {
+              "item": "地代家賃",
+              "amount": 100000
+            },
+            {
+              "item": "消耗品費",
+              "amount": 126405
+            },
+            {
+              "item": "リース料",
+              "amount": 27177
+            },
+            {
+              "item": "システム利用料",
+              "amount": 9900
+            },
+            {
+              "item": "雑費",
+              "amount": 10365
+            },
+            {
+              "item": "支払手数料",
+              "amount": 188634
+            },
+            {
+              "item": "福利厚生費",
+              "amount": 9335
+            },
+            {
+              "item": "通信費",
+              "amount": 2310
+            },
+            {
+              "item": "外注費",
+              "amount": 8400
+            },
+            {
+              "item": "修繕維持費",
+              "amount": 3000
+            },
+            {
+              "item": "広告宣伝費",
+              "amount": 432
+            }
+          ]
+        },
+        "non_op_income": {
+          "total": 28676,
+          "breakdown": [
+            {
+              "item": "雑収入",
+              "amount": 28676
+            }
+          ]
+        },
+        "non_op_expense": {
+          "total": 0,
+          "breakdown": []
+        },
+        "_summary": {
+          "gross_profit": 5008717,
+          "op_profit": 958125,
+          "ordinary_profit": 986801
+        }
+      }
+    }
+  }
+}
