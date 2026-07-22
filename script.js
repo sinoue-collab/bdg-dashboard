@@ -14,6 +14,13 @@ const HR_FILE       = 'data/hr/hr_latest.json';
 const COMPANIES     = ['BLUE ESTATE', 'BLUE DESIGN', 'BLUE LIFE'];
 const ALL_COMPANIES = [...COMPANIES, '青天堂'];
 
+const SUGOI_TARGETS = {
+  OP_PROFIT_ANNUAL:     150_000_000,
+  VA_PER_PERSON_ANNUAL:  25_000_000,
+  VA_PER_HOUR:           10_000,
+  PERIOD_END: '2026-12-31',
+};
+
 const CO_COLOR = {
   'BLUE ESTATE': '#1A3A5C',
   'BLUE DESIGN': '#0090BA',
@@ -1023,6 +1030,112 @@ function s6CalcGroup() {
   };
 }
 
+function s6CalcSugoi() {
+  // 前月（prior）データで計算。なければ当月（latest）
+  const coKeys = ['BLUE ESTATE', 'BLUE DESIGN', 'BLUE LIFE', '青天堂'];
+  const unitIds = ['unit_blue_estate', 'unit_blue_design', 'unit_blue_life', 'unit_seitendo'];
+
+  let totalGP = 0, totalOP = 0, totalHead = 0, totalHours = 0;
+  let hasData = false;
+
+  const companies = state.current?.companies ?? {};
+  for (let i = 0; i < coKeys.length; i++) {
+    const coName = coKeys[i];
+    const uid    = unitIds[i];
+    const co     = companies[coName];
+    const hr     = state.hr?.[uid];
+
+    const pl = co?.prior ?? co?.latest ?? null;
+    if (pl) {
+      totalGP += pl.gross_profit ?? 0;
+      totalOP += pl.op_profit    ?? 0;
+      hasData  = true;
+    }
+    if (hr) {
+      totalHead  += hr.headcount.total || 0;
+      totalHours += hr.hours.total_monthly_hours || 0;
+    }
+  }
+
+  if (!hasData) return null;
+
+  const annualOP       = totalOP * 12;
+  const vaPerPerson    = totalHead  > 0 ? totalGP * 12 / totalHead  : null;
+  const vaPerHour      = totalHours > 0 ? totalGP      / totalHours : null;
+
+  const pctClamp = (val, tgt) => tgt <= 0 ? 0 : Math.max(0, Math.min(100, val / tgt * 100));
+
+  return {
+    annualOP,
+    vaPerPerson,
+    vaPerHour,
+    pctOP:       pctClamp(annualOP,    SUGOI_TARGETS.OP_PROFIT_ANNUAL),
+    pctPerson:   vaPerPerson !== null ? pctClamp(vaPerPerson, SUGOI_TARGETS.VA_PER_PERSON_ANNUAL) : 0,
+    pctHour:     vaPerHour   !== null ? pctClamp(vaPerHour,   SUGOI_TARGETS.VA_PER_HOUR)          : 0,
+  };
+}
+
+function renderSugoiPanel(sg) {
+  if (!sg) return '';
+  const fmtOku = (n) => {
+    if (n === null || n === undefined) return '—';
+    const sign = n < 0 ? '−' : '';
+    return `${sign}${(Math.abs(n) / 100_000_000).toFixed(2)}億円`;
+  };
+  const fmtMan = (n) => {
+    if (n === null || n === undefined) return '—';
+    const sign = n < 0 ? '−' : '';
+    return `${sign}${Math.round(Math.abs(n) / 10_000).toLocaleString()}万円`;
+  };
+  const fmtYen = (n) => {
+    if (n === null || n === undefined) return '—';
+    return `${Math.round(n).toLocaleString()}円/h`;
+  };
+  const bar = (pct, color) =>
+    `<div class="sg-bar-bg"><div class="sg-bar-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>`;
+
+  const kpis = [
+    {
+      label:  '営業利益（年換算ペース）',
+      actual: fmtOku(sg.annualOP),
+      target: `目標 ${fmtOku(SUGOI_TARGETS.OP_PROFIT_ANNUAL)}`,
+      pct:    sg.pctOP,
+      color:  sg.annualOP >= 0 ? '#059669' : '#dc2626',
+    },
+    {
+      label:  '1人あたり年間付加価値（粗利）',
+      actual: fmtMan(sg.vaPerPerson),
+      target: `目標 ${fmtMan(SUGOI_TARGETS.VA_PER_PERSON_ANNUAL)}`,
+      pct:    sg.pctPerson,
+      color:  '#0090BA',
+    },
+    {
+      label:  '1時間あたり付加価値（粗利）',
+      actual: fmtYen(sg.vaPerHour),
+      target: `目標 ${SUGOI_TARGETS.VA_PER_HOUR.toLocaleString()}円/h`,
+      pct:    sg.pctHour,
+      color:  '#B45309',
+    },
+  ];
+
+  let h = '<div class="sg-panel">';
+  h += '<div class="sg-panel-title">すごい会議 経営目標 — 2026年12月末</div>';
+  h += '<div class="sg-kpi-grid">';
+  for (const k of kpis) {
+    h += `<div class="sg-kpi-card">
+      <div class="sg-kpi-label">${k.label}</div>
+      <div class="sg-kpi-actual">${k.actual}</div>
+      <div class="sg-kpi-target">${k.target}</div>
+      ${bar(k.pct, k.color)}
+      <div class="sg-kpi-pct">${k.pct.toFixed(1)}%</div>
+    </div>`;
+  }
+  h += '</div>';
+  h += '<div class="sg-note">前月実績をベースに算出。付加価値＝粗利（控除法）で代替。</div>';
+  h += '</div>';
+  return h;
+}
+
 function fmtManYen(n) {
   if (n === null || n === undefined) return '—';
   return Math.round(n / 10000).toLocaleString() + '万円';
@@ -1040,7 +1153,10 @@ function renderS6() {
   const grp   = s6CalcGroup();
   const units = S6_UNITS.map(u => ({ ...u, calc: s6CalcUnit(u.id) }));
 
-  // ── ① グループ全体サマリー ──
+  // ── ① すごい会議 経営目標 ──
+  let h = renderSugoiPanel(s6CalcSugoi());
+
+  // ── ② グループ全体サマリー ──
   const heroCards = [
     { label: '総社員数',       value: grp ? `${grp.total}名`                 : '—', sub: `正社員 ${grp?.full_time ?? '—'}名 / パート ${grp?.part_time ?? '—'}名` },
     { label: '採用数（当期累計）', value: grp ? `${grp.new_hires_ytd}名`      : '—', sub: `離職 ${grp?.departures_ytd ?? '—'}名` },
@@ -1048,7 +1164,7 @@ function renderS6() {
     { label: '1人当たり粗利（月）', value: grp ? fmtManYen(grp.gp_per_head) : '—', sub: `時間当たり ${grp?.gp_per_hour?.toLocaleString() ?? '—'}円/h` },
   ];
 
-  let h = '<div class="s6-section-title">グループ全体サマリー</div>';
+  h += '<div class="s6-section-title">グループ全体サマリー</div>';
   h += '<div class="s6-hero-grid">';
   for (const c of heroCards) {
     h += `<div class="s6-hero-card">
