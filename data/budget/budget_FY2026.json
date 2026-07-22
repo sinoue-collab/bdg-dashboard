@@ -1,6 +1,6 @@
 {
   "note": "各数値を入力してください（単位：円、未設定はnull）",
-  "target_month": "2026-06",
+  "target_month": "2026-07",
   "companies": {
     "BLUE ESTATE": {
       "budget_monthly": {
@@ -73,19 +73,48 @@
       }
     },
     "BLUE LIFE": {
+      "note": "CW唐津（修正版）+ CW唐津南（修正版）2拠点合算。2026.6.29修正版Excelより。粗利=売上高（介護サービスのため原価なし）。",
+      "fy_start": "2026-06",
+      "monthly_plan": {
+        "2026-06": { "revenue": 4343400,  "gross_profit": 4343400,  "sga_total": 3826600, "op_profit":  516800,  "ordinary_profit":  516800  },
+        "2026-07": { "revenue": 4963446,  "gross_profit": 4963446,  "sga_total": 3626600, "op_profit": 1336846,  "ordinary_profit": 1336846  },
+        "2026-08": { "revenue": 4974732,  "gross_profit": 4974732,  "sga_total": 3955600, "op_profit": 1019132,  "ordinary_profit": 1019132  },
+        "2026-09": { "revenue": 5675604,  "gross_profit": 5675604,  "sga_total": 3955600, "op_profit": 1720004,  "ordinary_profit": 1720004  },
+        "2026-10": { "revenue": 6139584,  "gross_profit": 6139584,  "sga_total": 3955600, "op_profit": 2183984,  "ordinary_profit": 2183984  },
+        "2026-11": { "revenue": 6303402,  "gross_profit": 6303402,  "sga_total": 3955600, "op_profit": 2347802,  "ordinary_profit": 2347802  },
+        "2026-12": { "revenue": 7067544,  "gross_profit": 7067544,  "sga_total": 4284600, "op_profit": 2782944,  "ordinary_profit": 2782944  },
+        "2027-01": { "revenue": 7419804,  "gross_profit": 7419804,  "sga_total": 4633600, "op_profit": 2786204,  "ordinary_profit": 2786204  },
+        "2027-02": { "revenue": 7268640,  "gross_profit": 7268640,  "sga_total": 4633600, "op_profit": 2635040,  "ordinary_profit": 2635040  },
+        "2027-03": { "revenue": 8665710,  "gross_profit": 8665710,  "sga_total": 4633600, "op_profit": 4032110,  "ordinary_profit": 4032110  },
+        "2027-04": { "revenue": 8539740,  "gross_profit": 8539740,  "sga_total": 4633600, "op_profit": 3906140,  "ordinary_profit": 3906140  },
+        "2027-05": { "revenue": 8390970,  "gross_profit": 8390970,  "sga_total": 4633600, "op_profit": 3757370,  "ordinary_profit": 3757370  }
+      },
+      "annual_one_time_costs": {
+        "note": "月次経費に含まれない年間一括計上費用（2拠点合計）",
+        "total": 2230000,
+        "items": {
+          "採用費": 800000,
+          "販売促進費": 100000,
+          "旅費交通費": 20000,
+          "交際費": 100000,
+          "会議費": 10000,
+          "修理費": 400000,
+          "租税公課": 800000
+        }
+      },
       "budget_monthly": {
-        "revenue":          null,
-        "gross_profit":     null,
-        "sga_total":        null,
-        "op_profit":        null,
-        "ordinary_profit":  null
+        "revenue":          4963446,
+        "gross_profit":     4963446,
+        "sga_total":        3626600,
+        "op_profit":        1336846,
+        "ordinary_profit":  1336846
       },
       "budget_ytd": {
-        "revenue":          null,
-        "gross_profit":     null,
-        "sga_total":        null,
-        "op_profit":        null,
-        "ordinary_profit":  null
+        "revenue":          9306846,
+        "gross_profit":     9306846,
+        "sga_total":        7453200,
+        "op_profit":        1853646,
+        "ordinary_profit":  1853646
       },
       "py_monthly": {
         "revenue":          null,
@@ -103,8 +132,8 @@
       },
       "cash": null,
       "landing_forecast": {
-        "revenue":   null,
-        "op_profit": null
+        "revenue":   79752576,
+        "op_profit": 29024376
       }
     }
   }
