@@ -1,10 +1,11 @@
 {
   "schema_version": "2.1",
-  "generated_at": "2026-07-22T20:29:23.509643+09:00",
+  "generated_at": "2026-07-22T20:54:47.314410+09:00",
   "data_periods": {
     "BLUE ESTATE": "2026-07",
     "BLUE DESIGN": "2026-07",
-    "BLUE LIFE": "2026-07"
+    "BLUE LIFE": "2026-07",
+    "青天堂": "2026-06"
   },
   "companies": {
     "BLUE ESTATE": {
@@ -83,28 +84,28 @@
       }
     },
     "青天堂": {
-      "latest_month": "2026-05",
-      "prior_month": "2026-04",
+      "latest_month": "2026-06",
+      "prior_month": "2026-05",
       "latest": {
-        "revenue": 2114580,
-        "gross_profit": 1431028,
-        "sga_total": 1030387,
-        "op_profit": 400641,
-        "ordinary_profit": 411905
+        "revenue": 1820865,
+        "gross_profit": 1134270,
+        "sga_total": 1063649,
+        "op_profit": 70621,
+        "ordinary_profit": 76547
       },
       "prior": {
-        "revenue": 1821160,
-        "gross_profit": 1190875,
-        "sga_total": 1073737,
-        "op_profit": 117138,
-        "ordinary_profit": 123094
+        "revenue": 2123780,
+        "gross_profit": 1347838,
+        "sga_total": 1056152,
+        "op_profit": 291686,
+        "ordinary_profit": 302950
       },
       "ytd": {
-        "revenue": 7665405,
-        "gross_profit": 5008717,
-        "sga_total": 4050592,
-        "op_profit": 958125,
-        "ordinary_profit": 986801
+        "revenue": 9495470,
+        "gross_profit": 6063328,
+        "sga_total": 5143537,
+        "op_profit": 919791,
+        "ordinary_profit": 954393
       }
     }
   },
