@@ -38,38 +38,55 @@
       }
     },
     "BLUE DESIGN": {
+      "note": "R8年度（令和8年度）全社予算書より。FY2026/04-2027/03。売上高・販管費はスプレッドシート確定値。粗利は各カテゴリの目標工事粗利率から推計（スプレッドシートのCOGS欄は#VALUE!エラー）。月次は年間/12の均等配分。",
+      "fy_start": "2026-04",
+      "annual_budget": {
+        "revenue":         818000000,
+        "gross_profit":    250500000,
+        "sga_total":       127959000,
+        "op_profit":       122541000,
+        "ordinary_profit": 123799000,
+        "gp_rate_note": "粗利率30.6%（カテゴリ別: 住宅新築30%、商業新築30%、自社企画商業70%、外構30%、オーナーメンテ35%、紹介料100%）"
+      },
+      "py_annual": {
+        "revenue":         604000000,
+        "gross_profit":    161750000,
+        "sga_total":        84755000,
+        "op_profit":        76995000,
+        "ordinary_profit":  78253000
+      },
       "budget_monthly": {
-        "revenue":          null,
-        "gross_profit":     null,
-        "sga_total":        null,
-        "op_profit":        null,
-        "ordinary_profit":  null
+        "revenue":          68167000,
+        "gross_profit":     20875000,
+        "sga_total":        10663000,
+        "op_profit":        10212000,
+        "ordinary_profit":  10317000
       },
       "budget_ytd": {
-        "revenue":          null,
-        "gross_profit":     null,
-        "sga_total":        null,
-        "op_profit":        null,
-        "ordinary_profit":  null
+        "revenue":         272667000,
+        "gross_profit":     83500000,
+        "sga_total":        42653000,
+        "op_profit":        40847000,
+        "ordinary_profit":  41267000
       },
       "py_monthly": {
-        "revenue":          null,
-        "gross_profit":     null,
-        "sga_total":        null,
-        "op_profit":        null,
-        "ordinary_profit":  null
+        "revenue":          50333000,
+        "gross_profit":     13479000,
+        "sga_total":         7063000,
+        "op_profit":         6416000,
+        "ordinary_profit":   6521000
       },
       "py_ytd": {
-        "revenue":          null,
-        "gross_profit":     null,
-        "sga_total":        null,
-        "op_profit":        null,
-        "ordinary_profit":  null
+        "revenue":         201333000,
+        "gross_profit":     53917000,
+        "sga_total":        28252000,
+        "op_profit":        25665000,
+        "ordinary_profit":  26084000
       },
       "cash": null,
       "landing_forecast": {
-        "revenue":   null,
-        "op_profit": null
+        "revenue":   818000000,
+        "op_profit": 122541000
       }
     },
     "BLUE LIFE": {
