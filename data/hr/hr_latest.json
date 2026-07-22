@@ -1,67 +1,82 @@
 {
-  "schema_version": "1.0",
-  "period": "2026-06",
-  "note": "人事データ。headcountはダミー値（実データに差し替えてください）。時間当たり生産性はactuals_latest.jsonと組み合わせてJS側で計算。",
+  "schema_version": "1.1",
+  "period": "2026-07",
+  "generated_at": "2026-07-22T21:00:00+09:00",
+  "source": "Google Sheets 従業員一覧（MCP取得 2026-07-22）",
+  "sheet_id": "1eQfPRMnkTNR1__TiynsVgsYh0Ho35Guus8IY2ntL3Mg",
+  "note": "人数・管理職・勤続は実績値。稼働時間は正社員160h/月・パート80h/月の推定値。",
   "data": {
     "unit_blue_estate": {
-      "period": "2026-06",
+      "period": "2026-07",
+      "headcount": {
+        "total": 21,
+        "full_time": 17,
+        "part_time": 4,
+        "managers": 5,
+        "new_hires_ytd": 6,
+        "departures_ytd": 0,
+        "avg_tenure_years": 3.9,
+        "avg_age": 35.5
+      },
+      "hours": {
+        "avg_overtime_monthly": null,
+        "total_monthly_hours": 3040
+      },
+      "data_status": "actual"
+    },
+    "unit_blue_design": {
+      "period": "2026-07",
       "headcount": {
         "total": 10,
         "full_time": 7,
-        "part_time": 3,
+        "part_time": 1,
+        "managers": 1,
         "new_hires_ytd": 1,
-        "departures_ytd": 0
+        "departures_ytd": 2,
+        "avg_tenure_years": 8.8,
+        "avg_age": 42.5
       },
       "hours": {
-        "avg_overtime_monthly": 8.5,
-        "total_monthly_hours": 1430
+        "avg_overtime_monthly": null,
+        "total_monthly_hours": 1600
       },
-      "data_status": "dummy"
-    },
-    "unit_blue_design": {
-      "period": "2026-06",
-      "headcount": {
-        "total": 20,
-        "full_time": 18,
-        "part_time": 2,
-        "new_hires_ytd": 2,
-        "departures_ytd": 1
-      },
-      "hours": {
-        "avg_overtime_monthly": 15.0,
-        "total_monthly_hours": 3220
-      },
-      "data_status": "dummy"
+      "data_status": "actual"
     },
     "unit_blue_life": {
-      "period": "2026-06",
+      "period": "2026-07",
       "headcount": {
-        "total": 12,
-        "full_time": 8,
-        "part_time": 4,
-        "new_hires_ytd": 3,
-        "departures_ytd": 2
+        "total": 8,
+        "full_time": 7,
+        "part_time": 1,
+        "managers": 1,
+        "new_hires_ytd": 4,
+        "departures_ytd": 0,
+        "avg_tenure_years": 1.5,
+        "avg_age": 36.1
       },
       "hours": {
-        "avg_overtime_monthly": 5.0,
-        "total_monthly_hours": 1680
+        "avg_overtime_monthly": null,
+        "total_monthly_hours": 1200
       },
-      "data_status": "dummy"
+      "data_status": "actual"
     },
     "unit_seitendo": {
-      "period": "2026-04",
+      "period": "2026-07",
       "headcount": {
-        "total": 7,
-        "full_time": 2,
+        "total": 6,
+        "full_time": 1,
         "part_time": 5,
-        "new_hires_ytd": 1,
-        "departures_ytd": 1
+        "managers": 0,
+        "new_hires_ytd": 0,
+        "departures_ytd": 0,
+        "avg_tenure_years": 2.5,
+        "avg_age": 28.3
       },
       "hours": {
-        "avg_overtime_monthly": 3.0,
-        "total_monthly_hours": 740
+        "avg_overtime_monthly": null,
+        "total_monthly_hours": 560
       },
-      "data_status": "dummy"
+      "data_status": "actual"
     }
   }
 }
