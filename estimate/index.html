@@ -24,22 +24,18 @@
 
     <section class="card">
       <h2 class="card-title">① 物件情報</h2>
-      <div class="hint" style="margin-bottom:12px;">ITANDI BB（募集中）または賃貸革命（契約後）の画面を見ながら、最新の情報を入力してください。物件ページのURLかPDFがあれば、賃料・管理費・敷金礼金・住所を自動入力できます（無料・AI不使用）。</div>
+      <div class="hint" style="margin-bottom:12px;">ITANDI BB（募集中）または賃貸革命（契約後）の画面を見ながら、最新の情報を入力してください。物件資料のPDF、またはページ全体をコピーして貼り付ければ、賃料・管理費・敷金礼金・住所を自動入力できます（無料・AI不使用）。</div>
 
       <div class="autofill-box">
         <div class="autofill-tabs">
-          <button type="button" class="autofill-tab active" data-tab="url">URLから読み込む</button>
-          <button type="button" class="autofill-tab" data-tab="pdf">PDFから読み込む</button>
-          <button type="button" class="autofill-tab" data-tab="text">テキストを貼り付け</button>
+          <button type="button" class="autofill-tab active" data-tab="pdf">PDFから読み込む</button>
+          <button type="button" class="autofill-tab" data-tab="text">ページのコピーを貼り付け</button>
         </div>
-        <div class="autofill-pane" data-pane="url">
-          <input type="text" id="autofillUrl" placeholder="https://... 物件ページのURL">
-        </div>
-        <div class="autofill-pane" data-pane="pdf" hidden>
+        <div class="autofill-pane" data-pane="pdf">
           <input type="file" id="autofillPdf" accept="application/pdf">
         </div>
         <div class="autofill-pane" data-pane="text" hidden>
-          <textarea id="autofillText" rows="4" placeholder="マイソク等のテキストをそのまま貼り付けてください"></textarea>
+          <textarea id="autofillText" rows="4" placeholder="物件ページを開いて全選択（Ctrl+A / Cmd+A）→コピーし、ここに貼り付けてください"></textarea>
         </div>
         <button type="button" class="btn-add" id="autofill-run">✨ 自動読み込み（賃料・管理費・敷金礼金・住所）</button>
         <div id="autofill-status" class="hint" style="margin-top:8px;"></div>
@@ -52,47 +48,47 @@
       <div class="field-grid">
         <div class="field">
           <label for="propertyName">物件名</label>
-          <input type="text" id="propertyName" placeholder="サンライズ渋谷" required>
+          <input type="text" id="propertyName" placeholder="例：サンライズ渋谷（自動入力されません・手入力）" required>
         </div>
         <div class="field">
           <label for="roomNo">部屋番号</label>
-          <input type="text" id="roomNo" placeholder="302" required>
+          <input type="text" id="roomNo" placeholder="例：302" required>
         </div>
         <div class="field" style="grid-column: 1 / -1;">
           <label for="address">住所</label>
-          <input type="text" id="address" placeholder="東京都渋谷区〇〇1-2-3">
+          <input type="text" id="address" placeholder="例：東京都渋谷区〇〇1-2-3">
         </div>
         <div class="field">
           <label for="rent">賃料（円）</label>
-          <input type="number" id="rent" placeholder="120000" required>
+          <input type="number" id="rent" placeholder="例：120000" required>
         </div>
         <div class="field">
           <label for="kyoueki">共益費・管理費（円）</label>
-          <input type="number" id="kyoueki" placeholder="8000">
+          <input type="number" id="kyoueki" placeholder="例：8000">
         </div>
         <div class="field">
           <label for="shikikinMonths">敷金（ヶ月）</label>
-          <input type="number" id="shikikinMonths" step="0.5" placeholder="1">
+          <input type="number" id="shikikinMonths" step="0.5" placeholder="例：1">
         </div>
         <div class="field">
           <label for="reikinMonths">礼金（ヶ月）</label>
-          <input type="number" id="reikinMonths" step="0.5" placeholder="1">
+          <input type="number" id="reikinMonths" step="0.5" placeholder="例：1">
         </div>
         <div class="field">
           <label for="hoshouGaisha">保証会社名</label>
-          <input type="text" id="hoshouGaisha" placeholder="日本セーフティー">
+          <input type="text" id="hoshouGaisha" placeholder="例：日本セーフティー（自動入力されません・手入力）">
         </div>
         <div class="field">
           <label for="hoshouRate">初回保証料率（%）</label>
-          <input type="number" id="hoshouRate" step="1" placeholder="50">
+          <input type="number" id="hoshouRate" step="1" placeholder="例：50">
         </div>
         <div class="field" style="grid-column: 1 / -1;">
           <label for="hoshouNote">保証料 備考（保証内容など）</label>
-          <input type="text" id="hoshouNote" placeholder="初回保証料：総賃料の50%（賃料+共益費）">
+          <input type="text" id="hoshouNote" placeholder="例：初回保証料：総賃料の50%（賃料+共益費）">
         </div>
         <div class="field">
           <label for="kagiKoukan">鍵交換費用（円）</label>
-          <input type="number" id="kagiKoukan" placeholder="22000">
+          <input type="number" id="kagiKoukan" placeholder="例：22000">
         </div>
       </div>
     </section>

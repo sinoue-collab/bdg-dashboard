@@ -42,7 +42,12 @@
     };
   }
 
-  // ---- 物件情報の自動読み込み（URL / PDF / 貼り付けテキスト） ----
+  // ---- 物件情報の自動読み込み（PDF / 貼り付けテキスト） ----
+  // このツールはGitHub Pages（サーバー機能を持たない静的ホスティング）で
+  // 公開されているため、外部サイトのURLをブラウザから直接取得することは
+  // ブラウザの制約（CORS）上できない。そのため「URLを入力すると自動取得」
+  // という機能は成立せず、PDFアップロードとテキスト貼り付けの2方式のみに
+  // している（どちらもブラウザ内で完結し、サーバーを必要としない）。
   // AIは使わず、正規表現による抽出のみ（費用ゼロ）。
   // 賃料・管理費・敷金礼金・住所のみ自動入力し、保証会社・その他経費は
   // 「参考テキスト」として表示するだけに留め、担当者が③④へ手動で追加する。
@@ -114,18 +119,7 @@
 
     try {
       let text;
-      if (activeTab === "url") {
-        const url = document.getElementById("autofillUrl").value.trim();
-        if (!url) throw new Error("URLを入力してください。");
-        const resp = await fetch("/.netlify/functions/parse-property", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
-        });
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || "URLの読み込みに失敗しました。");
-        text = data.text;
-      } else if (activeTab === "pdf") {
+      if (activeTab === "pdf") {
         const fileInput = document.getElementById("autofillPdf");
         const file = fileInput.files[0];
         if (!file) throw new Error("PDFファイルを選択してください。");
