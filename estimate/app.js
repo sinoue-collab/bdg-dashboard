@@ -177,6 +177,140 @@
       .filter((mi) => mi.name && mi.amount);
   }
 
+  // ---- 作成履歴（このパソコンのブラウザ内のみ・localStorage・最大20件） ----
+  // サーバーやDBを持たない静的サイトのため、チーム共有の履歴は持てない。
+  // 「直近作ったものを呼び戻して微調整したい」というニーズに絞った軽量版。
+  const HISTORY_KEY = "bdgEstimateHistory_v1";
+  const HISTORY_MAX = 20;
+
+  function getHistory() {
+    try {
+      return JSON.parse(window.localStorage.getItem(HISTORY_KEY) || "[]");
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function setHistory(list) {
+    try {
+      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, HISTORY_MAX)));
+    } catch (_) {
+      /* localStorageが使えない環境でも本体機能は動かす */
+    }
+  }
+
+  function formatHistoryDate(iso) {
+    const d = new Date(iso);
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+
+  function buildFormSnapshot(caseId, total) {
+    return {
+      caseId,
+      total,
+      savedAt: new Date().toISOString(),
+      fields: {
+        propertyName: document.getElementById("propertyName").value,
+        roomNo: document.getElementById("roomNo").value,
+        address: document.getElementById("address").value,
+        rent: document.getElementById("rent").value,
+        kyoueki: document.getElementById("kyoueki").value,
+        shikikinMonths: document.getElementById("shikikinMonths").value,
+        reikinMonths: document.getElementById("reikinMonths").value,
+        hoshouGaisha: document.getElementById("hoshouGaisha").value,
+        hoshouRate: document.getElementById("hoshouRate").value,
+        hoshouNote: document.getElementById("hoshouNote").value,
+        kagiKoukan: document.getElementById("kagiKoukan").value,
+        customerName: document.getElementById("customerName").value,
+        staffName: document.getElementById("staffName").value,
+        moveinDate: document.getElementById("moveinDate").value,
+        zenyachinUntil: document.getElementById("zenyachinUntil").value,
+        prorationMethod: document.getElementById("prorationMethod").value,
+        chukaiOverride: document.getElementById("chukaiOverride").value,
+        biko: document.getElementById("biko").value,
+        lineItems: collectLineItems(),
+        monthlyItems: collectMonthlyItems(),
+      },
+    };
+  }
+
+  function applyFormSnapshot(snapshot) {
+    const f = snapshot.fields;
+    document.getElementById("propertyName").value = f.propertyName || "";
+    document.getElementById("roomNo").value = f.roomNo || "";
+    document.getElementById("address").value = f.address || "";
+    document.getElementById("rent").value = f.rent || "";
+    document.getElementById("kyoueki").value = f.kyoueki || "";
+    document.getElementById("shikikinMonths").value = f.shikikinMonths || "";
+    document.getElementById("reikinMonths").value = f.reikinMonths || "";
+    document.getElementById("hoshouGaisha").value = f.hoshouGaisha || "";
+    document.getElementById("hoshouRate").value = f.hoshouRate || "";
+    document.getElementById("hoshouNote").value = f.hoshouNote || "";
+    document.getElementById("kagiKoukan").value = f.kagiKoukan || "";
+    document.getElementById("customerName").value = f.customerName || "";
+    document.getElementById("staffName").value = f.staffName || "";
+    document.getElementById("moveinDate").value = f.moveinDate || "";
+    document.getElementById("zenyachinUntil").value = f.zenyachinUntil || "";
+    document.getElementById("prorationMethod").value = f.prorationMethod || "fixed30";
+    document.getElementById("chukaiOverride").value = f.chukaiOverride || "";
+    document.getElementById("biko").value = f.biko || "";
+
+    lineItemsContainer.innerHTML = "";
+    for (const li of f.lineItems || []) {
+      document.getElementById("add-line-item").click();
+      const row = lineItemsContainer.querySelector(".dyn-row:last-child");
+      row.querySelector(".li-category").value = li.category || "諸費用";
+      row.querySelector(".li-name").value = li.name || "";
+      row.querySelector(".li-amount").value = li.amount || "";
+      row.querySelector(".li-note").value = li.note || "";
+    }
+    monthlyItemsContainer.innerHTML = "";
+    for (const mi of f.monthlyItems || []) {
+      document.getElementById("add-monthly-item").click();
+      const row = monthlyItemsContainer.querySelector(".dyn-row:last-child");
+      row.querySelector(".mi-name").value = mi.name || "";
+      row.querySelector(".mi-amount").value = mi.amount || "";
+      row.querySelector(".mi-note").value = mi.note || "";
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    showResult("success", `<div class="result-row">📜 履歴（${snapshot.caseId}）を呼び出しました。内容を確認・修正のうえ、再度作成してください。</div>`);
+  }
+
+  function renderHistoryList() {
+    const listEl = document.getElementById("history-list");
+    const emptyEl = document.getElementById("history-empty");
+    const history = getHistory();
+    listEl.innerHTML = "";
+    if (!history.length) {
+      emptyEl.hidden = false;
+      return;
+    }
+    emptyEl.hidden = true;
+    history.forEach((snapshot, idx) => {
+      const row = document.createElement("div");
+      row.className = "history-item";
+      const f = snapshot.fields;
+      row.innerHTML = `
+        <div class="hi-date">${formatHistoryDate(snapshot.savedAt)}</div>
+        <div class="hi-main"><b>${f.propertyName || "（物件名未入力）"}</b> ${f.roomNo || ""}　${f.customerName || ""}様　${snapshot.total ? yen(snapshot.total) : ""}</div>
+        <div class="hi-actions">
+          <button type="button" class="btn-add hi-load">呼び出す</button>
+          <button type="button" class="btn-remove hi-delete">削除</button>
+        </div>`;
+      row.querySelector(".hi-load").addEventListener("click", () => applyFormSnapshot(snapshot));
+      row.querySelector(".hi-delete").addEventListener("click", () => {
+        const h = getHistory();
+        h.splice(idx, 1);
+        setHistory(h);
+        renderHistoryList();
+      });
+      listEl.appendChild(row);
+    });
+  }
+
+  renderHistoryList();
+
   function parseDateInput(value) {
     // value: "YYYY-MM-DD"
     const [year, month, day] = value.split("-").map(Number);
@@ -260,6 +394,13 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+
+      // 作成履歴（このブラウザ内のみ）に保存
+      const snapshot = buildFormSnapshot(caseData.caseId, caseData.total);
+      const history = getHistory();
+      history.unshift(snapshot);
+      setHistory(history);
+      renderHistoryList();
 
       const monthlyTotal = caseData.monthlyItems.reduce((s, mi) => s + mi.amount, 0);
       showResult(
