@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>初期費用見積書 作成 | BLUE ESTATE</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="logo-mark">BE</div>
+    <div>
+      <div class="hdr-title">BLUE ESTATE <span>初期費用見積書 作成</span></div>
+      <div class="hdr-sub">新しいをつくる不動産会社</div>
+    </div>
+  </div>
+  <div class="hdr-right">社内用ツール（テスト運用版）</div>
+</header>
+
+<main class="main">
+  <form id="estimate-form">
+
+    <section class="card">
+      <h2 class="card-title">① 物件</h2>
+      <div class="field">
+        <label for="property">物件を選択</label>
+        <select id="property" required></select>
+      </div>
+      <div id="property-preview" class="property-preview"></div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">② お客様・入居条件</h2>
+      <div class="field-grid">
+        <div class="field">
+          <label for="customerName">お客様名</label>
+          <input type="text" id="customerName" placeholder="山田 太郎" required>
+        </div>
+        <div class="field">
+          <label for="staffName">担当者名</label>
+          <input type="text" id="staffName" placeholder="井上">
+        </div>
+        <div class="field">
+          <label for="moveinDate">ご入居日</label>
+          <input type="date" id="moveinDate" required>
+        </div>
+        <div class="field">
+          <label for="zenyachinUntil">前家賃を含める最終月</label>
+          <input type="month" id="zenyachinUntil">
+          <div class="hint">入居月の翌月以降、この月分までを前家賃として計上します（不要なら空欄）</div>
+        </div>
+        <div class="field">
+          <label for="prorationMethod">日割り計算方式</label>
+          <select id="prorationMethod">
+            <option value="fixed30">30日固定（標準）</option>
+            <option value="actual_days">実日数按分</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="chukaiOverride">仲介手数料（上書き・任意）</label>
+          <input type="number" id="chukaiOverride" placeholder="自動計算：賃料1ヶ月分+消費税">
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">③ 初期費用への追加項目（任意）</h2>
+      <div class="hint">物件マスタにない費用や、今回だけ発生する費用があれば追加してください。</div>
+      <div id="extra-line-items"></div>
+      <button type="button" class="btn-add" id="add-line-item">＋ 初期費用の項目を追加</button>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">④ 入居後の月額費用（任意）</h2>
+      <div class="hint">保証料の月額分・町内会費など、案件によって有無や金額が変わる費用はここで追加してください。初期費用の合計には含まれず、「ご参考」として別枠に表示されます。</div>
+      <div id="monthly-items"></div>
+      <button type="button" class="btn-add" id="add-monthly-item">＋ 月額費用を追加</button>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">⑤ 備考</h2>
+      <div class="field">
+        <textarea id="biko" rows="3" placeholder="契約時に火災保険の加入証明書をご提出ください。"></textarea>
+      </div>
+    </section>
+
+    <button type="submit" class="btn-primary" id="submit-btn">見積書を作成（Excelダウンロード）</button>
+
+    <div id="result" class="result"></div>
+  </form>
+</main>
+
+<template id="line-item-tpl">
+  <div class="dyn-row">
+    <select class="li-category">
+      <option value="賃料">賃料</option>
+      <option value="共益費">共益費</option>
+      <option value="前家賃">前家賃</option>
+      <option value="敷金・礼金">敷金・礼金</option>
+      <option value="保証料">保証料</option>
+      <option value="諸費用" selected>諸費用</option>
+      <option value="仲介手数料">仲介手数料</option>
+    </select>
+    <input type="text" class="li-name" placeholder="項目名">
+    <input type="number" class="li-amount" placeholder="金額">
+    <input type="text" class="li-note" placeholder="備考（任意）">
+    <button type="button" class="btn-remove">削除</button>
+  </div>
+</template>
+
+<template id="monthly-item-tpl">
+  <div class="dyn-row">
+    <input type="text" class="mi-name" placeholder="例：月額保証料（〇〇）">
+    <input type="number" class="mi-amount" placeholder="金額／月">
+    <input type="text" class="mi-note" placeholder="備考（任意）">
+    <button type="button" class="btn-remove">削除</button>
+  </div>
+</template>
+
+<script src="calc.js"></script>
+<script src="generate.js"></script>
+<script src="vendor/exceljs.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

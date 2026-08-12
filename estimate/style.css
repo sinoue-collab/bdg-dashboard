@@ -1,0 +1,200 @@
+/* 初期費用見積書 作成ツール — style.css（BDGダッシュボードの配色規約を踏襲） */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:   #0090BA;
+  --navy:   #1A3A5C;
+  --bg:     #F2F6FA;
+  --card:   #FFFFFF;
+  --border: #DDE4ED;
+  --text:   #1A1A2E;
+  --sub:    #64748B;
+  --danger: #DC2626;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 14px rgba(0,0,0,.04);
+}
+
+body {
+  font-family: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.hdr {
+  background: var(--navy);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.hdr-left  { display: flex; align-items: center; gap: 12px; }
+.logo-mark {
+  width: 36px; height: 36px;
+  background: var(--blue);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900; color: #fff;
+  flex-shrink: 0;
+}
+.hdr-title      { font-size: 16px; font-weight: 700; }
+.hdr-title span { color: #90D8F0; font-weight: 500; margin-left: 6px; }
+.hdr-sub        { font-size: 10px; opacity: .65; margin-top: 1px; }
+.hdr-right      { font-size: 11px; opacity: .75; }
+
+.main {
+  max-width: 720px;
+  margin: 28px auto;
+  padding: 0 20px 60px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--bg);
+}
+
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+.field-grid .field { margin-bottom: 0; }
+
+label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sub);
+  margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="month"],
+select,
+textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(0,144,186,.12);
+}
+textarea { resize: vertical; }
+
+.hint {
+  font-size: 11px;
+  color: var(--sub);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.property-preview {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--sub);
+  display: none;
+}
+.property-preview.show { display: block; }
+.property-preview b { color: var(--text); }
+.property-preview .pp-row { margin-bottom: 3px; }
+.property-preview .pp-row:last-child { margin-bottom: 0; }
+
+.dyn-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 110px 1fr 56px;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+.dyn-row input, .dyn-row select { font-size: 12px; padding: 7px 8px; }
+
+.btn-add {
+  margin-top: 6px;
+  background: none;
+  border: 1px dashed var(--blue);
+  color: var(--blue);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-add:hover { background: rgba(0,144,186,.06); }
+
+.btn-remove {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--danger);
+  border-radius: 6px;
+  padding: 7px 4px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-remove:hover { background: rgba(220,38,38,.06); }
+
+.btn-primary {
+  display: block;
+  width: 100%;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: var(--shadow);
+}
+.btn-primary:hover { background: var(--navy); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+.result {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  display: none;
+}
+.result.show     { display: block; }
+.result.success  { background: #EAF6EE; border: 1px solid #B7E4C7; color: #16693D; }
+.result.error    { background: #FDECEC; border: 1px solid #F5B5B5; color: #B42318; }
+.result-row { margin-bottom: 4px; }
+.result-row:last-child { margin-bottom: 0; }
+
+@media (max-width: 640px) {
+  .field-grid { grid-template-columns: 1fr; }
+  .dyn-row { grid-template-columns: 1fr; }
+}

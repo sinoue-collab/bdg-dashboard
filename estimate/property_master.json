@@ -1,0 +1,58 @@
+{
+  "_comment": "自社管理物件のサンプルマスタ（デモ用）。将来的には実際の物件管理システム/台帳からの取込に差し替える想定。",
+  "properties": [
+    {
+      "property_id": "P001",
+      "property_name": "サンライズ渋谷",
+      "room_no": "302",
+      "address": "東京都渋谷区〇〇1-2-3",
+      "management_type": "自社管理",
+      "rent": 120000,
+      "kyoueki": 8000,
+      "shikikin_months": 1.0,
+      "reikin_months": 1.0,
+      "hoshou_gaisha": "日本セーフティー",
+      "hoshou_ryou_rate": 0.5,
+      "hoshou_ryou_note": "初回保証料：総賃料の50%（賃料+共益費）",
+      "kagi_koukan_hiyou": 22000,
+      "sonota_hiyou": [
+        {"name": "火災保険料", "amount": 20000, "note": "2年契約"},
+        {"name": "室内消毒料", "amount": 16500, "note": ""}
+      ]
+    },
+    {
+      "property_id": "P002",
+      "property_name": "グランメゾン中目黒",
+      "room_no": "105",
+      "address": "東京都目黒区〇〇4-5-6",
+      "management_type": "自社管理",
+      "rent": 185000,
+      "kyoueki": 10000,
+      "shikikin_months": 1.0,
+      "reikin_months": 0.0,
+      "hoshou_gaisha": "全保連",
+      "hoshou_ryou_rate": 1.0,
+      "hoshou_ryou_note": "初回保証料：賃料1ヶ月分",
+      "kagi_koukan_hiyou": 27500,
+      "sonota_hiyou": [
+        {"name": "24時間サポート費", "amount": 18000, "note": "年間契約"}
+      ]
+    },
+    {
+      "property_id": "P003",
+      "property_name": "パークハイツ恵比寿",
+      "room_no": "801",
+      "address": "東京都渋谷区〇〇7-8-9",
+      "management_type": "自社管理",
+      "rent": 145000,
+      "kyoueki": 0,
+      "shikikin_months": 1.0,
+      "reikin_months": 1.0,
+      "hoshou_gaisha": "Casa",
+      "hoshou_ryou_rate": 0.5,
+      "hoshou_ryou_note": "初回保証料：賃料の50%",
+      "kagi_koukan_hiyou": 19800,
+      "sonota_hiyou": []
+    }
+  ]
+}
