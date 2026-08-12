@@ -4,46 +4,145 @@
 
   const yen = (n) => `¥${Math.round(n).toLocaleString("ja-JP")}`;
 
-  let propertyMaster = {}; // property_id -> propertyData
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js";
+  }
 
-  const propertySelect = document.getElementById("property");
-  const propertyPreview = document.getElementById("property-preview");
   const form = document.getElementById("estimate-form");
   const resultBox = document.getElementById("result");
   const submitBtn = document.getElementById("submit-btn");
 
-  // ---- 物件マスタ読み込み ----
-  fetch("property_master.json")
-    .then((r) => r.json())
-    .then((data) => {
-      propertyMaster = {};
-      for (const p of data.properties) {
-        propertyMaster[p.property_id] = p;
-        const opt = document.createElement("option");
-        opt.value = p.property_id;
-        opt.textContent = `${p.property_name}　${p.room_no}号室`;
-        propertySelect.appendChild(opt);
-      }
-      if (data.properties.length) renderPropertyPreview(data.properties[0]);
-    })
-    .catch((err) => {
-      showResult("error", "物件マスタ（property_master.json）の読み込みに失敗しました。" + err.message);
-    });
+  // ---- 物件情報：ITANDI BB / 賃貸革命の画面を見ながら都度入力する ----
+  // （物件数が膨大かつ賃料が変動するため、固定の物件マスタは持たない方針）
+  function collectPropertyData() {
+    const propertyName = document.getElementById("propertyName").value.trim();
+    const roomNo = document.getElementById("roomNo").value.trim();
+    if (!propertyName) throw new Error("物件名を入力してください。");
+    if (!roomNo) throw new Error("部屋番号を入力してください。");
 
-  propertySelect.addEventListener("change", () => {
-    const p = propertyMaster[propertySelect.value];
-    if (p) renderPropertyPreview(p);
+    const rent = Number(document.getElementById("rent").value || 0);
+    if (!rent) throw new Error("賃料を入力してください。");
+
+    const hoshouRateRaw = document.getElementById("hoshouRate").value;
+
+    return {
+      property_id: "",
+      property_name: propertyName,
+      room_no: roomNo,
+      address: document.getElementById("address").value.trim(),
+      rent,
+      kyoueki: Number(document.getElementById("kyoueki").value || 0),
+      shikikin_months: Number(document.getElementById("shikikinMonths").value || 0),
+      reikin_months: Number(document.getElementById("reikinMonths").value || 0),
+      hoshou_gaisha: document.getElementById("hoshouGaisha").value.trim(),
+      hoshou_ryou_rate: hoshouRateRaw ? Number(hoshouRateRaw) / 100 : 0,
+      hoshou_ryou_note: document.getElementById("hoshouNote").value.trim(),
+      kagi_koukan_hiyou: Number(document.getElementById("kagiKoukan").value || 0),
+      sonota_hiyou: [],
+    };
+  }
+
+  // ---- 物件情報の自動読み込み（URL / PDF / 貼り付けテキスト） ----
+  // AIは使わず、正規表現による抽出のみ（費用ゼロ）。
+  // 賃料・管理費・敷金礼金・住所のみ自動入力し、保証会社・その他経費は
+  // 「参考テキスト」として表示するだけに留め、担当者が③④へ手動で追加する。
+  const autofillTabs = document.querySelectorAll(".autofill-tab");
+  const autofillPanes = document.querySelectorAll(".autofill-pane");
+  autofillTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      autofillTabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      const target = tab.dataset.tab;
+      autofillPanes.forEach((p) => (p.hidden = p.dataset.pane !== target));
+    });
   });
 
-  function renderPropertyPreview(p) {
-    propertyPreview.innerHTML = `
-      <div class="pp-row">所在地：<b>${p.address || "―"}</b></div>
-      <div class="pp-row">家賃：<b>${yen(p.rent)}</b>　共益費：<b>${yen(p.kyoueki || 0)}</b></div>
-      <div class="pp-row">敷金：<b>${p.shikikin_months || 0}ヶ月</b>　礼金：<b>${p.reikin_months || 0}ヶ月</b></div>
-      <div class="pp-row">保証会社：<b>${p.hoshou_gaisha || "―"}</b>（初回保証料率：${p.hoshou_ryou_rate ? p.hoshou_ryou_rate * 100 + "%" : "―"}）</div>
-    `;
-    propertyPreview.classList.add("show");
+  function setAutofillStatus(type, msg) {
+    const box = document.getElementById("autofill-status");
+    box.textContent = msg;
+    box.className = `hint ${type === "ok" ? "autofill-status-ok" : type === "err" ? "autofill-status-err" : ""}`;
   }
+
+  function setIfEmpty(id, value) {
+    const el = document.getElementById(id);
+    if (value !== undefined && value !== null && value !== "" && value !== 0) el.value = value;
+  }
+
+  async function extractTextFromPdfFile(file) {
+    const buf = await file.arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+    let text = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map((it) => it.str).join(" ") + "\n";
+    }
+    return text;
+  }
+
+  function applyExtractedFields(r) {
+    setIfEmpty("address", r.address);
+    setIfEmpty("rent", r.rent);
+    setIfEmpty("kyoueki", r.kyoueki);
+    setIfEmpty("shikikinMonths", r.shikikinMonths);
+    setIfEmpty("reikinMonths", r.reikinMonths);
+    setIfEmpty("kagiKoukan", r.kagiKoukan);
+
+    const foundCount = ["rent", "kyoueki", "shikikinMonths", "reikinMonths", "kagiKoukan", "address"]
+      .filter((k) => r[k] !== null && r[k] !== undefined && r[k] !== "").length;
+
+    const refBox = document.getElementById("autofill-reference");
+    const refText = document.getElementById("autofill-reference-text");
+    if (r.referenceNotes) {
+      refText.textContent = r.referenceNotes;
+      refBox.hidden = false;
+    } else {
+      refBox.hidden = true;
+    }
+
+    setAutofillStatus(
+      "ok",
+      `✅ ${foundCount}項目を自動入力しました。物件名・部屋番号・保証会社などは引き続き手入力してください。内容は必ずご確認ください。`
+    );
+  }
+
+  document.getElementById("autofill-run").addEventListener("click", async () => {
+    const activeTab = document.querySelector(".autofill-tab.active").dataset.tab;
+    const btn = document.getElementById("autofill-run");
+    btn.disabled = true;
+    setAutofillStatus("", "読み込み中…");
+
+    try {
+      let text;
+      if (activeTab === "url") {
+        const url = document.getElementById("autofillUrl").value.trim();
+        if (!url) throw new Error("URLを入力してください。");
+        const resp = await fetch("/.netlify/functions/parse-property", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || "URLの読み込みに失敗しました。");
+        text = data.text;
+      } else if (activeTab === "pdf") {
+        const fileInput = document.getElementById("autofillPdf");
+        const file = fileInput.files[0];
+        if (!file) throw new Error("PDFファイルを選択してください。");
+        text = await extractTextFromPdfFile(file);
+      } else {
+        text = document.getElementById("autofillText").value.trim();
+        if (!text) throw new Error("テキストを貼り付けてください。");
+      }
+
+      const r = PropertyParser.extractPropertyFields(text);
+      applyExtractedFields(r);
+    } catch (err) {
+      setAutofillStatus("err", `⚠️ ${err.message}`);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
   // ---- 初期費用の追加項目（動的行） ----
   const lineItemTpl = document.getElementById("line-item-tpl");
@@ -106,9 +205,7 @@
     submitBtn.textContent = "作成中…";
 
     try {
-      const propertyId = propertySelect.value;
-      const propertyData = propertyMaster[propertyId];
-      if (!propertyData) throw new Error("物件を選択してください。");
+      const propertyData = collectPropertyData();
 
       const customerName = document.getElementById("customerName").value.trim();
       if (!customerName) throw new Error("お客様名を入力してください。");

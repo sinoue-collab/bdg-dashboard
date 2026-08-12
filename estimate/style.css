@@ -194,6 +194,56 @@ textarea { resize: vertical; }
 .result-row { margin-bottom: 4px; }
 .result-row:last-child { margin-bottom: 0; }
 
+.autofill-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+.autofill-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.autofill-tab {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sub);
+  cursor: pointer;
+  font-family: inherit;
+}
+.autofill-tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+.autofill-pane input[type="text"],
+.autofill-pane textarea { width: 100%; }
+.autofill-pane textarea { resize: vertical; }
+#autofill-run { margin-top: 10px; }
+.autofill-status-ok   { color: #16693D; }
+.autofill-status-err  { color: var(--danger); }
+
+.autofill-reference {
+  margin-top: 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.autofill-reference-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+.autofill-reference pre {
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
 @media (max-width: 640px) {
   .field-grid { grid-template-columns: 1fr; }
   .dyn-row { grid-template-columns: 1fr; }

@@ -23,12 +23,78 @@
   <form id="estimate-form">
 
     <section class="card">
-      <h2 class="card-title">① 物件</h2>
-      <div class="field">
-        <label for="property">物件を選択</label>
-        <select id="property" required></select>
+      <h2 class="card-title">① 物件情報</h2>
+      <div class="hint" style="margin-bottom:12px;">ITANDI BB（募集中）または賃貸革命（契約後）の画面を見ながら、最新の情報を入力してください。物件ページのURLかPDFがあれば、賃料・管理費・敷金礼金・住所を自動入力できます（無料・AI不使用）。</div>
+
+      <div class="autofill-box">
+        <div class="autofill-tabs">
+          <button type="button" class="autofill-tab active" data-tab="url">URLから読み込む</button>
+          <button type="button" class="autofill-tab" data-tab="pdf">PDFから読み込む</button>
+          <button type="button" class="autofill-tab" data-tab="text">テキストを貼り付け</button>
+        </div>
+        <div class="autofill-pane" data-pane="url">
+          <input type="text" id="autofillUrl" placeholder="https://... 物件ページのURL">
+        </div>
+        <div class="autofill-pane" data-pane="pdf" hidden>
+          <input type="file" id="autofillPdf" accept="application/pdf">
+        </div>
+        <div class="autofill-pane" data-pane="text" hidden>
+          <textarea id="autofillText" rows="4" placeholder="マイソク等のテキストをそのまま貼り付けてください"></textarea>
+        </div>
+        <button type="button" class="btn-add" id="autofill-run">✨ 自動読み込み（賃料・管理費・敷金礼金・住所）</button>
+        <div id="autofill-status" class="hint" style="margin-top:8px;"></div>
+        <div id="autofill-reference" class="autofill-reference" hidden>
+          <div class="autofill-reference-title">📋 参考：保証会社・その他経費に関する記載（自動入力はされません。読んで③④に手動で追加してください）</div>
+          <pre id="autofill-reference-text"></pre>
+        </div>
       </div>
-      <div id="property-preview" class="property-preview"></div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label for="propertyName">物件名</label>
+          <input type="text" id="propertyName" placeholder="サンライズ渋谷" required>
+        </div>
+        <div class="field">
+          <label for="roomNo">部屋番号</label>
+          <input type="text" id="roomNo" placeholder="302" required>
+        </div>
+        <div class="field" style="grid-column: 1 / -1;">
+          <label for="address">住所</label>
+          <input type="text" id="address" placeholder="東京都渋谷区〇〇1-2-3">
+        </div>
+        <div class="field">
+          <label for="rent">賃料（円）</label>
+          <input type="number" id="rent" placeholder="120000" required>
+        </div>
+        <div class="field">
+          <label for="kyoueki">共益費・管理費（円）</label>
+          <input type="number" id="kyoueki" placeholder="8000">
+        </div>
+        <div class="field">
+          <label for="shikikinMonths">敷金（ヶ月）</label>
+          <input type="number" id="shikikinMonths" step="0.5" placeholder="1">
+        </div>
+        <div class="field">
+          <label for="reikinMonths">礼金（ヶ月）</label>
+          <input type="number" id="reikinMonths" step="0.5" placeholder="1">
+        </div>
+        <div class="field">
+          <label for="hoshouGaisha">保証会社名</label>
+          <input type="text" id="hoshouGaisha" placeholder="日本セーフティー">
+        </div>
+        <div class="field">
+          <label for="hoshouRate">初回保証料率（%）</label>
+          <input type="number" id="hoshouRate" step="1" placeholder="50">
+        </div>
+        <div class="field" style="grid-column: 1 / -1;">
+          <label for="hoshouNote">保証料 備考（保証内容など）</label>
+          <input type="text" id="hoshouNote" placeholder="初回保証料：総賃料の50%（賃料+共益費）">
+        </div>
+        <div class="field">
+          <label for="kagiKoukan">鍵交換費用（円）</label>
+          <input type="number" id="kagiKoukan" placeholder="22000">
+        </div>
+      </div>
     </section>
 
     <section class="card">
@@ -67,7 +133,7 @@
 
     <section class="card">
       <h2 class="card-title">③ 初期費用への追加項目（任意）</h2>
-      <div class="hint">物件マスタにない費用や、今回だけ発生する費用があれば追加してください。</div>
+      <div class="hint">火災保険料・室内消毒料・24時間サポート費など、案件ごとに異なる費用はここで追加してください。</div>
       <div id="extra-line-items"></div>
       <button type="button" class="btn-add" id="add-line-item">＋ 初期費用の項目を追加</button>
     </section>
@@ -121,7 +187,9 @@
 
 <script src="calc.js"></script>
 <script src="generate.js"></script>
+<script src="parse.js"></script>
 <script src="vendor/exceljs.min.js"></script>
+<script src="vendor/pdf.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
