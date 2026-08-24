@@ -32,6 +32,7 @@
     <button class="screen-btn" data-screen="s5">S5 KPIポータル</button>
     <button class="screen-btn" data-screen="s6">S6 人事・生産性</button>
     <button class="screen-btn" data-screen="s7">S7 AI分析</button>
+    <button class="screen-btn" data-screen="s8">S8 費用サマリー</button>
   </nav>
 
   <!-- ════════════════════════════════════
@@ -287,6 +288,38 @@
       </div>
     </main>
   </section>
+
+  <!-- ════════════════════════════════════
+       S8: 費用サマリー
+  ════════════════════════════════════ -->
+  <section id="screen-s8" class="screen">
+    <div class="controls-bar">
+      <div class="s8-label">3社 費用サマリー</div>
+      <div class="period-toggle" id="s8-period-toggle">
+        <button class="period-btn active" data-period="monthly">当月</button>
+        <button class="period-btn" data-period="ytd">当期累計</button>
+      </div>
+    </div>
+    <div class="info-bar" id="s8-info-bar">読込中…</div>
+    <main class="main">
+      <div id="s8-cards" class="s8-cards"></div>
+    </main>
+  </section>
+
+  <!-- 費用明細ドロワー -->
+  <div id="cost-drawer" class="cost-drawer" hidden>
+    <div class="cd-overlay" id="cd-overlay"></div>
+    <div class="cd-panel">
+      <div class="cd-hdr" id="cd-hdr">
+        <div>
+          <div class="cd-co-name" id="cd-co-name">—</div>
+          <div class="cd-period" id="cd-period">—</div>
+        </div>
+        <button class="cd-close" id="cd-close">✕</button>
+      </div>
+      <div class="cd-body" id="cd-body"></div>
+    </div>
+  </div>
 
   <!-- フッター -->
   <footer class="footer">

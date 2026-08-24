@@ -27,6 +27,13 @@ const CO_COLOR = {
   'BLUE LIFE':   '#059669',
   '青天堂':      '#B45309',
 };
+
+const CO_UNIT = {
+  'BLUE ESTATE': 'unit_blue_estate',
+  'BLUE DESIGN': 'unit_blue_design',
+  'BLUE LIFE':   'unit_blue_life',
+  '青天堂':      'unit_seitendo',
+};
 const CO_SEGMENTS = {
   'BLUE ESTATE': '不動産 / 宿泊 / ランドリー / BDG運営',
   'BLUE DESIGN': '建築',
@@ -85,6 +92,7 @@ let state = {
   s3Period:       'ytd',
   s4Unit:         'unit_blue_estate',
   s4Period:       'ytd',
+  s8Period:       'monthly',
 };
 
 // ══════════════════════════════════════════════════════
@@ -1281,6 +1289,284 @@ function updateClock() {
 }
 
 // ══════════════════════════════════════════════════════
+//  S8: 費用サマリー
+// ══════════════════════════════════════════════════════
+
+function renderS8() {
+  renderS8InfoBar();
+  renderS8Cards();
+}
+
+function renderS8InfoBar() {
+  const bar  = document.getElementById('s8-info-bar');
+  if (!bar) return;
+  const snap = state.current;
+  if (!snap) { bar.textContent = 'データ未読込'; return; }
+  let html = '';
+  for (const co of COMPANIES) {
+    const month = snap.companies?.[co]?.latest_month ?? '—';
+    const [yr, mo] = (month || '').split('-');
+    const label = yr && mo ? `${yr}年${parseInt(mo)}月` : '—';
+    html += `<span class="info-item">
+      <span class="info-dot" style="background:${CO_COLOR[co]}"></span>
+      ${co}: <strong>${label}</strong>
+    </span>`;
+  }
+  const at = snap.generated_at
+    ? new Date(snap.generated_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '';
+  if (at) html += `<span class="info-item" style="margin-left:auto">更新: ${at}</span>`;
+  bar.innerHTML = html;
+}
+
+function renderS8Cards() {
+  const container = document.getElementById('s8-cards');
+  if (!container) return;
+  container.innerHTML = '';
+  const period = state.s8Period;
+
+  for (const name of COMPANIES) {
+    const co  = state.current?.companies?.[name];
+    const src = period === 'ytd' ? co?.ytd    : co?.latest;
+    const prSrc = period === 'monthly' ? co?.prior : null;
+
+    const month = co?.latest_month ?? '';
+    const [yr, mo] = month.split('-');
+    const periodLabel = period === 'ytd'
+      ? `累計: ${yr}年${parseInt(mo)}月まで`
+      : `最新: ${yr}年${parseInt(mo)}月`;
+
+    const rev = src?.revenue        ?? null;
+    const gp  = src?.gross_profit   ?? null;
+    const sga = src?.sga_total      ?? null;
+    const op  = src?.op_profit      ?? null;
+
+    const prRev = prSrc?.revenue        ?? null;
+    const prGp  = prSrc?.gross_profit   ?? null;
+    const prSga = prSrc?.sga_total      ?? null;
+    const prOp  = prSrc?.op_profit      ?? null;
+
+    // MoM バッジ（pct + 差額）
+    const momTag = (cur, prev, inv = false) => {
+      if (cur === null || prev === null || prev === 0) {
+        return '<span class="s8-mom-pct muted" style="color:var(--sub)">—</span>';
+      }
+      const pct  = (cur - prev) / Math.abs(prev) * 100;
+      const diff = cur - prev;
+      const up   = pct >= 0;
+      const cls  = inv ? (up ? 'up inv' : 'down inv') : (up ? 'up' : 'down');
+      return `<span class="s8-mom-pct ${cls}">${up ? '▲' : '▼'}${Math.abs(pct).toFixed(1)}%</span>
+              <span class="s8-mom-diff">${fmtDiff(cur, prev)}</span>`;
+    };
+
+    const metricRow = (lbl, val, prVal, inv = false) => {
+      const negCls = val !== null && val < 0 ? ' neg' : '';
+      const posCls = val !== null && val > 0 && lbl === '営業利益' ? ' pos' : '';
+      return `<div class="s8-metric-row">
+        <span class="s8-metric-lbl">${lbl}</span>
+        <span class="s8-metric-val${negCls}${posCls}">${d(fmtYen(val))}</span>
+        <div class="s8-mom">${momTag(val, prVal, inv)}</div>
+      </div>`;
+    };
+
+    const card = document.createElement('div');
+    card.className = 's8-card';
+    card.innerHTML = `
+      <div class="s8-card-hdr" style="background:${CO_COLOR[name]}">
+        <div>
+          <div class="s8-co-name">${name}</div>
+          <div class="s8-co-segs">${CO_SEGMENTS[name] ?? ''}</div>
+          <div class="s8-co-period">${periodLabel}</div>
+        </div>
+        <button class="s8-detail-btn" data-co="${name}">費用明細 →</button>
+      </div>
+      <div class="s8-card-body">
+        ${metricRow('売上',     rev, prRev)}
+        ${metricRow('粗利',     gp,  prGp)}
+        ${metricRow('販管費',   sga, prSga, true)}
+        ${metricRow('営業利益', op,  prOp)}
+      </div>`;
+    container.appendChild(card);
+  }
+}
+
+// ── 費用明細ドロワー ──
+
+function openCostDrawer(coName) {
+  const drawer  = document.getElementById('cost-drawer');
+  const body    = document.getElementById('cd-body');
+  const nameEl  = document.getElementById('cd-co-name');
+  const periodEl= document.getElementById('cd-period');
+  const hdrEl   = document.getElementById('cd-hdr');
+  if (!drawer || !body) return;
+
+  const co     = state.current?.companies?.[coName];
+  const period = state.s8Period;
+  const unitId = CO_UNIT[coName];
+  const act    = state.actuals?.[unitId];
+  const actData = (period === 'ytd' && act?.ytd) ? act.ytd : act;
+
+  const src   = period === 'ytd' ? co?.ytd  : co?.latest;
+  const prSrc = period === 'monthly' ? co?.prior : null;
+
+  const month = co?.latest_month ?? '';
+  const [yr, mo] = month.split('-');
+  const periodLabel = period === 'ytd'
+    ? `累計: ${yr}年${parseInt(mo)}月まで`
+    : `${yr}年${parseInt(mo)}月`;
+
+  nameEl.textContent   = coName;
+  periodEl.textContent = periodLabel;
+  hdrEl.style.borderTopColor = CO_COLOR[coName];
+
+  const rev = src?.revenue        ?? null;
+  const gp  = src?.gross_profit   ?? null;
+  const sga = src?.sga_total      ?? null;
+  const op  = src?.op_profit      ?? null;
+  const ord = src?.ordinary_profit ?? null;
+
+  const prRev = prSrc?.revenue        ?? null;
+  const prSga = prSrc?.sga_total      ?? null;
+  const prOp  = prSrc?.op_profit      ?? null;
+  const prOrd = prSrc?.ordinary_profit ?? null;
+
+  const momBadge = (cur, prev, inv = false) => {
+    if (cur === null || prev === null || prev === 0) return '';
+    const pct  = (cur - prev) / Math.abs(prev) * 100;
+    const up   = pct >= 0;
+    const good = inv ? !up : up;
+    return `<span class="cd-section-mom ${good ? 'var-good' : 'var-bad'}">${up ? '▲' : '▼'}${Math.abs(pct).toFixed(1)}%</span>`;
+  };
+
+  const summaryMom = (cur, prev, inv = false) => {
+    if (cur === null || prev === null || prev === 0) return '';
+    const pct  = (cur - prev) / Math.abs(prev) * 100;
+    const up   = pct >= 0;
+    const good = inv ? !up : up;
+    const col  = good ? 'var(--green)' : 'var(--red)';
+    return `<span class="cd-summary-mom" style="color:${col}">${up ? '▲' : '▼'}${Math.abs(pct).toFixed(1)}%</span>`;
+  };
+
+  const barItem = (item, amount, total, color) => {
+    const pct  = (rev && rev >= RATE_MIN_REVENUE && amount !== null) ? (amount / rev * 100) : null;
+    const barW = total && total !== 0 ? Math.min(100, Math.abs(amount) / Math.abs(total) * 100).toFixed(1) + '%' : '0%';
+    return `<div class="cd-item">
+      <span class="cd-item-name" title="${item}">${item}</span>
+      <div class="cd-bar-w"><div class="cd-bar" style="width:${barW};background:${color}"></div></div>
+      <span class="cd-item-amt">${fmtFull(amount)}</span>
+      <span class="cd-item-pct">${pct !== null ? pct.toFixed(1) + '%' : '—'}</span>
+    </div>`;
+  };
+
+  let html = '';
+
+  if (!actData) {
+    html = '<p style="color:var(--sub);text-align:center;padding:40px">詳細データ未読込（actuals_latest.json）</p>';
+  } else {
+    // 売上内訳
+    const revBreak = actData.revenue?.breakdown ?? [];
+    if (revBreak.length) {
+      const sorted = [...revBreak].sort((a, b) => b.amount - a.amount);
+      html += `<div class="cd-section">
+        <div class="cd-section-hdr">
+          <span class="cd-section-title">売上内訳</span>
+          <div class="cd-section-right">
+            <span class="cd-section-total">${d(fmtYen(rev))}</span>
+            ${momBadge(rev, prRev)}
+          </div>
+        </div>`;
+      for (const it of sorted) html += barItem(it.item, it.amount, rev, CO_COLOR[coName] + '99');
+      html += '</div>';
+    }
+
+    // 販管費内訳（金額順、費用増は赤）
+    const sgaBreak = actData.sga?.breakdown ?? [];
+    if (sgaBreak.length) {
+      const sorted = [...sgaBreak].sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+      html += `<div class="cd-section">
+        <div class="cd-section-hdr">
+          <span class="cd-section-title">販管費内訳</span>
+          <div class="cd-section-right">
+            <span class="cd-section-total">${d(fmtYen(sga))}</span>
+            ${momBadge(sga, prSga, true)}
+          </div>
+        </div>`;
+      for (const it of sorted) html += barItem(it.item, it.amount, sga, '#B4530988');
+      html += '</div>';
+    }
+
+    // 売上原価内訳
+    const cogsBreak = actData.cogs?.breakdown ?? [];
+    if (cogsBreak.length) {
+      html += `<div class="cd-section">
+        <div class="cd-section-hdr">
+          <span class="cd-section-title">売上原価内訳</span>
+        </div>`;
+      for (const it of cogsBreak) html += barItem(it.item, it.amount, rev, '#e74c3c88');
+      html += '</div>';
+    }
+
+    // 営業外収益
+    const noiBreak = actData.non_op_income?.breakdown ?? [];
+    if (noiBreak.length) {
+      const sorted = [...noiBreak].sort((a, b) => b.amount - a.amount);
+      html += `<div class="cd-section">
+        <div class="cd-section-hdr">
+          <span class="cd-section-title">営業外収益内訳</span>
+          <div class="cd-section-right">
+            <span class="cd-section-total">${d(fmtYen(actData.non_op_income.total))}</span>
+          </div>
+        </div>`;
+      for (const it of sorted) html += barItem(it.item, it.amount, actData.non_op_income.total || rev, '#05966999');
+      html += '</div>';
+    }
+
+    // 営業外費用
+    const noeBreak = actData.non_op_expense?.breakdown ?? [];
+    if (noeBreak.length) {
+      const sorted = [...noeBreak].sort((a, b) => b.amount - a.amount);
+      html += `<div class="cd-section">
+        <div class="cd-section-hdr">
+          <span class="cd-section-title">営業外費用内訳</span>
+          <div class="cd-section-right">
+            <span class="cd-section-total">${d(fmtYen(actData.non_op_expense.total))}</span>
+          </div>
+        </div>`;
+      for (const it of sorted) html += barItem(it.item, it.amount, actData.non_op_expense.total || rev, '#e74c3c88');
+      html += '</div>';
+    }
+
+    // サマリー
+    const valCls = v => v === null ? '' : v < 0 ? ' neg' : v > 0 ? ' pos' : '';
+    html += `<div class="cd-summary">
+      <div class="cd-summary-row">
+        <span class="cd-summary-lbl">粗利</span>
+        <span>${summaryMom(gp, prSrc?.gross_profit ?? null)}</span>
+        <span class="cd-summary-val${valCls(gp)}">${d(fmtYen(gp))}</span>
+      </div>
+      <div class="cd-summary-row">
+        <span class="cd-summary-lbl">営業利益</span>
+        <span>${summaryMom(op, prOp)}</span>
+        <span class="cd-summary-val${valCls(op)}">${d(fmtYen(op))}</span>
+      </div>
+      <div class="cd-summary-row">
+        <span class="cd-summary-lbl">経常利益</span>
+        <span>${summaryMom(ord, prOrd)}</span>
+        <span class="cd-summary-val${valCls(ord)}">${d(fmtYen(ord))}</span>
+      </div>
+    </div>`;
+  }
+
+  body.innerHTML = html;
+  drawer.hidden  = false;
+}
+
+function closeCostDrawer() {
+  const drawer = document.getElementById('cost-drawer');
+  if (drawer) drawer.hidden = true;
+}
+
+// ══════════════════════════════════════════════════════
 //  画面切替・イベント
 // ══════════════════════════════════════════════════════
 
@@ -1293,6 +1579,7 @@ function switchScreen(screenId) {
   if (screenId === 's4') renderS4();
   if (screenId === 's5') renderS5();
   if (screenId === 's6') renderS6();
+  if (screenId === 's8') renderS8();
 }
 
 function bindEvents() {
@@ -1375,6 +1662,27 @@ function bindEvents() {
       renderS4();
     });
   });
+
+  // S8: 期間切替
+  document.getElementById('s8-period-toggle')?.addEventListener('click', e => {
+    const btn = e.target.closest('.period-btn');
+    if (!btn) return;
+    state.s8Period = btn.dataset.period;
+    document.querySelectorAll('#s8-period-toggle .period-btn')
+      .forEach(b => b.classList.toggle('active', b === btn));
+    renderS8();
+  });
+
+  // S8: 費用明細ドロワーを開く
+  document.getElementById('s8-cards')?.addEventListener('click', e => {
+    const btn = e.target.closest('.s8-detail-btn');
+    if (!btn) return;
+    openCostDrawer(btn.dataset.co);
+  });
+
+  // ドロワーを閉じる
+  document.getElementById('cd-close')?.addEventListener('click', closeCostDrawer);
+  document.getElementById('cd-overlay')?.addEventListener('click', closeCostDrawer);
 
   // S4: ウォーターフォール展開/折畳み（イベント委譲）
   document.getElementById('screen-s4')?.addEventListener('click', e => {
