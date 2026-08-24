@@ -1207,12 +1207,23 @@ body {
 .cd-section-mom.var-good { background: #d1fae5; color: #065f46; }
 .cd-section-mom.var-bad  { background: #fee2e2; color: #991b1b; }
 
+.cd-prev-note {
+  font-size: 11px;
+  color: var(--sub);
+  background: var(--stripe);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 12px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
 .cd-item {
   display: grid;
-  grid-template-columns: 1fr 70px 90px 38px;
+  grid-template-columns: 1fr 60px 86px 36px 72px;
   align-items: center;
   padding: 6px 4px;
-  gap: 8px;
+  gap: 6px;
   font-size: 12px;
   border-bottom: 1px solid var(--stripe);
 }
@@ -1241,6 +1252,17 @@ body {
   color: var(--sub);
   text-align: right;
 }
+
+.cd-item-diff {
+  font-size: 11px;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cd-item-diff.cost-good { color: var(--green); }
+.cd-item-diff.cost-bad  { color: var(--red); }
+.cd-item-diff.muted     { color: var(--sub); font-weight: 400; }
 
 .cd-summary {
   background: var(--bg);

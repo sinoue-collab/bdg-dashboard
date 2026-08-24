@@ -6,7 +6,8 @@
 
 const SNAPSHOT_FILE = 'data/dashboard_snapshots/snapshot_latest.json';
 const BUDGET_FILE   = 'data/budget/budget_FY2026.json';
-const ACTUALS_FILE  = 'data/actuals/actuals_latest.json';
+const ACTUALS_FILE       = 'data/actuals/actuals_latest.json';
+const ACTUALS_PREV_FILE  = 'data/actuals/actuals_previous.json';
 const MAPPING_FILE  = 'data/imports/freee_mapping.json';
 const PORTALS_FILE  = 'data/portals/kpi_portals.json';
 const HR_FILE       = 'data/hr/hr_latest.json';
@@ -81,7 +82,8 @@ const S2_METRICS = [
 let state = {
   current:   null,
   budget:    null,
-  actuals:   null,
+  actuals:     null,
+  actualsPrev: null,
   mapping:   null,
   portals:   null,
   hr:        null,
@@ -1168,7 +1170,7 @@ function renderS6() {
   const heroCards = [
     { label: '総社員数',       value: grp ? `${grp.total}名`                 : '—', sub: `正社員 ${grp?.full_time ?? '—'}名 / パート ${grp?.part_time ?? '—'}名` },
     { label: '採用数（当期累計）', value: grp ? `${grp.new_hires_ytd}名`      : '—', sub: `離職 ${grp?.departures_ytd ?? '—'}名` },
-    { label: '平均残業時間',   value: grp ? `${grp.avg_overtime?.toFixed(1)}h/月` : '—', sub: 'グループ平均' },
+    { label: '平均残業時間',   value: grp && grp.avg_overtime != null ? `${grp.avg_overtime.toFixed(1)}h/月` : '—', sub: 'グループ平均' },
     { label: '1人当たり粗利（月）', value: grp ? fmtManYen(grp.gp_per_head) : '—', sub: `時間当たり ${grp?.gp_per_hour?.toLocaleString() ?? '—'}円/h` },
   ];
 
@@ -1200,7 +1202,7 @@ function renderS6() {
         <div class="s6-kv-row sub"><span class="s6-kv-lbl">パート</span><span class="s6-kv-val">${c?.part_time ?? '—'}名</span></div>
         <div class="s6-kv-row"><span class="s6-kv-lbl">採用（当期）</span><span class="s6-kv-val">${c ? `${c.new_hires_ytd}名` : '—'}</span></div>
         <div class="s6-kv-row"><span class="s6-kv-lbl">離職（当期）</span><span class="s6-kv-val">${c ? `${c.departures_ytd}名` : '—'}</span></div>
-        <div class="s6-kv-row"><span class="s6-kv-lbl">平均残業</span><span class="s6-kv-val">${c ? `${c.avg_overtime?.toFixed(1)}h/月` : '—'}</span></div>
+        <div class="s6-kv-row"><span class="s6-kv-lbl">平均残業</span><span class="s6-kv-val">${c && c.avg_overtime != null ? `${c.avg_overtime.toFixed(1)}h/月` : '—'}</span></div>
         <div class="s6-kv-sep"></div>
         <div class="s6-kv-row"><span class="s6-kv-lbl">1人当たり売上</span><span class="s6-kv-val">${fmtManYen(c?.rev_per_head)}</span></div>
         <div class="s6-kv-row"><span class="s6-kv-lbl">1人当たり粗利</span><span class="s6-kv-val">${fmtManYen(c?.gp_per_head)}</span></div>
@@ -1222,7 +1224,7 @@ function renderS6() {
     { label: '└ パート/アルバイト',   key: 'part_time',      fmt: n => `${n}名`, sub: true },
     { label: '採用数（当期）',        key: 'new_hires_ytd',  fmt: n => `${n}名` },
     { label: '離職数（当期）',        key: 'departures_ytd', fmt: n => `${n}名` },
-    { label: '月平均残業時間',        key: 'avg_overtime',   fmt: n => `${n?.toFixed(1)}h` },
+    { label: '月平均残業時間',        key: 'avg_overtime',   fmt: n => n != null ? `${n.toFixed(1)}h` : '—' },
     { sep: '生産性指標' },
     { label: '1人当たり売上（月）',   key: 'rev_per_head',   fmt: fmtManYen },
     { label: '1人当たり粗利（月）',   key: 'gp_per_head',    fmt: fmtManYen },
@@ -1401,22 +1403,25 @@ function openCostDrawer(coName) {
   if (!drawer || !body) return;
 
   const co     = state.current?.companies?.[coName];
-  const period = state.s8Period;
   const unitId = CO_UNIT[coName];
-  const act    = state.actuals?.[unitId];
-  const actData = (period === 'ytd' && act?.ytd) ? act.ytd : act;
 
-  const src   = period === 'ytd' ? co?.ytd  : co?.latest;
-  const prSrc = period === 'monthly' ? co?.prior : null;
+  // 内訳は常にYTD累計データを使用（月次breakdown=YTD breakdownのため）
+  const act     = state.actuals?.[unitId];
+  const actData = act?.ytd ?? act;
+  const prevAct = state.actualsPrev?.[unitId];
+  const prevData = prevAct?.ytd ?? prevAct;
+
+  // サマリー数値はS8の期間設定に従う
+  const period = state.s8Period;
+  const src    = period === 'ytd' ? co?.ytd : co?.latest;
+  const prSrc  = period === 'monthly' ? co?.prior : null;
 
   const month = co?.latest_month ?? '';
   const [yr, mo] = month.split('-');
-  const periodLabel = period === 'ytd'
-    ? `累計: ${yr}年${parseInt(mo)}月まで`
-    : `${yr}年${parseInt(mo)}月`;
+  const ytdLabel = actData?.period || (yr && mo ? `${yr}年1月〜${parseInt(mo)}月` : '—');
 
   nameEl.textContent   = coName;
-  periodEl.textContent = periodLabel;
+  periodEl.textContent = `累計内訳: ${ytdLabel}（前回更新比を表示）`;
   hdrEl.style.borderTopColor = CO_COLOR[coName];
 
   const rev = src?.revenue        ?? null;
@@ -1425,10 +1430,13 @@ function openCostDrawer(coName) {
   const op  = src?.op_profit      ?? null;
   const ord = src?.ordinary_profit ?? null;
 
-  const prRev = prSrc?.revenue        ?? null;
-  const prSga = prSrc?.sga_total      ?? null;
+  const prGp  = prSrc?.gross_profit   ?? null;
   const prOp  = prSrc?.op_profit      ?? null;
   const prOrd = prSrc?.ordinary_profit ?? null;
+
+  // 前回同名科目の金額をルックアップ
+  const findPrev = (prevBreakdown, itemName) =>
+    prevBreakdown?.find(i => i.item === itemName)?.amount ?? null;
 
   const momBadge = (cur, prev, inv = false) => {
     if (cur === null || prev === null || prev === 0) return '';
@@ -1447,14 +1455,29 @@ function openCostDrawer(coName) {
     return `<span class="cd-summary-mom" style="color:${col}">${up ? '▲' : '▼'}${Math.abs(pct).toFixed(1)}%</span>`;
   };
 
-  const barItem = (item, amount, total, color) => {
+  // barItem: 科目行（前回比差分列付き）
+  const barItem = (item, amount, total, color, prevAmount, inv = false) => {
     const pct  = (rev && rev >= RATE_MIN_REVENUE && amount !== null) ? (amount / rev * 100) : null;
     const barW = total && total !== 0 ? Math.min(100, Math.abs(amount) / Math.abs(total) * 100).toFixed(1) + '%' : '0%';
+    let diffHtml = '<span class="cd-item-diff muted">—</span>';
+    if (prevAmount !== null && prevAmount !== undefined) {
+      const diff = amount - prevAmount;
+      if (diff !== 0) {
+        const up   = diff > 0;
+        const good = inv ? !up : up;
+        const cls  = good ? 'cost-good' : 'cost-bad';
+        const sign = up ? '+' : '▲';
+        diffHtml = `<span class="cd-item-diff ${cls}">${sign}${Math.abs(diff).toLocaleString()}</span>`;
+      } else {
+        diffHtml = '<span class="cd-item-diff muted">±0</span>';
+      }
+    }
     return `<div class="cd-item">
       <span class="cd-item-name" title="${item}">${item}</span>
       <div class="cd-bar-w"><div class="cd-bar" style="width:${barW};background:${color}"></div></div>
       <span class="cd-item-amt">${fmtFull(amount)}</span>
       <span class="cd-item-pct">${pct !== null ? pct.toFixed(1) + '%' : '—'}</span>
+      ${diffHtml}
     </div>`;
   };
 
@@ -1463,94 +1486,133 @@ function openCostDrawer(coName) {
   if (!actData) {
     html = '<p style="color:var(--sub);text-align:center;padding:40px">詳細データ未読込（actuals_latest.json）</p>';
   } else {
+    const hasPrev = !!prevData;
+    if (!hasPrev) {
+      html += `<div class="cd-prev-note">前回データなし — 次回更新後から前回更新比が表示されます</div>`;
+    }
+
     // 売上内訳
-    const revBreak = actData.revenue?.breakdown ?? [];
+    const revBreak  = actData.revenue?.breakdown ?? [];
+    const prevRevBk = prevData?.revenue?.breakdown;
     if (revBreak.length) {
+      const ytdRev = revBreak.reduce((s, i) => s + i.amount, 0);
+      const prevYtdRev = prevRevBk ? prevRevBk.reduce((s, i) => s + i.amount, 0) : null;
       const sorted = [...revBreak].sort((a, b) => b.amount - a.amount);
       html += `<div class="cd-section">
         <div class="cd-section-hdr">
-          <span class="cd-section-title">売上内訳</span>
+          <span class="cd-section-title">売上内訳（YTD累計）</span>
           <div class="cd-section-right">
-            <span class="cd-section-total">${d(fmtYen(rev))}</span>
-            ${momBadge(rev, prRev)}
+            <span class="cd-section-total">${d(fmtYen(ytdRev))}</span>
+            ${momBadge(ytdRev, prevYtdRev)}
           </div>
         </div>`;
-      for (const it of sorted) html += barItem(it.item, it.amount, rev, CO_COLOR[coName] + '99');
+      for (const it of sorted) {
+        const prev = findPrev(prevRevBk, it.item);
+        html += barItem(it.item, it.amount, ytdRev, CO_COLOR[coName] + '99', prev, false);
+      }
       html += '</div>';
     }
 
-    // 販管費内訳（金額順、費用増は赤）
-    const sgaBreak = actData.sga?.breakdown ?? [];
+    // 販管費内訳（金額大順・費用増=赤）
+    const sgaBreak  = actData.sga?.breakdown ?? [];
+    const prevSgaBk = prevData?.sga?.breakdown;
     if (sgaBreak.length) {
+      const ytdSga = sgaBreak.reduce((s, i) => s + i.amount, 0);
+      const prevYtdSga = prevSgaBk ? prevSgaBk.reduce((s, i) => s + i.amount, 0) : null;
       const sorted = [...sgaBreak].sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
       html += `<div class="cd-section">
         <div class="cd-section-hdr">
-          <span class="cd-section-title">販管費内訳</span>
+          <span class="cd-section-title">販管費内訳（YTD累計）</span>
           <div class="cd-section-right">
-            <span class="cd-section-total">${d(fmtYen(sga))}</span>
-            ${momBadge(sga, prSga, true)}
+            <span class="cd-section-total">${d(fmtYen(ytdSga))}</span>
+            ${momBadge(ytdSga, prevYtdSga, true)}
           </div>
         </div>`;
-      for (const it of sorted) html += barItem(it.item, it.amount, sga, '#B4530988');
+      for (const it of sorted) {
+        const prev = findPrev(prevSgaBk, it.item);
+        html += barItem(it.item, it.amount, ytdSga, '#B4530988', prev, true);
+      }
       html += '</div>';
     }
 
     // 売上原価内訳
-    const cogsBreak = actData.cogs?.breakdown ?? [];
+    const cogsBreak  = actData.cogs?.breakdown ?? [];
+    const prevCogsBk = prevData?.cogs?.breakdown;
     if (cogsBreak.length) {
+      const ytdCogs = cogsBreak.reduce((s, i) => s + i.amount, 0);
       html += `<div class="cd-section">
         <div class="cd-section-hdr">
-          <span class="cd-section-title">売上原価内訳</span>
+          <span class="cd-section-title">売上原価内訳（YTD累計）</span>
+          <div class="cd-section-right">
+            <span class="cd-section-total">${d(fmtYen(ytdCogs))}</span>
+          </div>
         </div>`;
-      for (const it of cogsBreak) html += barItem(it.item, it.amount, rev, '#e74c3c88');
+      for (const it of cogsBreak) {
+        const prev = findPrev(prevCogsBk, it.item);
+        html += barItem(it.item, it.amount, ytdCogs, '#e74c3c88', prev, true);
+      }
       html += '</div>';
     }
 
     // 営業外収益
-    const noiBreak = actData.non_op_income?.breakdown ?? [];
+    const noiBreak  = actData.non_op_income?.breakdown ?? [];
+    const prevNoiBk = prevData?.non_op_income?.breakdown;
     if (noiBreak.length) {
+      const ytdNoi = noiBreak.reduce((s, i) => s + i.amount, 0);
+      const prevYtdNoi = prevNoiBk ? prevNoiBk.reduce((s, i) => s + i.amount, 0) : null;
       const sorted = [...noiBreak].sort((a, b) => b.amount - a.amount);
       html += `<div class="cd-section">
         <div class="cd-section-hdr">
-          <span class="cd-section-title">営業外収益内訳</span>
+          <span class="cd-section-title">営業外収益内訳（YTD累計）</span>
           <div class="cd-section-right">
-            <span class="cd-section-total">${d(fmtYen(actData.non_op_income.total))}</span>
+            <span class="cd-section-total">${d(fmtYen(ytdNoi))}</span>
+            ${momBadge(ytdNoi, prevYtdNoi)}
           </div>
         </div>`;
-      for (const it of sorted) html += barItem(it.item, it.amount, actData.non_op_income.total || rev, '#05966999');
+      for (const it of sorted) {
+        const prev = findPrev(prevNoiBk, it.item);
+        html += barItem(it.item, it.amount, ytdNoi, '#05966999', prev, false);
+      }
       html += '</div>';
     }
 
     // 営業外費用
-    const noeBreak = actData.non_op_expense?.breakdown ?? [];
+    const noeBreak  = actData.non_op_expense?.breakdown ?? [];
+    const prevNoeBk = prevData?.non_op_expense?.breakdown;
     if (noeBreak.length) {
+      const ytdNoe = noeBreak.reduce((s, i) => s + i.amount, 0);
+      const prevYtdNoe = prevNoeBk ? prevNoeBk.reduce((s, i) => s + i.amount, 0) : null;
       const sorted = [...noeBreak].sort((a, b) => b.amount - a.amount);
       html += `<div class="cd-section">
         <div class="cd-section-hdr">
-          <span class="cd-section-title">営業外費用内訳</span>
+          <span class="cd-section-title">営業外費用内訳（YTD累計）</span>
           <div class="cd-section-right">
-            <span class="cd-section-total">${d(fmtYen(actData.non_op_expense.total))}</span>
+            <span class="cd-section-total">${d(fmtYen(ytdNoe))}</span>
+            ${momBadge(ytdNoe, prevYtdNoe, true)}
           </div>
         </div>`;
-      for (const it of sorted) html += barItem(it.item, it.amount, actData.non_op_expense.total || rev, '#e74c3c88');
+      for (const it of sorted) {
+        const prev = findPrev(prevNoeBk, it.item);
+        html += barItem(it.item, it.amount, ytdNoe, '#e74c3c88', prev, true);
+      }
       html += '</div>';
     }
 
-    // サマリー
+    // サマリー（S8期間設定の合計値）
     const valCls = v => v === null ? '' : v < 0 ? ' neg' : v > 0 ? ' pos' : '';
     html += `<div class="cd-summary">
       <div class="cd-summary-row">
-        <span class="cd-summary-lbl">粗利</span>
-        <span>${summaryMom(gp, prSrc?.gross_profit ?? null)}</span>
+        <span class="cd-summary-lbl">粗利（${period === 'ytd' ? 'YTD' : '当月'}）</span>
+        <span>${summaryMom(gp, prGp)}</span>
         <span class="cd-summary-val${valCls(gp)}">${d(fmtYen(gp))}</span>
       </div>
       <div class="cd-summary-row">
-        <span class="cd-summary-lbl">営業利益</span>
+        <span class="cd-summary-lbl">営業利益（${period === 'ytd' ? 'YTD' : '当月'}）</span>
         <span>${summaryMom(op, prOp)}</span>
         <span class="cd-summary-val${valCls(op)}">${d(fmtYen(op))}</span>
       </div>
       <div class="cd-summary-row">
-        <span class="cd-summary-lbl">経常利益</span>
+        <span class="cd-summary-lbl">経常利益（${period === 'ytd' ? 'YTD' : '当月'}）</span>
         <span>${summaryMom(ord, prOrd)}</span>
         <span class="cd-summary-val${valCls(ord)}">${d(fmtYen(ord))}</span>
       </div>
@@ -1707,21 +1769,23 @@ async function init() {
   updateClock();
   setInterval(updateClock, 60_000);
 
-  const [snapshot, budget, actualsRaw, mapping, portals, hrRaw] = await Promise.all([
+  const [snapshot, budget, actualsRaw, actualsPrevRaw, mapping, portals, hrRaw] = await Promise.all([
     tryFetch(SNAPSHOT_FILE),
     tryFetch(BUDGET_FILE),
     tryFetch(ACTUALS_FILE),
+    tryFetch(ACTUALS_PREV_FILE),
     tryFetch(MAPPING_FILE),
     tryFetch(PORTALS_FILE),
     tryFetch(HR_FILE),
   ]);
 
-  state.current = snapshot;
-  state.budget  = budget;
-  state.actuals = actualsRaw?.data ?? null;
-  state.mapping = mapping;
-  state.portals = portals;
-  state.hr      = hrRaw?.data ?? null;
+  state.current     = snapshot;
+  state.budget      = budget;
+  state.actuals     = actualsRaw?.data     ?? null;
+  state.actualsPrev = actualsPrevRaw?.data ?? null;
+  state.mapping     = mapping;
+  state.portals     = portals;
+  state.hr          = hrRaw?.data ?? null;
 
   if (!snapshot) {
     document.getElementById('s1-highlights').innerHTML =
