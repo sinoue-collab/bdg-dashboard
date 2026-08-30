@@ -3,3 +3,8 @@ estimate/output/
 estimate/test_browser_sim.js
 estimate/package.json
 estimate/package-lock.json
+
+# 認証情報（絶対にコミットしない）
+.env
+.env.*
+*.token
