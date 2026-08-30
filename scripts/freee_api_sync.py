@@ -135,7 +135,7 @@ def freee_get(path, access_token, params=None):
         raise RuntimeError(f'freee API {e.code}: {body[:400]}')
 
 
-def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month):
+def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month, debug=False):
     """指定期間の損益試算表 balances を返す"""
     params = {
         'company_id':  company_id,
@@ -144,7 +144,18 @@ def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month
         'end_month':   end_month,
     }
     data = freee_get('/api/1/reports/trial_pl', access_token, params)
-    return data.get('trial_pl', {}).get('balances', [])
+    balances = data.get('trial_pl', {}).get('balances', [])
+    if debug:
+        print(f'    [DEBUG] balances 件数: {len(balances)}')
+        for b in balances[:8]:
+            name   = b.get('account_item_name', '(不明)')
+            amt    = b.get('closing_balance', 0)
+            level  = b.get('hierarchy_level', '?')
+            n_acct = len(b.get('account_items', []))
+            print(f'    [DEBUG]   lv{level} {name!r:30s} amount={amt:>12,}  account_items={n_acct}')
+        if len(balances) > 8:
+            print(f'    [DEBUG]   ... 残り {len(balances)-8} 件')
+    return balances
 
 
 # ─────────────────────────────────────────
@@ -154,7 +165,13 @@ def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month
 def parse_balances(balances, mapping):
     """
     freee balances → {revenue, cogs, sga, non_op_income, non_op_expense}
-    各セクション内の金額ゼロ以外のリーフ項目のみ収集する。
+
+    freee は2種類の構造を返す場合がある:
+    (A) フラット階層: balances の各エントリが勘定科目1行に対応
+    (B) ネスト型: balances の各エントリがセクションで、
+        個別科目は entry['account_items'] に格納
+
+    どちらにも対応するため、account_items があれば優先して使用する。
     """
     section_starters = mapping['section_starters']
     cogs_markers     = set(mapping['cogs_markers'])
@@ -177,18 +194,37 @@ def parse_balances(balances, mapping):
             continue
         if name in section_starters:
             current_section = section_starters[name]
-            continue
-        if name in cogs_markers:
+        elif name in cogs_markers:
             current_section = 'cogs'
-            continue
+        elif current_section:
+            # フラット構造のリーフ項目
+            if amount != 0:
+                result[current_section]['breakdown'].append({
+                    'item':   name,
+                    'amount': abs(int(amount)),
+                })
 
-        if current_section and amount != 0:
-            result[current_section]['breakdown'].append({
-                'item':   name,
-                'amount': abs(int(amount)),
-            })
+        # ネスト型: account_items に個別科目が入っている場合
+        section_for_row = section_starters.get(name) or ('cogs' if name in cogs_markers else None)
+        if section_for_row:
+            for ai in row.get('account_items', []):
+                ai_name   = (ai.get('name') or ai.get('account_item_name') or '').strip()
+                ai_amount = ai.get('closing_balance') or 0
+                if ai_amount != 0:
+                    result[section_for_row]['breakdown'].append({
+                        'item':   ai_name,
+                        'amount': abs(int(ai_amount)),
+                    })
 
+    # 重複排除（フラットとネスト両方で追加された場合）
     for sec in result.values():
+        seen = set()
+        deduped = []
+        for item in sec['breakdown']:
+            if item['item'] not in seen:
+                seen.add(item['item'])
+                deduped.append(item)
+        sec['breakdown'] = deduped
         sec['total'] = sum(i['amount'] for i in sec['breakdown'])
 
     return result
@@ -227,6 +263,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--month',   help='対象月 YYYY-MM（省略時は当月）')
     ap.add_argument('--dry-run', action='store_true', help='ファイル書き込みをスキップ')
+    ap.add_argument('--debug',   action='store_true', help='API レスポンスの詳細ログを出力')
     args = ap.parse_args()
 
     now = datetime.now(JST)
@@ -309,8 +346,10 @@ def main():
     for co_name, cfg in COMPANIES.items():
         company_id_str = os.environ.get(cfg['env_key'], '')
         if not company_id_str:
-            print(f'  ⚠️  {co_name}: {cfg["env_key"]} 未設定 → スキップ')
+            print(f'  ⚠️  {co_name}: 環境変数 {cfg["env_key"]} が未設定または空 → スキップ')
+            print(f'      （GitHub Secrets に {cfg["env_key"]} が登録されているか確認してください）')
             continue
+        print(f'  [{co_name}] company_id={company_id_str}')
 
         company_id = int(company_id_str)
         fs         = cfg['fiscal_start_month']
@@ -323,19 +362,20 @@ def main():
 
         print(f'  [{co_name}] (id={company_id})')
         try:
+            dbg = args.debug
             print(f'    当月    {cur_year}-{cur_month:02d}...')
-            cur_bal  = fetch_trial_pl(company_id, access_token, cur_year, cur_month, cur_month)
+            cur_bal  = fetch_trial_pl(company_id, access_token, cur_year, cur_month, cur_month, debug=dbg)
             cur_data = parse_balances(cur_bal, mapping)
             cur_sum  = compute_summary(cur_data)
 
             ytd_label = f'{ytd_year}-{ytd_sm:02d}〜{cur_year}-{cur_month:02d}'
             print(f'    YTD     {ytd_label}...')
-            ytd_bal  = fetch_trial_pl(company_id, access_token, ytd_year, ytd_sm, cur_month)
+            ytd_bal  = fetch_trial_pl(company_id, access_token, ytd_year, ytd_sm, cur_month, debug=dbg)
             ytd_data = parse_balances(ytd_bal, mapping)
             ytd_sum  = compute_summary(ytd_data)
 
             print(f'    前月    {prv_year}-{prv_month:02d}...')
-            prv_bal  = fetch_trial_pl(company_id, access_token, prv_year, prv_month, prv_month)
+            prv_bal  = fetch_trial_pl(company_id, access_token, prv_year, prv_month, prv_month, debug=dbg)
             prv_data = parse_balances(prv_bal, mapping)
             prv_sum  = compute_summary(prv_data)
 

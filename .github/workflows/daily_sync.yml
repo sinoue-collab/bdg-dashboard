@@ -13,6 +13,10 @@ on:
         description: 'DRY RUN（ファイル書き込みなし）'
         type: boolean
         default: false
+      debug:
+        description: 'DEBUG（API レスポンスの詳細を出力）'
+        type: boolean
+        default: false
 
 permissions:
   contents: write   # JSON コミット・プッシュ用
@@ -52,6 +56,9 @@ jobs:
           fi
           if [ "${{ inputs.dry_run }}" = "true" ]; then
             ARGS="$ARGS --dry-run"
+          fi
+          if [ "${{ inputs.debug }}" = "true" ]; then
+            ARGS="$ARGS --debug"
           fi
           python3 scripts/freee_api_sync.py $ARGS
 
