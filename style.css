@@ -149,6 +149,34 @@ body {
 }
 .s1-block-hdr .s1-section-title { margin: 0; border: none; padding: 0; font-size: 12px; }
 
+/* 変化テーブル */
+.delta-tbl-wrap { overflow-x: auto; padding: 0 16px 16px; }
+.delta-tbl {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}
+.delta-tbl th {
+  text-align: right; color: var(--sub); font-weight: 600;
+  padding: 6px 10px; border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.delta-tbl th:first-child { text-align: left; }
+.delta-tbl td {
+  text-align: right; padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.delta-lbl { text-align: left !important; color: var(--text); font-weight: 500; }
+.delta-sga-lbl { color: var(--sub); font-size: 11px; padding-left: 20px !important; }
+.delta-cur { color: var(--text); font-weight: 700; }
+.delta-good { color: var(--green); font-weight: 600; }
+.delta-bad  { color: var(--red);   font-weight: 600; }
+.delta-zero { color: var(--sub); }
+.delta-dash { color: var(--sub); }
+.delta-note {
+  font-size: 11px; color: var(--sub); padding: 10px 16px 4px;
+}
+.delta-sga-row td { background: var(--bg); }
+
 /* ミニトグル（S1専用） */
 .mini-toggle {
   display: flex;

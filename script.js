@@ -9,6 +9,7 @@ const BUDGET_FILE   = 'data/budget/budget_FY2026.json';
 const ACTUALS_FILE            = 'data/actuals/actuals_latest.json';
 const ACTUALS_PREV_FILE       = 'data/actuals/actuals_previous.json';
 const ACTUALS_MONTH_START_FILE= 'data/actuals/actuals_month_start.json';
+const DAILY_HISTORY_BASE      = 'data/actuals/daily_history';
 const MAPPING_FILE  = 'data/imports/freee_mapping.json';
 const PORTALS_FILE  = 'data/portals/kpi_portals.json';
 const HR_FILE       = 'data/hr/hr_latest.json';
@@ -83,9 +84,11 @@ const S2_METRICS = [
 let state = {
   current:   null,
   budget:    null,
-  actuals:          null,
-  actualsPrev:      null,
+  actuals:           null,
+  actualsPrev:       null,
   actualsMonthStart: null,
+  actualsYesterday:  null,
+  actualsLastWeek:   null,
   mapping:   null,
   portals:   null,
   hr:        null,
@@ -310,9 +313,111 @@ function diffClass(diff, isExpense = false) {
 
 function renderS1() {
   renderS1HeroKPIs();
+  renderS1CoCards();
+  renderS1Delta();
   renderS1MetricsTable();
   renderS1Highlights();
-  renderS1CoCards();
+}
+
+// ⑤ 変化テーブル（前日比・前週比・前月比）
+function renderS1Delta() {
+  const el = document.getElementById('s1-delta');
+  if (!el) return;
+
+  const cur = state.actuals;
+  const yd  = state.actualsYesterday;
+  const wk  = state.actualsLastWeek;
+  const ms  = state.actualsMonthStart;
+
+  if (!cur) {
+    el.innerHTML = '<p class="delta-empty">実績データ未読込</p>';
+    return;
+  }
+
+  const UNIT_KEYS = ['unit_blue_estate', 'unit_blue_design', 'unit_blue_life', 'unit_seitendo'];
+
+  const sumKey = (data, summaryKey) => {
+    if (!data) return null;
+    let total = 0, found = false;
+    for (const u of UNIT_KEYS) {
+      const v = data[u]?._summary?.[summaryKey];
+      if (v !== undefined && v !== null) { total += v; found = true; }
+    }
+    return found ? total : null;
+  };
+
+  const sumBkItem = (data, itemName) => {
+    if (!data) return null;
+    let total = 0, found = false;
+    for (const u of UNIT_KEYS) {
+      const bk = data[u]?.sga?.breakdown ?? [];
+      const it = bk.find(i => i.item === itemName);
+      if (it) { total += it.amount; found = true; }
+    }
+    return found ? total : null;
+  };
+
+  const diffCell = (curV, baseV, inv = false) => {
+    if (curV === null || baseV === null)
+      return '<td class="delta-dash">—</td>';
+    const d = curV - baseV;
+    if (d === 0) return '<td class="delta-zero">±0</td>';
+    const up   = d > 0;
+    const good = inv ? !up : up;
+    const sign = up ? '+' : '';
+    return `<td class="${good ? 'delta-good' : 'delta-bad'}">${sign}${fmtYen(d)}</td>`;
+  };
+
+  const MAIN_METRICS = [
+    { lbl: '当月売上',     key: 'revenue',         inv: false },
+    { lbl: '当月粗利',     key: 'gross_profit',    inv: false },
+    { lbl: '当月営業利益', key: 'op_profit',        inv: false },
+  ];
+
+  // 上位販管費科目（グループ合計で金額上位3件）
+  const sgaMap = {};
+  for (const u of UNIT_KEYS) {
+    for (const it of cur[u]?.sga?.breakdown ?? []) {
+      sgaMap[it.item] = (sgaMap[it.item] ?? 0) + it.amount;
+    }
+  }
+  const topSga = Object.entries(sgaMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([name]) => name);
+
+  let rows = '';
+  for (const { lbl, key, inv } of MAIN_METRICS) {
+    const c = sumKey(cur, key);
+    rows += `<tr>
+      <td class="delta-lbl">${lbl}</td>
+      <td class="delta-cur">${c !== null ? fmtYen(c) : '—'}</td>
+      ${diffCell(c, sumKey(yd,  key), inv)}
+      ${diffCell(c, sumKey(wk,  key), inv)}
+      ${diffCell(c, sumKey(ms,  key), inv)}
+    </tr>`;
+  }
+  for (const name of topSga) {
+    const c = sgaMap[name];
+    rows += `<tr class="delta-sga-row">
+      <td class="delta-lbl delta-sga-lbl">${name}</td>
+      <td class="delta-cur">${fmtYen(c)}</td>
+      ${diffCell(c, sumBkItem(yd, name), true)}
+      ${diffCell(c, sumBkItem(wk, name), true)}
+      ${diffCell(c, sumBkItem(ms, name), true)}
+    </tr>`;
+  }
+
+  const hasHistory = yd !== null || wk !== null;
+  const note = hasHistory ? '' :
+    '<div class="delta-note">※ 前日比・前週比は翌日以降の自動同期後から表示されます</div>';
+
+  el.innerHTML = `${note}<div class="delta-tbl-wrap"><table class="delta-tbl">
+    <thead><tr>
+      <th>指標</th><th>今月累計</th><th>前日比</th><th>前週比</th><th>前月比</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
 }
 
 // ① ヒーローKPIカード
@@ -1908,7 +2013,15 @@ async function init() {
   updateClock();
   setInterval(updateClock, 60_000);
 
-  const [snapshot, budget, actualsRaw, actualsPrevRaw, actualsMonthStartRaw, mapping, portals, hrRaw] = await Promise.all([
+  // 日次履歴ファイルのパスを JST 基準で生成
+  const _jstNow = new Date(Date.now() + 9 * 3600 * 1000);
+  const _jstDate = (d) => new Date(d.getTime()).toISOString().slice(0, 10);
+  const _ydDate  = new Date(_jstNow.getTime() - 86400000);
+  const _wkDate  = new Date(_jstNow.getTime() - 7 * 86400000);
+  const DAILY_YD = `${DAILY_HISTORY_BASE}/${_jstDate(_ydDate)}.json`;
+  const DAILY_WK = `${DAILY_HISTORY_BASE}/${_jstDate(_wkDate)}.json`;
+
+  const [snapshot, budget, actualsRaw, actualsPrevRaw, actualsMonthStartRaw, mapping, portals, hrRaw, ydRaw, wkRaw] = await Promise.all([
     tryFetch(SNAPSHOT_FILE),
     tryFetch(BUDGET_FILE),
     tryFetch(ACTUALS_FILE),
@@ -1917,6 +2030,8 @@ async function init() {
     tryFetch(MAPPING_FILE),
     tryFetch(PORTALS_FILE),
     tryFetch(HR_FILE),
+    tryFetch(DAILY_YD),
+    tryFetch(DAILY_WK),
   ]);
 
   state.current          = snapshot;
@@ -1924,6 +2039,8 @@ async function init() {
   state.actuals          = actualsRaw?.data          ?? null;
   state.actualsPrev      = actualsPrevRaw?.data      ?? null;
   state.actualsMonthStart= actualsMonthStartRaw?.data ?? null;
+  state.actualsYesterday = ydRaw?.data               ?? null;
+  state.actualsLastWeek  = wkRaw?.data               ?? null;
   state.mapping     = mapping;
   state.portals     = portals;
   state.hr          = hrRaw?.data ?? null;

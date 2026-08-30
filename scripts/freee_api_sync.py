@@ -62,6 +62,7 @@ MAPPING_FILE     = os.path.join(REPO_ROOT, 'data', 'imports', 'freee_mapping.jso
 ACTUALS_LATEST      = os.path.join(ACTUALS_DIR, 'actuals_latest.json')
 ACTUALS_PREVIOUS    = os.path.join(ACTUALS_DIR, 'actuals_previous.json')
 ACTUALS_MONTH_START = os.path.join(ACTUALS_DIR, 'actuals_month_start.json')
+DAILY_HISTORY_DIR   = os.path.join(ACTUALS_DIR, 'daily_history')
 SNAPSHOT_LATEST  = os.path.join(SNAPSHOT_DIR, 'snapshot_latest.json')
 
 
@@ -727,6 +728,13 @@ def main():
         with open(SNAPSHOT_LATEST, 'w', encoding='utf-8') as f:
             json.dump(snapshot_out, f, ensure_ascii=False, indent=2)
         print(f'  ✓ snapshot_latest.json 更新')
+
+        # 日次履歴スナップショット保存
+        os.makedirs(DAILY_HISTORY_DIR, exist_ok=True)
+        today_str   = now.strftime('%Y-%m-%d')
+        daily_file  = os.path.join(DAILY_HISTORY_DIR, f'{today_str}.json')
+        shutil.copy2(ACTUALS_LATEST, daily_file)
+        print(f'  ✓ 日次履歴 data/actuals/daily_history/{today_str}.json 保存')
 
     print()
     print('=' * 60)
