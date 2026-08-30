@@ -31,23 +31,12 @@ COMPANIES = {
 }
 
 # ── 認証 ────────────────────────────────────────────────────────────────
+# 注意: プローブはトークンを更新しない。
+# freee は rotating refresh token 方式のため、プローブがリフレッシュすると
+# 新トークンが GitHub Secrets に書き戻されず、本番同期が壊れる。
 
-def refresh_token():
-    client_id     = os.environ.get('FREEE_CLIENT_ID', '')
-    client_secret = os.environ.get('FREEE_CLIENT_SECRET', '')
-    refresh_tok   = os.environ.get('FREEE_REFRESH_TOKEN', '')
-    if not all([client_id, client_secret, refresh_tok]):
-        return os.environ.get('FREEE_ACCESS_TOKEN', '')
-    data = urllib.parse.urlencode({
-        'grant_type':    'refresh_token',
-        'client_id':     client_id,
-        'client_secret': client_secret,
-        'refresh_token': refresh_tok,
-    }).encode()
-    req = urllib.request.Request(FREEE_TOKEN_URL, data=data, method='POST')
-    req.add_header('Content-Type', 'application/x-www-form-urlencoded')
-    with urllib.request.urlopen(req) as r:
-        return json.loads(r.read())['access_token']
+def get_token():
+    return os.environ.get('FREEE_ACCESS_TOKEN', '')
 
 
 def freee_get(path, token, params=None):
@@ -226,7 +215,7 @@ def main():
     print('  freee 部門・品目タグ付与率 調査レポート')
     print('=' * 60)
 
-    token = refresh_token()
+    token = get_token()
     if not token:
         print('ERROR: FREEE_ACCESS_TOKEN が未設定です')
         sys.exit(1)
