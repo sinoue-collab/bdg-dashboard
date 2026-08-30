@@ -41,19 +41,16 @@ GITHUB_REPO = os.environ.get('GITHUB_REPOSITORY', 'sinoue-collab/bdg-dashboard')
 # fiscal_start_month: freee で設定している会計期間の開始月（1月=1、4月=4）
 COMPANIES = {
     'BLUE ESTATE': {
-        'env_key':            'FREEE_COMPANY_ID_BLUE_ESTATE',
-        'unit_key':           'unit_blue_estate',
-        'fiscal_start_month': 1,   # 1月期（カレンダー年度）
+        'env_key':  'FREEE_COMPANY_ID_BLUE_ESTATE',
+        'unit_key': 'unit_blue_estate',
     },
     'BLUE DESIGN': {
-        'env_key':            'FREEE_COMPANY_ID_BLUE_DESIGN',
-        'unit_key':           'unit_blue_design',
-        'fiscal_start_month': 4,   # 4月期（要確認; エラーが出る場合は1に変更）
+        'env_key':  'FREEE_COMPANY_ID_BLUE_DESIGN',
+        'unit_key': 'unit_blue_design',
     },
     'BLUE LIFE': {
-        'env_key':            'FREEE_COMPANY_ID_BLUE_LIFE',
-        'unit_key':           'unit_blue_life',
-        'fiscal_start_month': 4,   # 4月期（1月指定でYTD 400エラーが発生したため修正）
+        'env_key':  'FREEE_COMPANY_ID_BLUE_LIFE',
+        'unit_key': 'unit_blue_life',
     },
 }
 
@@ -149,6 +146,16 @@ def freee_get(path, access_token, params=None):
     except urllib.error.HTTPError as e:
         body = e.read().decode('utf-8', errors='replace')
         raise RuntimeError(f'freee API {e.code}: {body[:500]}')
+
+
+def get_company_fiscal_start(company_id, access_token):
+    """freee 会社情報から会計期首月（カレンダー月）を自動取得する。失敗時は 1 を返す。"""
+    try:
+        data = freee_get(f'/api/1/companies/{company_id}', access_token)
+        month = data.get('company', {}).get('fiscal_year_start_month', 1)
+        return int(month)
+    except Exception:
+        return 1
 
 
 def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month, debug=False):
@@ -388,8 +395,8 @@ def main():
             continue
 
         company_id = int(company_id_str)
-        fs         = cfg['fiscal_start_month']
-        print(f'  [{co_name}] company_id={company_id}  fiscal_start={fs}月')
+        fs         = get_company_fiscal_start(company_id, access_token)
+        print(f'  [{co_name}] company_id={company_id}  fiscal_start={fs}月（freee自動取得）')
 
         # freee は start_month / end_month をカレンダー月として解釈する。
         # fiscal_year = 当月が属する会計年度の「開始カレンダー年」。
