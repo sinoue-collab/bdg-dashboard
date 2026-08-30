@@ -1,0 +1,27 @@
+name: 部門・品目タグ付与率 調査（一時）
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run coverage probe
+        env:
+          FREEE_ACCESS_TOKEN:           ${{ secrets.FREEE_ACCESS_TOKEN }}
+          FREEE_REFRESH_TOKEN:          ${{ secrets.FREEE_REFRESH_TOKEN }}
+          FREEE_CLIENT_ID:              ${{ secrets.FREEE_CLIENT_ID }}
+          FREEE_CLIENT_SECRET:          ${{ secrets.FREEE_CLIENT_SECRET }}
+          FREEE_COMPANY_ID_BLUE_ESTATE: ${{ secrets.FREEE_COMPANY_ID_BLUE_ESTATE }}
+          FREEE_COMPANY_ID_BLUE_DESIGN: ${{ secrets.FREEE_COMPANY_ID_BLUE_DESIGN }}
+          FREEE_COMPANY_ID_BLUE_LIFE:   ${{ secrets.FREEE_COMPANY_ID_BLUE_LIFE }}
+        run: python3 scripts/probe_department_coverage.py
