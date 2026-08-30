@@ -1,6 +1,6 @@
 {
   "schema_version": "2.1",
-  "generated_at": "2026-08-30T17:02:38.723760+09:00",
+  "generated_at": "2026-08-30T17:10:59.660866+09:00",
   "data_periods": {
     "BLUE ESTATE": "2026-08",
     "BLUE DESIGN": "2026-08",
@@ -12,24 +12,24 @@
       "prior_month": "2026-07",
       "latest": {
         "revenue": 2535883,
-        "gross_profit": 2535883,
+        "gross_profit": 1834981,
         "sga_total": 4615794,
-        "op_profit": -2079911,
-        "ordinary_profit": 102817
+        "op_profit": -2780813,
+        "ordinary_profit": -598085
       },
       "prior": {
         "revenue": 12196610,
-        "gross_profit": 12196610,
+        "gross_profit": 7964496,
         "sga_total": 12129813,
-        "op_profit": 66797,
-        "ordinary_profit": 4510821
+        "op_profit": -4165317,
+        "ordinary_profit": 278707
       },
       "ytd": {
         "revenue": 150695215,
-        "gross_profit": 150695215,
+        "gross_profit": 6911851,
         "sga_total": 103100864,
-        "op_profit": 47594351,
-        "ordinary_profit": 72365045
+        "op_profit": -96189013,
+        "ordinary_profit": -71418319
       }
     },
     "BLUE DESIGN": {
@@ -37,24 +37,24 @@
       "prior_month": "2026-07",
       "latest": {
         "revenue": 610020,
-        "gross_profit": 610020,
+        "gross_profit": 569420,
         "sga_total": 3758394,
-        "op_profit": -3148374,
-        "ordinary_profit": -3129395
+        "op_profit": -3188974,
+        "ordinary_profit": -3169995
       },
       "prior": {
         "revenue": 11512993,
-        "gross_profit": 11512993,
+        "gross_profit": -1591119,
         "sga_total": 10174812,
-        "op_profit": 1338181,
-        "ordinary_profit": 1377691
+        "op_profit": -11765931,
+        "ordinary_profit": -11726421
       },
       "ytd": {
         "revenue": 62981617,
-        "gross_profit": 62981617,
+        "gross_profit": -35284079,
         "sga_total": 39496947,
-        "op_profit": 23484670,
-        "ordinary_profit": 27305748
+        "op_profit": -74781026,
+        "ordinary_profit": -70959948
       }
     },
     "青天堂": {
