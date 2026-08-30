@@ -6,8 +6,9 @@
 
 const SNAPSHOT_FILE = 'data/dashboard_snapshots/snapshot_latest.json';
 const BUDGET_FILE   = 'data/budget/budget_FY2026.json';
-const ACTUALS_FILE       = 'data/actuals/actuals_latest.json';
-const ACTUALS_PREV_FILE  = 'data/actuals/actuals_previous.json';
+const ACTUALS_FILE            = 'data/actuals/actuals_latest.json';
+const ACTUALS_PREV_FILE       = 'data/actuals/actuals_previous.json';
+const ACTUALS_MONTH_START_FILE= 'data/actuals/actuals_month_start.json';
 const MAPPING_FILE  = 'data/imports/freee_mapping.json';
 const PORTALS_FILE  = 'data/portals/kpi_portals.json';
 const HR_FILE       = 'data/hr/hr_latest.json';
@@ -82,8 +83,9 @@ const S2_METRICS = [
 let state = {
   current:   null,
   budget:    null,
-  actuals:     null,
-  actualsPrev: null,
+  actuals:          null,
+  actualsPrev:      null,
+  actualsMonthStart: null,
   mapping:   null,
   portals:   null,
   hr:        null,
@@ -173,6 +175,30 @@ function sumRaw(list) {
 function groupActual(period) {
   const key  = period === 'monthly' ? 'latest' : 'ytd';
   return addRates(sumRaw(COMPANIES.map(c => state.current?.companies?.[c]?.[key])));
+}
+
+// グループ集計（月初スナップショット YTD）— S1 前月比 YTD 用
+function groupMonthStart() {
+  if (!state.actualsMonthStart) return null;
+  return addRates(sumRaw(COMPANIES.map(c => {
+    const u = state.actualsMonthStart[CO_UNIT[c]];
+    if (!u) return null;
+    return u.ytd ?? u;
+  })));
+}
+
+// 会社別の最新2年分の history データを返す
+function getCompanyHistory(company) {
+  const h = state.current?.history?.[company];
+  if (!h) return { latest: null, prev: null };
+  const keys = Object.keys(h).sort();
+  if (keys.length === 0) return { latest: null, prev: null };
+  const lk = keys[keys.length - 1];
+  const pk = keys.length >= 2 ? keys[keys.length - 2] : null;
+  return {
+    latest: { data: addRates(h[lk]), key: lk },
+    prev:   pk ? { data: addRates(h[pk]), key: pk } : null,
+  };
 }
 
 // 単社 actual
@@ -341,7 +367,7 @@ function renderS1MetricsTable() {
   const actual = groupActual(period);
   const budget = getBudget('group', period);
   const py     = getPY('group', period);
-  const pm     = period === 'monthly' ? groupPrior() : null;
+  const pm     = period === 'monthly' ? groupPrior() : groupMonthStart();
 
   const tbody = document.getElementById('s1-tbl-body');
   tbody.innerHTML = '';
@@ -690,6 +716,63 @@ function renderS3Table() {
     const tr = document.createElement('tr');
     tr.innerHTML = cells;
     tbody.appendChild(tr);
+  }
+
+  // ── 前年比較セクション（history から最新2年度の差分）──
+  const HIST_METRICS = [
+    { id: 'revenue', label: '売上高',   isExpense: false },
+    { id: 'gp',      label: '粗利',     isExpense: false },
+    { id: 'sga',     label: '販管費',   isExpense: true  },
+    { id: 'op',      label: '営業利益', isExpense: false },
+  ];
+  const histMap = {};
+  let hasHist = false;
+  for (const co of ALL_COMPANIES) {
+    const h = getCompanyHistory(co);
+    histMap[co] = h;
+    if (h.latest) hasHist = true;
+  }
+
+  if (hasHist) {
+    // 年度ラベル行
+    const labelTr = document.createElement('tr');
+    labelTr.className = 'sep';
+    let lbHtml = '<td>前年比較（最新完了年度 対 前年度）</td><td>—</td>';
+    for (const co of ALL_COMPANIES) {
+      const h = histMap[co];
+      if (h.latest && h.prev) {
+        lbHtml += `<td style="font-size:.78em;text-align:center;white-space:nowrap">${h.latest.key} / ${h.prev.key}</td>`;
+      } else if (h.latest) {
+        lbHtml += `<td style="font-size:.78em;text-align:center">${h.latest.key}</td>`;
+      } else {
+        lbHtml += '<td>—</td>';
+      }
+    }
+    labelTr.innerHTML = lbHtml;
+    tbody.appendChild(labelTr);
+
+    for (const m of HIST_METRICS) {
+      // 最新年度値行
+      const trL = document.createElement('tr');
+      let lHtml = `<td class="td-metric" style="padding-left:1em">${m.label}（前年実績）</td><td class="v-dash">—</td>`;
+      for (const co of ALL_COMPANIES) {
+        const val = histMap[co].latest ? getValue(histMap[co].latest.data, m.id, co) : null;
+        lHtml += `<td class="${valClass(val, m.isExpense)}">${d(fmtYen(val))}</td>`;
+      }
+      trL.innerHTML = lHtml;
+      tbody.appendChild(trL);
+
+      // 対前年差行
+      const trD = document.createElement('tr');
+      let dHtml = `<td class="td-metric" style="padding-left:1.5em;font-size:.82em;color:#6B7280">└ 対前年差</td><td class="v-dash">—</td>`;
+      for (const co of ALL_COMPANIES) {
+        const lv = histMap[co].latest ? getValue(histMap[co].latest.data, m.id, co) : null;
+        const pv = histMap[co].prev   ? getValue(histMap[co].prev.data,   m.id, co) : null;
+        dHtml += `<td class="${diffClass(lv !== null && pv !== null ? lv - pv : null, m.isExpense)}">${d(fmtDiff(lv, pv, false))}</td>`;
+      }
+      trD.innerHTML = dHtml;
+      tbody.appendChild(trD);
+    }
   }
 }
 
@@ -1772,20 +1855,22 @@ async function init() {
   updateClock();
   setInterval(updateClock, 60_000);
 
-  const [snapshot, budget, actualsRaw, actualsPrevRaw, mapping, portals, hrRaw] = await Promise.all([
+  const [snapshot, budget, actualsRaw, actualsPrevRaw, actualsMonthStartRaw, mapping, portals, hrRaw] = await Promise.all([
     tryFetch(SNAPSHOT_FILE),
     tryFetch(BUDGET_FILE),
     tryFetch(ACTUALS_FILE),
     tryFetch(ACTUALS_PREV_FILE),
+    tryFetch(ACTUALS_MONTH_START_FILE),
     tryFetch(MAPPING_FILE),
     tryFetch(PORTALS_FILE),
     tryFetch(HR_FILE),
   ]);
 
-  state.current     = snapshot;
-  state.budget      = budget;
-  state.actuals     = actualsRaw?.data     ?? null;
-  state.actualsPrev = actualsPrevRaw?.data ?? null;
+  state.current          = snapshot;
+  state.budget           = budget;
+  state.actuals          = actualsRaw?.data          ?? null;
+  state.actualsPrev      = actualsPrevRaw?.data      ?? null;
+  state.actualsMonthStart= actualsMonthStartRaw?.data ?? null;
   state.mapping     = mapping;
   state.portals     = portals;
   state.hr          = hrRaw?.data ?? null;

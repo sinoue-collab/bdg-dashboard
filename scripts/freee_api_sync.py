@@ -59,8 +59,9 @@ REPO_ROOT        = os.path.dirname(SCRIPT_DIR)
 ACTUALS_DIR      = os.path.join(REPO_ROOT, 'data', 'actuals')
 SNAPSHOT_DIR     = os.path.join(REPO_ROOT, 'data', 'dashboard_snapshots')
 MAPPING_FILE     = os.path.join(REPO_ROOT, 'data', 'imports', 'freee_mapping.json')
-ACTUALS_LATEST   = os.path.join(ACTUALS_DIR,  'actuals_latest.json')
-ACTUALS_PREVIOUS = os.path.join(ACTUALS_DIR,  'actuals_previous.json')
+ACTUALS_LATEST      = os.path.join(ACTUALS_DIR, 'actuals_latest.json')
+ACTUALS_PREVIOUS    = os.path.join(ACTUALS_DIR, 'actuals_previous.json')
+ACTUALS_MONTH_START = os.path.join(ACTUALS_DIR, 'actuals_month_start.json')
 SNAPSHOT_LATEST  = os.path.join(SNAPSHOT_DIR, 'snapshot_latest.json')
 
 
@@ -521,6 +522,29 @@ def main():
             s = data['latest']
             print(f'  {co}: 売上={s["revenue"]:,}  経常={s["ordinary_profit"]:,}')
     else:
+        # ── 月初スナップショット（前月末データ）の保存 ──────────────
+        # 月が変わった最初の同期時のみ保存。ACTUALS_LATEST の新データ書き込み前に実行。
+        cur_month_str = f'{cur_year}-{cur_month:02d}'
+        save_month_start = True
+        if os.path.exists(ACTUALS_MONTH_START):
+            try:
+                with open(ACTUALS_MONTH_START, encoding='utf-8') as f:
+                    ms_meta = json.load(f)
+                if ms_meta.get('month_start_for') == cur_month_str:
+                    save_month_start = False  # 今月分はすでに保存済み
+            except Exception:
+                pass
+        if save_month_start and os.path.exists(ACTUALS_LATEST):
+            try:
+                with open(ACTUALS_LATEST, encoding='utf-8') as f:
+                    ms_content = json.load(f)
+                ms_content['month_start_for'] = cur_month_str  # どの月の月初か記録
+                with open(ACTUALS_MONTH_START, 'w', encoding='utf-8') as f:
+                    json.dump(ms_content, f, ensure_ascii=False, indent=2)
+                print(f'  ✓ actuals_month_start.json に前月末スナップショット保存（{cur_month_str} 用）')
+            except Exception as e:
+                print(f'  ⚠️  月初スナップショット保存失敗: {e}')
+
         if os.path.exists(ACTUALS_LATEST):
             shutil.copy2(ACTUALS_LATEST, ACTUALS_PREVIOUS)
             print(f'  ✓ actuals_previous.json に退避')
