@@ -14,7 +14,7 @@ GitHub Actions から毎日自動実行される想定。以下の環境変数�
   GH_PAT                        - GitHub PAT（repo スコープ、Secrets 書き戻し用）
 
 手動実行:
-  python3 scripts/freee_api_sync.py [--month 2026-08] [--dry-run]
+  python3 scripts/freee_api_sync.py [--month 2026-08] [--dry-run] [--debug]
 """
 
 import argparse
@@ -38,22 +38,22 @@ FREEE_API_BASE  = 'https://api.freee.co.jp'
 
 GITHUB_REPO = os.environ.get('GITHUB_REPOSITORY', 'sinoue-collab/bdg-dashboard')
 
-# 3社の設定（fiscal_start_month: 月次YTD集計の起算月）
+# fiscal_start_month: freee で設定している会計期間の開始月（1月=1、4月=4）
 COMPANIES = {
     'BLUE ESTATE': {
         'env_key':            'FREEE_COMPANY_ID_BLUE_ESTATE',
         'unit_key':           'unit_blue_estate',
-        'fiscal_start_month': 1,
+        'fiscal_start_month': 1,   # 1月期（カレンダー年度）
     },
     'BLUE DESIGN': {
         'env_key':            'FREEE_COMPANY_ID_BLUE_DESIGN',
         'unit_key':           'unit_blue_design',
-        'fiscal_start_month': 1,
+        'fiscal_start_month': 4,   # 4月期（要確認; エラーが出る場合は1に変更）
     },
     'BLUE LIFE': {
         'env_key':            'FREEE_COMPANY_ID_BLUE_LIFE',
         'unit_key':           'unit_blue_life',
-        'fiscal_start_month': 1,
+        'fiscal_start_month': 4,   # 4月期（要確認）
     },
 }
 
@@ -68,11 +68,38 @@ SNAPSHOT_LATEST  = os.path.join(SNAPSHOT_DIR, 'snapshot_latest.json')
 
 
 # ─────────────────────────────────────────
+#  会計月計算
+# ─────────────────────────────────────────
+
+def calendar_to_fiscal(cal_year, cal_month, fiscal_start_month):
+    """
+    カレンダー年月 → (会計年度, 会計月番号)
+    例: 4月期, 2026年8月 → FY2026, 月番号5
+    例: 4月期, 2026年2月 → FY2025, 月番号11
+    """
+    if cal_month >= fiscal_start_month:
+        fy = cal_year
+        fm = cal_month - fiscal_start_month + 1
+    else:
+        fy = cal_year - 1
+        fm = cal_month + 12 - fiscal_start_month + 1
+    return fy, fm
+
+
+def fiscal_year_start_calendar(cal_year, cal_month, fiscal_start_month):
+    """当月が属する会計年度のカレンダー上の開始年月を返す"""
+    fy, _ = calendar_to_fiscal(cal_year, cal_month, fiscal_start_month)
+    # FY fy の開始カレンダー月
+    start_cal_year  = fy
+    start_cal_month = fiscal_start_month
+    return start_cal_year, start_cal_month
+
+
+# ─────────────────────────────────────────
 #  トークン管理
 # ─────────────────────────────────────────
 
 def do_token_refresh(client_id, client_secret, refresh_tok):
-    """リフレッシュトークンで新しいアクセストークンを取得"""
     data = urllib.parse.urlencode({
         'grant_type':    'refresh_token',
         'client_id':     client_id,
@@ -86,7 +113,6 @@ def do_token_refresh(client_id, client_secret, refresh_tok):
 
 
 def update_github_secret(repo, gh_token, name, value):
-    """PyNaCl で暗号化して GitHub Secrets に PUT"""
     try:
         from nacl import encoding, public as nacl_public
     except ImportError:
@@ -132,29 +158,34 @@ def freee_get(path, access_token, params=None):
             return json.loads(resp.read())
     except urllib.error.HTTPError as e:
         body = e.read().decode('utf-8', errors='replace')
-        raise RuntimeError(f'freee API {e.code}: {body[:400]}')
+        raise RuntimeError(f'freee API {e.code}: {body[:500]}')
 
 
 def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month, debug=False):
-    """指定期間の損益試算表 balances を返す"""
+    """
+    指定した会計年度・会計月番号で損益試算表を取得。
+    start_month / end_month は freee の「会計月番号」（会計年度の第N月）。
+    """
     params = {
         'company_id':  company_id,
         'fiscal_year': fiscal_year,
         'start_month': start_month,
         'end_month':   end_month,
     }
-    data = freee_get('/api/1/reports/trial_pl', access_token, params)
+    data     = freee_get('/api/1/reports/trial_pl', access_token, params)
     balances = data.get('trial_pl', {}).get('balances', [])
+
     if debug:
         print(f'    [DEBUG] balances 件数: {len(balances)}')
-        for b in balances[:8]:
-            name   = b.get('account_item_name', '(不明)')
+        for b in balances[:10]:
+            name   = b.get('account_item_name')   or '(不明)'
+            parent = b.get('parent_account_item_name') or '(なし)'
             amt    = b.get('closing_balance', 0)
             level  = b.get('hierarchy_level', '?')
-            n_acct = len(b.get('account_items', []))
-            print(f'    [DEBUG]   lv{level} {name!r:30s} amount={amt:>12,}  account_items={n_acct}')
-        if len(balances) > 8:
-            print(f'    [DEBUG]   ... 残り {len(balances)-8} 件')
+            print(f'    [DEBUG]   lv{level} {name!r:25s} parent={parent!r:25s} amount={amt:>13,}')
+        if len(balances) > 10:
+            print(f'    [DEBUG]   ... 残り {len(balances)-10} 件')
+
     return balances
 
 
@@ -166,16 +197,15 @@ def parse_balances(balances, mapping):
     """
     freee balances → {revenue, cogs, sga, non_op_income, non_op_expense}
 
-    freee は2種類の構造を返す場合がある:
-    (A) フラット階層: balances の各エントリが勘定科目1行に対応
-    (B) ネスト型: balances の各エントリがセクションで、
-        個別科目は entry['account_items'] に格納
-
-    どちらにも対応するため、account_items があれば優先して使用する。
+    freee は「子アイテムを先に出力し、最後に親（合計行）を出力する」順序を取る。
+    合計行（section_starters / cogs_markers に対応）は account_item_name が
+    null になる場合があるため、各アイテムの parent_account_item_name を辿って
+    どのセクションに属するか判定する。
     """
     section_starters = mapping['section_starters']
     cogs_markers     = set(mapping['cogs_markers'])
     end_markers      = set(mapping['section_end_markers'])
+    skip_names       = set(section_starters) | cogs_markers | end_markers
 
     result = {
         'revenue':        {'total': 0, 'breakdown': []},
@@ -184,47 +214,78 @@ def parse_balances(balances, mapping):
         'non_op_income':  {'total': 0, 'breakdown': []},
         'non_op_expense': {'total': 0, 'breakdown': []},
     }
-    current_section = None
 
+    # name → parent_name のルックアップテーブルを構築
+    parent_of = {}
+    for row in balances:
+        name   = (row.get('account_item_name')        or '').strip()
+        parent = (row.get('parent_account_item_name') or '').strip()
+        if name:
+            parent_of[name] = parent
+
+    # 子を持つアイテム（非リーフ）を特定
+    has_children = set()
+    for row in balances:
+        p = (row.get('parent_account_item_name') or '').strip()
+        if p:
+            has_children.add(p)
+
+    def resolve_section(name, depth=0):
+        """親を辿って所属セクションを返す。見つからなければ None。"""
+        if depth > 8 or not name:
+            return None
+        p = parent_of.get(name, '')
+        if p in section_starters:
+            return section_starters[p]
+        if p in cogs_markers:
+            return 'cogs'
+        if p:
+            return resolve_section(p, depth + 1)
+        return None
+
+    seen = set()
     for row in balances:
         name   = (row.get('account_item_name') or '').strip()
         amount = row.get('closing_balance') or 0
 
-        if name in end_markers:
+        # 名前なし・金額ゼロ・重複はスキップ
+        if not name or not amount or name in seen:
             continue
+        seen.add(name)
+
+        # セクションヘッダー・小計名はスキップ
+        if name in skip_names:
+            continue
+
+        # 中間ノード（子を持つアイテム）はスキップ
+        if name in has_children:
+            continue
+
+        section = resolve_section(name)
+        if section:
+            result[section]['breakdown'].append({
+                'item':   name,
+                'amount': abs(int(amount)),
+            })
+
+    # フォールバック: セクション名そのものがリーフになっている場合
+    # （例: BLUE LIFE の '売上高' が内訳なしで lv2 に存在するケース）
+    for row in balances:
+        name   = (row.get('account_item_name') or '').strip()
+        amount = row.get('closing_balance') or 0
+        if not name or not amount:
+            continue
+
         if name in section_starters:
-            current_section = section_starters[name]
-        elif name in cogs_markers:
-            current_section = 'cogs'
-        elif current_section:
-            # フラット構造のリーフ項目
-            if amount != 0:
-                result[current_section]['breakdown'].append({
-                    'item':   name,
-                    'amount': abs(int(amount)),
-                })
+            sec = section_starters[name]
+            if result[sec]['total'] == 0 and name not in has_children:
+                result[sec]['breakdown'].append({'item': name, 'amount': abs(int(amount))})
 
-        # ネスト型: account_items に個別科目が入っている場合
-        section_for_row = section_starters.get(name) or ('cogs' if name in cogs_markers else None)
-        if section_for_row:
-            for ai in row.get('account_items', []):
-                ai_name   = (ai.get('name') or ai.get('account_item_name') or '').strip()
-                ai_amount = ai.get('closing_balance') or 0
-                if ai_amount != 0:
-                    result[section_for_row]['breakdown'].append({
-                        'item':   ai_name,
-                        'amount': abs(int(ai_amount)),
-                    })
+        if name in cogs_markers and result['cogs']['total'] == 0 and name not in has_children:
+            result['cogs']['breakdown'].append({'item': name, 'amount': abs(int(amount))})
 
-    # 重複排除（フラットとネスト両方で追加された場合）
+    # 合計を算出
     for sec in result.values():
-        seen = set()
-        deduped = []
-        for item in sec['breakdown']:
-            if item['item'] not in seen:
-                seen.add(item['item'])
-                deduped.append(item)
-        sec['breakdown'] = deduped
         sec['total'] = sum(i['amount'] for i in sec['breakdown'])
 
     return result
@@ -280,9 +341,9 @@ def main():
     else:
         prv_year, prv_month = cur_year, cur_month - 1
 
-    print('=' * 55)
+    print('=' * 60)
     print('  freee API データ同期')
-    print('=' * 55)
+    print('=' * 60)
     print(f'対象月 : {cur_year}-{cur_month:02d}')
     print(f'前月   : {prv_year}-{prv_month:02d}')
     print()
@@ -346,40 +407,47 @@ def main():
     for co_name, cfg in COMPANIES.items():
         company_id_str = os.environ.get(cfg['env_key'], '')
         if not company_id_str:
-            print(f'  ⚠️  {co_name}: 環境変数 {cfg["env_key"]} が未設定または空 → スキップ')
-            print(f'      （GitHub Secrets に {cfg["env_key"]} が登録されているか確認してください）')
+            print(f'  ⚠️  {co_name}: 環境変数 {cfg["env_key"]} が未設定 → スキップ')
             continue
-        print(f'  [{co_name}] company_id={company_id_str}')
 
         company_id = int(company_id_str)
         fs         = cfg['fiscal_start_month']
+        print(f'  [{co_name}] company_id={company_id}  fiscal_start={fs}月')
 
-        # YTD 起算月（当年内に fiscal_start_month があるか）
-        if cur_month >= fs:
-            ytd_year, ytd_sm = cur_year, fs
-        else:
-            ytd_year, ytd_sm = cur_year - 1, fs
+        # カレンダー月 → 会計月番号に変換
+        cur_fy, cur_fm = calendar_to_fiscal(cur_year, cur_month, fs)
+        prv_fy, prv_fm = calendar_to_fiscal(prv_year, prv_month, fs)
+        ytd_fy         = cur_fy
+        ytd_fm_start   = 1        # 会計期首から
+        ytd_fm_end     = cur_fm
 
-        print(f'  [{co_name}] (id={company_id})')
+        # YTD のカレンダー上の表示文字列
+        ytd_cal_year, ytd_cal_month = fiscal_year_start_calendar(cur_year, cur_month, fs)
+        ytd_label = f'{ytd_cal_year}-{ytd_cal_month:02d}〜{cur_year}-{cur_month:02d}'
+
+        if args.debug:
+            print(f'    当月  FY={cur_fy} 第{cur_fm}月  前月  FY={prv_fy} 第{prv_fm}月')
+            print(f'    YTD   FY={ytd_fy} 第{ytd_fm_start}〜{ytd_fm_end}月  ({ytd_label})')
+
         try:
-            dbg = args.debug
             print(f'    当月    {cur_year}-{cur_month:02d}...')
-            cur_bal  = fetch_trial_pl(company_id, access_token, cur_year, cur_month, cur_month, debug=dbg)
+            cur_bal  = fetch_trial_pl(company_id, access_token, cur_fy, cur_fm, cur_fm, debug=args.debug)
             cur_data = parse_balances(cur_bal, mapping)
             cur_sum  = compute_summary(cur_data)
 
-            ytd_label = f'{ytd_year}-{ytd_sm:02d}〜{cur_year}-{cur_month:02d}'
             print(f'    YTD     {ytd_label}...')
-            ytd_bal  = fetch_trial_pl(company_id, access_token, ytd_year, ytd_sm, cur_month, debug=dbg)
+            ytd_bal  = fetch_trial_pl(company_id, access_token, ytd_fy, ytd_fm_start, ytd_fm_end, debug=args.debug)
             ytd_data = parse_balances(ytd_bal, mapping)
             ytd_sum  = compute_summary(ytd_data)
 
             print(f'    前月    {prv_year}-{prv_month:02d}...')
-            prv_bal  = fetch_trial_pl(company_id, access_token, prv_year, prv_month, prv_month, debug=dbg)
+            prv_bal  = fetch_trial_pl(company_id, access_token, prv_fy, prv_fm, prv_fm, debug=args.debug)
             prv_data = parse_balances(prv_bal, mapping)
             prv_sum  = compute_summary(prv_data)
 
             print(f'    ✓ 完了  売上={cur_data["revenue"]["total"]:,}  経常={cur_sum["ordinary_profit"]:,}')
+            if cur_data['revenue']['total'] == 0:
+                print(f'    ⚠️  売上が0です。freee への入力が未完了か、科目マッピングを確認してください。')
 
         except Exception as e:
             print(f'    ✗ エラー: {e}')
@@ -419,7 +487,7 @@ def main():
     if not actuals_data:
         sys.exit('エラー: 取得できた会社データが0件です')
 
-    # 青天堂はfreee対象外のため既存データを引き継ぎ
+    # 青天堂は freee 対象外のため既存データを引き継ぎ
     existing_companies = existing_snap.get('companies', {})
     if '青天堂' in existing_companies:
         snapshot_companies['青天堂'] = existing_companies['青天堂']
@@ -463,9 +531,9 @@ def main():
         print(f'  ✓ snapshot_latest.json 更新')
 
     print()
-    print('=' * 55)
+    print('=' * 60)
     print('  同期完了')
-    print('=' * 55)
+    print('=' * 60)
 
 
 if __name__ == '__main__':
