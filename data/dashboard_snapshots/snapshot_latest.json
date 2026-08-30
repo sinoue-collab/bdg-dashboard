@@ -1,6 +1,6 @@
 {
   "schema_version": "2.1",
-  "generated_at": "2026-08-30T16:42:34.484286+09:00",
+  "generated_at": "2026-08-30T16:49:18.283133+09:00",
   "data_periods": {
     "BLUE ESTATE": "2026-08",
     "BLUE LIFE": "2026-08",
@@ -11,50 +11,50 @@
       "latest_month": "2026-08",
       "prior_month": "2026-07",
       "latest": {
-        "revenue": 0,
-        "gross_profit": 0,
-        "sga_total": 0,
-        "op_profit": 0,
-        "ordinary_profit": 0
+        "revenue": 2535883,
+        "gross_profit": 2535883,
+        "sga_total": 4615794,
+        "op_profit": -2079911,
+        "ordinary_profit": 102817
       },
       "prior": {
-        "revenue": 0,
-        "gross_profit": 0,
-        "sga_total": 0,
-        "op_profit": 0,
-        "ordinary_profit": 0
+        "revenue": 12196610,
+        "gross_profit": 12196610,
+        "sga_total": 12129813,
+        "op_profit": 66797,
+        "ordinary_profit": 4510821
       },
       "ytd": {
-        "revenue": 0,
-        "gross_profit": 0,
-        "sga_total": 0,
-        "op_profit": 0,
-        "ordinary_profit": 0
+        "revenue": 150695215,
+        "gross_profit": 150695215,
+        "sga_total": 103100864,
+        "op_profit": 47594351,
+        "ordinary_profit": 72365045
       }
     },
     "BLUE LIFE": {
       "latest_month": "2026-08",
       "prior_month": "2026-07",
       "latest": {
-        "revenue": 7573683,
-        "gross_profit": 7573683,
+        "revenue": 0,
+        "gross_profit": 0,
         "sga_total": 0,
-        "op_profit": 7573683,
-        "ordinary_profit": 7573683
+        "op_profit": 0,
+        "ordinary_profit": 0
       },
       "prior": {
-        "revenue": 7573683,
-        "gross_profit": 7573683,
+        "revenue": 0,
+        "gross_profit": 0,
         "sga_total": 0,
-        "op_profit": 7573683,
-        "ordinary_profit": 7573683
+        "op_profit": 0,
+        "ordinary_profit": 0
       },
       "ytd": {
-        "revenue": 7573683,
-        "gross_profit": 7573683,
+        "revenue": 0,
+        "gross_profit": 0,
         "sga_total": 0,
-        "op_profit": 7573683,
-        "ordinary_profit": 7573683
+        "op_profit": 0,
+        "ordinary_profit": 0
       }
     },
     "青天堂": {
