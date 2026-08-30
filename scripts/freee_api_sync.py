@@ -236,6 +236,26 @@ def parse_balances(balances, mapping):
     for sec in result.values():
         sec['total'] = sum(i['amount'] for i in sec['breakdown'])
 
+    # ── Pass 2: null 名の COGS 項目を補完 ────────────────────────────────
+    # 建設業など、工事原価が account_item_name=null で返る場合への対応。
+    # COGS の breakdown が空の場合のみ、cogs_markers カテゴリの最大 null 名金額を使う。
+    if result['cogs']['total'] == 0:
+        cogs_null: dict[str, int] = {}
+        for row in balances:
+            name     = (row.get('account_item_name')     or '').strip()
+            category = (row.get('account_category_name') or '').strip()
+            opening  = row.get('opening_balance', 0) or 0
+            closing  = row.get('closing_balance',  0) or 0
+            amount   = closing - opening
+            if name or not amount:
+                continue
+            if category in cogs_markers:
+                # 複数の null 名行がある場合は最大値（= セクション合計）を採用
+                cogs_null[category] = max(cogs_null.get(category, 0), abs(int(amount)))
+        for cat, amt in cogs_null.items():
+            result['cogs']['breakdown'].append({'item': cat, 'amount': amt})
+        result['cogs']['total'] = sum(i['amount'] for i in result['cogs']['breakdown'])
+
     return result
 
 
