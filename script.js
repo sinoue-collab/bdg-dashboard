@@ -1334,9 +1334,11 @@ function renderS8Cards() {
 
     const month = co?.latest_month ?? '';
     const [yr, mo] = month.split('-');
-    const periodLabel = period === 'ytd'
-      ? `累計: ${yr}年${parseInt(mo)}月まで`
-      : `最新: ${yr}年${parseInt(mo)}月`;
+    const periodLabel = (yr && mo && !isNaN(parseInt(mo)))
+      ? (period === 'ytd'
+          ? `累計: ${yr}年${parseInt(mo)}月まで`
+          : `最新: ${yr}年${parseInt(mo)}月`)
+      : 'データなし';
 
     const rev = src?.revenue        ?? null;
     const gp  = src?.gross_profit   ?? null;
@@ -1405,11 +1407,10 @@ function openCostDrawer(coName) {
   const co     = state.current?.companies?.[coName];
   const unitId = CO_UNIT[coName];
 
-  // 内訳は常にYTD累計データを使用（月次breakdown=YTD breakdownのため）
-  const act     = state.actuals?.[unitId];
-  const actData = act?.ytd ?? act;
-  const prevAct = state.actualsPrev?.[unitId];
-  const prevData = prevAct?.ytd ?? prevAct;
+  // 内訳は当月データを使用し、前月データ（same JSON内の previous_month）と比較
+  const act      = state.actuals?.[unitId];
+  const actData  = act;                        // 当月 breakdown
+  const prevData = act?.previous_month ?? null; // 前月 breakdown（同一 JSON 内）
 
   // サマリー数値はS8の期間設定に従う
   const period = state.s8Period;
@@ -1418,10 +1419,12 @@ function openCostDrawer(coName) {
 
   const month = co?.latest_month ?? '';
   const [yr, mo] = month.split('-');
-  const ytdLabel = actData?.period || (yr && mo ? `${yr}年1月〜${parseInt(mo)}月` : '—');
+  const prevMonth = act?.previous_month?.period ?? null;
+  const [pyr, pmo] = (prevMonth ?? '').split('-');
+  const prevLabel = (pyr && pmo) ? `${pyr}年${parseInt(pmo)}月` : '前月';
 
   nameEl.textContent   = coName;
-  periodEl.textContent = `累計内訳: ${ytdLabel}（前回更新比を表示）`;
+  periodEl.textContent = `当月内訳（前月比: ${prevLabel}）`;
   hdrEl.style.borderTopColor = CO_COLOR[coName];
 
   const rev = src?.revenue        ?? null;

@@ -458,6 +458,15 @@ def main():
             'non_op_income':  cur_data['non_op_income'],
             'non_op_expense': cur_data['non_op_expense'],
             '_summary':    cur_sum,
+            'previous_month': {
+                'period':  f'{prv_year}-{prv_month:02d}',
+                'revenue': prv_data['revenue'],
+                'cogs':    prv_data['cogs'],
+                'sga':     prv_data['sga'],
+                'non_op_income':  prv_data['non_op_income'],
+                'non_op_expense': prv_data['non_op_expense'],
+                '_summary': prv_sum,
+            },
             'ytd': {
                 'period':      ytd_label,
                 'source_file': 'Freee API',
