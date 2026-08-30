@@ -148,14 +148,29 @@ def freee_get(path, access_token, params=None):
         raise RuntimeError(f'freee API {e.code}: {body[:500]}')
 
 
-def get_company_fiscal_start(company_id, access_token):
-    """freee 会社情報から会計期首月（カレンダー月）を自動取得する。失敗時は 1 を返す。"""
-    try:
-        data = freee_get(f'/api/1/companies/{company_id}', access_token)
-        month = data.get('company', {}).get('fiscal_year_start_month', 1)
-        return int(month)
-    except Exception:
-        return 1
+def fetch_ytd_probing(company_id, access_token, cal_year, cal_month, debug=False):
+    """
+    YTD を取得しつつ会計期首月を自動検出する。
+    候補月 [1, 4, 5, 6, 7, 8, cal_month] を順に試し、
+    最初に 400 エラーなく取得できた月を会計期首として採用する。
+    Returns: (balances, fiscal_start_month, fiscal_year)
+    """
+    seen: list[int] = []
+    for fs in [1, 4, 5, 6, 7, 8, cal_month]:
+        if fs > cal_month or fs in seen:
+            continue
+        seen.append(fs)
+        fy = get_fiscal_year(cal_year, cal_month, fs)
+        try:
+            bal = fetch_trial_pl(company_id, access_token, fy, fs, cal_month, debug=debug)
+            if debug:
+                print(f'    [DEBUG] 会計期首={fs}月 で YTD 取得成功（fiscal_year={fy}）')
+            return bal, fs, fy
+        except RuntimeError:
+            if debug:
+                print(f'    [DEBUG] 会計期首={fs}月 は無効（400）')
+            continue
+    raise RuntimeError(f'会計期首の自動検出に失敗しました (company_id={company_id})')
 
 
 def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month, debug=False):
@@ -395,33 +410,29 @@ def main():
             continue
 
         company_id = int(company_id_str)
-        fs         = get_company_fiscal_start(company_id, access_token)
-        print(f'  [{co_name}] company_id={company_id}  fiscal_start={fs}月（freee自動取得）')
-
-        # freee は start_month / end_month をカレンダー月として解釈する。
-        # fiscal_year = 当月が属する会計年度の「開始カレンダー年」。
-        cur_fy = get_fiscal_year(cur_year, cur_month, fs)
-        prv_fy = get_fiscal_year(prv_year, prv_month, fs)
-
-        # YTD: 会計期首のカレンダー月 〜 当月（同一 fiscal_year 内）
-        ytd_start_month = fs
-        ytd_label = f'{cur_fy}-{fs:02d}〜{cur_year}-{cur_month:02d}'
-
-        if args.debug:
-            print(f'    当月  fiscal_year={cur_fy} month={cur_month}')
-            print(f'    前月  fiscal_year={prv_fy} month={prv_month}')
-            print(f'    YTD   fiscal_year={cur_fy} month={ytd_start_month}〜{cur_month}  ({ytd_label})')
+        print(f'  [{co_name}] company_id={company_id}')
 
         try:
+            # YTD 取得と同時に会計期首月を自動検出（候補月を順に試す）
+            print(f'    YTD     （会計期首を自動検出しながら取得）...')
+            ytd_bal, fs, cur_fy = fetch_ytd_probing(
+                company_id, access_token, cur_year, cur_month, debug=args.debug)
+            ytd_data = parse_balances(ytd_bal, mapping)
+            ytd_sum  = compute_summary(ytd_data)
+
+            ytd_start_month = fs
+            ytd_label = f'{cur_fy}-{fs:02d}〜{cur_year}-{cur_month:02d}'
+            prv_fy    = get_fiscal_year(prv_year, prv_month, fs)
+
+            if args.debug:
+                print(f'    当月  fiscal_year={cur_fy} month={cur_month}  (fiscal_start={fs}月)')
+                print(f'    前月  fiscal_year={prv_fy} month={prv_month}')
+                print(f'    YTD   {ytd_label}')
+
             print(f'    当月    {cur_year}-{cur_month:02d}...')
             cur_bal  = fetch_trial_pl(company_id, access_token, cur_fy, cur_month, cur_month, debug=args.debug)
             cur_data = parse_balances(cur_bal, mapping)
             cur_sum  = compute_summary(cur_data)
-
-            print(f'    YTD     {ytd_label}...')
-            ytd_bal  = fetch_trial_pl(company_id, access_token, cur_fy, ytd_start_month, cur_month, debug=args.debug)
-            ytd_data = parse_balances(ytd_bal, mapping)
-            ytd_sum  = compute_summary(ytd_data)
 
             print(f'    前月    {prv_year}-{prv_month:02d}...')
             prv_bal  = fetch_trial_pl(company_id, access_token, prv_fy, prv_month, prv_month, debug=args.debug)
