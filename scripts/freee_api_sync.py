@@ -53,7 +53,7 @@ COMPANIES = {
     'BLUE LIFE': {
         'env_key':            'FREEE_COMPANY_ID_BLUE_LIFE',
         'unit_key':           'unit_blue_life',
-        'fiscal_start_month': 4,   # 4月期（要確認）
+        'fiscal_start_month': 1,   # 1月期（400エラーなしの動作実績より）
     },
 }
 
@@ -68,31 +68,21 @@ SNAPSHOT_LATEST  = os.path.join(SNAPSHOT_DIR, 'snapshot_latest.json')
 
 
 # ─────────────────────────────────────────
-#  会計月計算
+#  会計年度計算
 # ─────────────────────────────────────────
 
-def calendar_to_fiscal(cal_year, cal_month, fiscal_start_month):
+def get_fiscal_year(cal_year, cal_month, fiscal_start_month):
     """
-    カレンダー年月 → (会計年度, 会計月番号)
-    例: 4月期, 2026年8月 → FY2026, 月番号5
-    例: 4月期, 2026年2月 → FY2025, 月番号11
+    カレンダー年月 → freee の fiscal_year パラメータ値を返す。
+    freee は start_month / end_month をカレンダー月として扱うため、
+    「当月が属する会計年度の開始カレンダー年」が fiscal_year になる。
+    例: 4月期, 2026年8月 → fiscal_year=2026（4月期FY2026=2026/4〜2027/3）
+    例: 4月期, 2027年1月 → fiscal_year=2026（FY2026の期中）
     """
     if cal_month >= fiscal_start_month:
-        fy = cal_year
-        fm = cal_month - fiscal_start_month + 1
+        return cal_year
     else:
-        fy = cal_year - 1
-        fm = cal_month + 12 - fiscal_start_month + 1
-    return fy, fm
-
-
-def fiscal_year_start_calendar(cal_year, cal_month, fiscal_start_month):
-    """当月が属する会計年度のカレンダー上の開始年月を返す"""
-    fy, _ = calendar_to_fiscal(cal_year, cal_month, fiscal_start_month)
-    # FY fy の開始カレンダー月
-    start_cal_year  = fy
-    start_cal_month = fiscal_start_month
-    return start_cal_year, start_cal_month
+        return cal_year - 1
 
 
 # ─────────────────────────────────────────
@@ -372,34 +362,33 @@ def main():
         fs         = cfg['fiscal_start_month']
         print(f'  [{co_name}] company_id={company_id}  fiscal_start={fs}月')
 
-        # カレンダー月 → 会計月番号に変換
-        cur_fy, cur_fm = calendar_to_fiscal(cur_year, cur_month, fs)
-        prv_fy, prv_fm = calendar_to_fiscal(prv_year, prv_month, fs)
-        ytd_fy         = cur_fy
-        ytd_fm_start   = 1        # 会計期首から
-        ytd_fm_end     = cur_fm
+        # freee は start_month / end_month をカレンダー月として解釈する。
+        # fiscal_year = 当月が属する会計年度の「開始カレンダー年」。
+        cur_fy = get_fiscal_year(cur_year, cur_month, fs)
+        prv_fy = get_fiscal_year(prv_year, prv_month, fs)
 
-        # YTD のカレンダー上の表示文字列
-        ytd_cal_year, ytd_cal_month = fiscal_year_start_calendar(cur_year, cur_month, fs)
-        ytd_label = f'{ytd_cal_year}-{ytd_cal_month:02d}〜{cur_year}-{cur_month:02d}'
+        # YTD: 会計期首のカレンダー月 〜 当月（同一 fiscal_year 内）
+        ytd_start_month = fs
+        ytd_label = f'{cur_fy}-{fs:02d}〜{cur_year}-{cur_month:02d}'
 
         if args.debug:
-            print(f'    当月  FY={cur_fy} 第{cur_fm}月  前月  FY={prv_fy} 第{prv_fm}月')
-            print(f'    YTD   FY={ytd_fy} 第{ytd_fm_start}〜{ytd_fm_end}月  ({ytd_label})')
+            print(f'    当月  fiscal_year={cur_fy} month={cur_month}')
+            print(f'    前月  fiscal_year={prv_fy} month={prv_month}')
+            print(f'    YTD   fiscal_year={cur_fy} month={ytd_start_month}〜{cur_month}  ({ytd_label})')
 
         try:
             print(f'    当月    {cur_year}-{cur_month:02d}...')
-            cur_bal  = fetch_trial_pl(company_id, access_token, cur_fy, cur_fm, cur_fm, debug=args.debug)
+            cur_bal  = fetch_trial_pl(company_id, access_token, cur_fy, cur_month, cur_month, debug=args.debug)
             cur_data = parse_balances(cur_bal, mapping)
             cur_sum  = compute_summary(cur_data)
 
             print(f'    YTD     {ytd_label}...')
-            ytd_bal  = fetch_trial_pl(company_id, access_token, ytd_fy, ytd_fm_start, ytd_fm_end, debug=args.debug)
+            ytd_bal  = fetch_trial_pl(company_id, access_token, cur_fy, ytd_start_month, cur_month, debug=args.debug)
             ytd_data = parse_balances(ytd_bal, mapping)
             ytd_sum  = compute_summary(ytd_data)
 
             print(f'    前月    {prv_year}-{prv_month:02d}...')
-            prv_bal  = fetch_trial_pl(company_id, access_token, prv_fy, prv_fm, prv_fm, debug=args.debug)
+            prv_bal  = fetch_trial_pl(company_id, access_token, prv_fy, prv_month, prv_month, debug=args.debug)
             prv_data = parse_balances(prv_bal, mapping)
             prv_sum  = compute_summary(prv_data)
 
