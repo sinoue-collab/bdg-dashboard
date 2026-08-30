@@ -177,14 +177,12 @@ def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month
 
     if debug:
         print(f'    [DEBUG] balances 件数: {len(balances)}')
-        for b in balances[:10]:
-            name   = b.get('account_item_name')   or '(不明)'
-            parent = b.get('parent_account_item_name') or '(なし)'
-            amt    = b.get('closing_balance', 0)
-            level  = b.get('hierarchy_level', '?')
-            print(f'    [DEBUG]   lv{level} {name!r:25s} parent={parent!r:25s} amount={amt:>13,}')
-        if len(balances) > 10:
-            print(f'    [DEBUG]   ... 残り {len(balances)-10} 件')
+        print(f'    [DEBUG] 最初の5件（全フィールド）:')
+        for i, b in enumerate(balances[:5]):
+            compact = json.dumps(b, ensure_ascii=False, separators=(',', ':'))
+            print(f'    [DEBUG]   [{i}] {compact[:350]}')
+        if len(balances) > 5:
+            print(f'    [DEBUG]   ... 残り {len(balances)-5} 件')
 
     return balances
 
