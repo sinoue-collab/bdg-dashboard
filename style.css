@@ -1264,6 +1264,58 @@ body {
 .cd-item-diff.cost-bad  { color: var(--red); }
 .cd-item-diff.muted     { color: var(--sub); font-weight: 400; }
 
+/* ── 部門ドリルダウン アコーディオン ── */
+.cd-item.has-dept { cursor: pointer; }
+.cd-item.has-dept:hover { background: rgba(0,144,186,.04); border-radius: 4px; }
+.cd-expand-icon {
+  display: inline-block;
+  margin-left: 3px;
+  font-size: 10px;
+  color: var(--sub);
+  transition: transform .15s;
+  vertical-align: middle;
+}
+.cd-item.expanded .cd-expand-icon { transform: rotate(90deg); }
+.cd-dept-list {
+  display: none;
+  margin: 0 4px 6px 12px;
+  padding: 2px 6px 4px;
+  border-left: 2px solid rgba(0,144,186,.2);
+  background: rgba(0,144,186,.02);
+  border-radius: 0 4px 4px 0;
+}
+.cd-dept-row {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 2px;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(0,0,0,.04);
+}
+.cd-dept-row:last-child { border-bottom: none; }
+.cd-dept-warn {
+  text-align: center;
+  font-size: 10px;
+  color: #d97706;
+  line-height: 1;
+}
+.cd-dept-name {
+  color: var(--sub);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cd-dept-amt {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text);
+}
+.cd-dept-row.deprecated .cd-dept-name { color: #d97706; }
+.cd-dept-row.deprecated { background: rgba(217,119,6,.05); border-radius: 3px; }
+.cd-dept-row.untagged .cd-dept-name { color: #9ca3af; font-style: italic; }
+
 .cd-summary {
   background: var(--bg);
   border: 1px solid var(--border);

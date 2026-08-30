@@ -1541,8 +1541,8 @@ function openCostDrawer(coName) {
     return `<span class="cd-summary-mom" style="color:${col}">${up ? '▲' : '▼'}${Math.abs(pct).toFixed(1)}%</span>`;
   };
 
-  // barItem: 科目行（前回比差分列付き）
-  const barItem = (item, amount, total, color, prevAmount, inv = false) => {
+  // barItem: 科目行（前回比差分列付き・部門アコーディオン対応）
+  const barItem = (item, amount, total, color, prevAmount, inv = false, deptList = null) => {
     const pct  = (rev && rev >= RATE_MIN_REVENUE && amount !== null) ? (amount / rev * 100) : null;
     const barW = total && total !== 0 ? Math.min(100, Math.abs(amount) / Math.abs(total) * 100).toFixed(1) + '%' : '0%';
     let diffHtml = '<span class="cd-item-diff muted">—</span>';
@@ -1558,13 +1558,29 @@ function openCostDrawer(coName) {
         diffHtml = '<span class="cd-item-diff muted">±0</span>';
       }
     }
-    return `<div class="cd-item">
-      <span class="cd-item-name" title="${item}">${item}</span>
+    const hasDept = deptList && deptList.length > 0;
+    const expandIcon = hasDept ? '<span class="cd-expand-icon">›</span>' : '';
+    let html = `<div class="cd-item${hasDept ? ' has-dept' : ''}">
+      <span class="cd-item-name" title="${item}">${item}${expandIcon}</span>
       <div class="cd-bar-w"><div class="cd-bar" style="width:${barW};background:${color}"></div></div>
       <span class="cd-item-amt">${fmtFull(amount)}</span>
       <span class="cd-item-pct">${pct !== null ? pct.toFixed(1) + '%' : '—'}</span>
       ${diffHtml}
     </div>`;
+    if (hasDept) {
+      const rows = deptList.map(d => {
+        const dep = d.deprecated;
+        const cls = dep ? 'deprecated' : (d.name === '（部門未設定）' ? 'untagged' : '');
+        const warn = dep ? '⚠' : '';
+        return `<div class="cd-dept-row${cls ? ' ' + cls : ''}">
+          <span class="cd-dept-warn">${warn}</span>
+          <span class="cd-dept-name">${d.name}</span>
+          <span class="cd-dept-amt">${fmtFull(d.amount)}</span>
+        </div>`;
+      }).join('');
+      html += `<div class="cd-dept-list">${rows}</div>`;
+    }
+    return html;
   };
 
   let html = '';
@@ -1594,7 +1610,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of sorted) {
         const prev = findPrev(prevRevBk, it.item);
-        html += barItem(it.item, it.amount, ytdRev, CO_COLOR[coName] + '99', prev, false);
+        html += barItem(it.item, it.amount, ytdRev, CO_COLOR[coName] + '99', prev, false, it.by_department ?? null);
       }
       html += '</div>';
     }
@@ -1616,7 +1632,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of sorted) {
         const prev = findPrev(prevSgaBk, it.item);
-        html += barItem(it.item, it.amount, ytdSga, '#B4530988', prev, true);
+        html += barItem(it.item, it.amount, ytdSga, '#B4530988', prev, true, it.by_department ?? null);
       }
       html += '</div>';
     }
@@ -1635,7 +1651,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of cogsBreak) {
         const prev = findPrev(prevCogsBk, it.item);
-        html += barItem(it.item, it.amount, ytdCogs, '#e74c3c88', prev, true);
+        html += barItem(it.item, it.amount, ytdCogs, '#e74c3c88', prev, true, it.by_department ?? null);
       }
       html += '</div>';
     }
@@ -1657,7 +1673,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of sorted) {
         const prev = findPrev(prevNoiBk, it.item);
-        html += barItem(it.item, it.amount, ytdNoi, '#05966999', prev, false);
+        html += barItem(it.item, it.amount, ytdNoi, '#05966999', prev, false, it.by_department ?? null);
       }
       html += '</div>';
     }
@@ -1679,7 +1695,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of sorted) {
         const prev = findPrev(prevNoeBk, it.item);
-        html += barItem(it.item, it.amount, ytdNoe, '#e74c3c88', prev, true);
+        html += barItem(it.item, it.amount, ytdNoe, '#e74c3c88', prev, true, it.by_department ?? null);
       }
       html += '</div>';
     }
@@ -1707,6 +1723,19 @@ function openCostDrawer(coName) {
 
   body.innerHTML = html;
   drawer.hidden  = false;
+
+  // 部門アコーディオン — 開閉トグル（innerHTML 更新後に毎回再設定）
+  if (body._deptHandler) body.removeEventListener('click', body._deptHandler);
+  body._deptHandler = e => {
+    const item = e.target.closest('.cd-item.has-dept');
+    if (!item) return;
+    const list = item.nextElementSibling;
+    if (!list?.classList.contains('cd-dept-list')) return;
+    const open = list.style.display === 'block';
+    list.style.display = open ? 'none' : 'block';
+    item.classList.toggle('expanded', !open);
+  };
+  body.addEventListener('click', body._deptHandler);
 }
 
 function closeCostDrawer() {

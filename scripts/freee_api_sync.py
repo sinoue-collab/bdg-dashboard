@@ -174,10 +174,98 @@ def fetch_ytd_probing(company_id, access_token, cal_year, cal_month, debug=False
     raise RuntimeError(f'会計期首の自動検出に失敗しました (company_id={company_id})')
 
 
-def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month, debug=False):
+DEPRECATED_SECTION_PREFIXES = ('<', '×')
+
+def is_deprecated_section(name: str) -> bool:
+    return name.startswith(DEPRECATED_SECTION_PREFIXES)
+
+
+def fetch_sections_all(company_id, access_token):
+    """全部門マスタを取得（ページネーション対応・廃止部門を含む全件）。"""
+    all_sections = []
+    offset = 0
+    while True:
+        try:
+            d = freee_get('/api/1/sections', access_token, {
+                'company_id': company_id,
+                'offset':     offset,
+                'limit':      100,
+            })
+        except RuntimeError as e:
+            print(f'  ⚠️  部門マスタ取得失敗 (offset={offset}): {e}')
+            break
+        secs = d.get('sections', [])
+        all_sections.extend(secs)
+        if len(secs) < 100:
+            break
+        offset += 100
+    return all_sections
+
+
+def enrich_with_departments(cur_data, company_id, access_token,
+                             cur_fy, cur_month, sections, mapping, debug=False):
+    """
+    cur_data の各 breakdown アイテムに by_department を付与する（当月のみ）。
+    部門ごとに trial_pl を呼び出し、科目金額を部門別に集計する。
+    """
+    SECTION_KEYS = ['revenue', 'cogs', 'sga', 'non_op_income', 'non_op_expense']
+
+    for sec in sections:
+        sec_id   = sec.get('id')
+        sec_name = (sec.get('name') or '').strip()
+        if not sec_id or not sec_name:
+            continue
+        deprecated = is_deprecated_section(sec_name)
+
+        try:
+            sec_bal  = fetch_trial_pl(
+                company_id, access_token,
+                cur_fy, cur_month, cur_month,
+                section_id=sec_id,
+            )
+            sec_data = parse_balances(sec_bal, mapping)
+        except RuntimeError as e:
+            if debug:
+                print(f'    [DEBUG] 部門 "{sec_name}"(id={sec_id}) 取得失敗: {e}')
+            continue
+
+        for sk in SECTION_KEYS:
+            for item in cur_data[sk]['breakdown']:
+                sec_item = next(
+                    (i for i in sec_data[sk]['breakdown'] if i['item'] == item['item']),
+                    None,
+                )
+                if sec_item and sec_item['amount'] > 0:
+                    item.setdefault('by_department', []).append({
+                        'name':       sec_name,
+                        'amount':     sec_item['amount'],
+                        'deprecated': deprecated,
+                    })
+
+    # 部門合計と科目合計の差分 = 部門未設定分 を末尾に追加
+    for sk in SECTION_KEYS:
+        for item in cur_data[sk]['breakdown']:
+            dept_list = item.get('by_department')
+            if not dept_list:
+                continue
+            dept_sum = sum(d['amount'] for d in dept_list)
+            untagged = item['amount'] - dept_sum
+            if untagged > 100:  # 端数誤差は無視
+                dept_list.append({
+                    'name':       '（部門未設定）',
+                    'amount':     untagged,
+                    'deprecated': False,
+                })
+            # 金額降順ソート
+            dept_list.sort(key=lambda d: -d['amount'])
+
+
+def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month,
+                   section_id=None, debug=False):
     """
     指定した会計年度・会計月番号で損益試算表を取得。
     start_month / end_month は freee の「会計月番号」（会計年度の第N月）。
+    section_id を指定すると当該部門のみに絞り込む。
     """
     params = {
         'company_id':  company_id,
@@ -185,6 +273,8 @@ def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month
         'start_month': start_month,
         'end_month':   end_month,
     }
+    if section_id is not None:
+        params['section_id'] = section_id
     data     = freee_get('/api/1/reports/trial_pl', access_token, params)
     balances = data.get('trial_pl', {}).get('balances', [])
 
@@ -434,6 +524,15 @@ def main():
             cur_bal  = fetch_trial_pl(company_id, access_token, cur_fy, cur_month, cur_month, debug=args.debug)
             cur_data = parse_balances(cur_bal, mapping)
             cur_sum  = compute_summary(cur_data)
+
+            # 部門別内訳を当月データに付与
+            print(f'    部門別内訳取得中...')
+            sections = fetch_sections_all(company_id, access_token)
+            print(f'      部門数: {len(sections)}件')
+            enrich_with_departments(
+                cur_data, company_id, access_token,
+                cur_fy, cur_month, sections, mapping, debug=args.debug,
+            )
 
             print(f'    前月    {prv_year}-{prv_month:02d}...')
             prv_bal  = fetch_trial_pl(company_id, access_token, prv_fy, prv_month, prv_month, debug=args.debug)
