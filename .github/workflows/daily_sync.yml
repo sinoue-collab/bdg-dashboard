@@ -1,0 +1,72 @@
+name: freee データ自動同期
+
+on:
+  schedule:
+    - cron: '0 21 * * *'   # 毎日 JST 06:00（UTC 21:00）
+  workflow_dispatch:
+    inputs:
+      month:
+        description: '対象月 YYYY-MM（省略時は当月）'
+        required: false
+        default: ''
+      dry_run:
+        description: 'DRY RUN（ファイル書き込みなし）'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # JSON コミット・プッシュ用
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install PyNaCl
+
+      - name: Run freee sync
+        env:
+          FREEE_ACCESS_TOKEN:           ${{ secrets.FREEE_ACCESS_TOKEN }}
+          FREEE_REFRESH_TOKEN:          ${{ secrets.FREEE_REFRESH_TOKEN }}
+          FREEE_CLIENT_ID:              ${{ secrets.FREEE_CLIENT_ID }}
+          FREEE_CLIENT_SECRET:          ${{ secrets.FREEE_CLIENT_SECRET }}
+          FREEE_COMPANY_ID_BLUE_ESTATE: ${{ secrets.FREEE_COMPANY_ID_BLUE_ESTATE }}
+          FREEE_COMPANY_ID_BLUE_DESIGN: ${{ secrets.FREEE_COMPANY_ID_BLUE_DESIGN }}
+          FREEE_COMPANY_ID_BLUE_LIFE:   ${{ secrets.FREEE_COMPANY_ID_BLUE_LIFE }}
+          GH_PAT:                       ${{ secrets.GH_PAT }}
+          GITHUB_REPOSITORY:            ${{ github.repository }}
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.month }}" ]; then
+            ARGS="--month ${{ inputs.month }}"
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          python3 scripts/freee_api_sync.py $ARGS
+
+      - name: Commit and push updated JSON
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add \
+            data/actuals/actuals_latest.json \
+            data/actuals/actuals_previous.json \
+            data/dashboard_snapshots/snapshot_latest.json
+          if git diff --staged --quiet; then
+            echo "変更なし。コミットをスキップします。"
+          else
+            git commit -m "auto: freee データ同期 $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M') JST"
+            git push
+          fi
