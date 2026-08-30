@@ -1,64 +1,12 @@
 {
   "schema_version": "2.1",
-  "generated_at": "2026-08-03T13:14:21.522244+09:00",
+  "generated_at": "2026-08-30T15:27:47.218565+09:00",
   "data_periods": {
     "BLUE ESTATE": "2026-08",
-    "BLUE DESIGN": "2026-08",
-    "BLUE LIFE": "2026-08",
     "青天堂": "2026-06"
   },
   "companies": {
     "BLUE ESTATE": {
-      "latest_month": "2026-08",
-      "prior_month": "2026-07",
-      "latest": {
-        "revenue": 0,
-        "gross_profit": 0,
-        "sga_total": 80952,
-        "op_profit": -80952,
-        "ordinary_profit": -80607
-      },
-      "prior": {
-        "revenue": 6560287,
-        "gross_profit": 5822872,
-        "sga_total": 5129746,
-        "op_profit": 693126,
-        "ordinary_profit": 5794830
-      },
-      "ytd": {
-        "revenue": 142523009,
-        "gross_profit": 72360420,
-        "sga_total": 91840341,
-        "op_profit": -19479921,
-        "ordinary_profit": 3615453
-      }
-    },
-    "BLUE DESIGN": {
-      "latest_month": "2026-08",
-      "prior_month": "2026-07",
-      "latest": {
-        "revenue": 104501,
-        "gross_profit": 104501,
-        "sga_total": 391361,
-        "op_profit": -286860,
-        "ordinary_profit": -286860
-      },
-      "prior": {
-        "revenue": 6751506,
-        "gross_profit": 6563393,
-        "sga_total": 4585770,
-        "op_profit": 1977623,
-        "ordinary_profit": 2016223
-      },
-      "ytd": {
-        "revenue": 57714611,
-        "gross_profit": 14966006,
-        "sga_total": 30588122,
-        "op_profit": -15622116,
-        "ordinary_profit": -14991155
-      }
-    },
-    "BLUE LIFE": {
       "latest_month": "2026-08",
       "prior_month": "2026-07",
       "latest": {
@@ -69,18 +17,18 @@
         "ordinary_profit": 0
       },
       "prior": {
-        "revenue": 447036,
-        "gross_profit": 447036,
-        "sga_total": 643187,
-        "op_profit": -196151,
-        "ordinary_profit": -196061
+        "revenue": 0,
+        "gross_profit": 0,
+        "sga_total": 0,
+        "op_profit": 0,
+        "ordinary_profit": 0
       },
       "ytd": {
-        "revenue": 4141400,
-        "gross_profit": 4141400,
-        "sga_total": 5515821,
-        "op_profit": -1374421,
-        "ordinary_profit": -1460033
+        "revenue": 0,
+        "gross_profit": 0,
+        "sga_total": 0,
+        "op_profit": 0,
+        "ordinary_profit": 0
       }
     },
     "青天堂": {
