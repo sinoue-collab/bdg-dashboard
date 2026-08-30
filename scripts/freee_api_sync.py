@@ -215,6 +215,10 @@ def parse_balances(balances, mapping):
 
         if not name or name in end_markers or name in seen:
             continue
+        # セクション集計行をスキップ（account_item_name == account_category_name のケース）
+        # 例: cat='売上原価', name='売上原価' → 上位合計行 → 下位項目とのダブルカウント防止
+        if name == category:
+            continue
         seen.add(name)
 
         if amount == 0:
@@ -252,8 +256,13 @@ def parse_balances(balances, mapping):
             if category in cogs_markers:
                 # 複数の null 名行がある場合は最大値（= セクション合計）を採用
                 cogs_null[category] = max(cogs_null.get(category, 0), abs(int(amount)))
-        for cat, amt in cogs_null.items():
-            result['cogs']['breakdown'].append({'item': cat, 'amount': amt})
+        # 売上原価（最上位合計）がある場合はそれだけを採用し、
+        # 製品売上原価・完成工事原価 等の下位カテゴリとのダブルカウントを防ぐ。
+        if cogs_null.get('売上原価', 0) > 0:
+            result['cogs']['breakdown'].append({'item': '売上原価', 'amount': cogs_null['売上原価']})
+        else:
+            for cat, amt in cogs_null.items():
+                result['cogs']['breakdown'].append({'item': cat, 'amount': amt})
         result['cogs']['total'] = sum(i['amount'] for i in result['cogs']['breakdown'])
 
     return result
