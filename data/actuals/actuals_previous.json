@@ -1,9 +1,467 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-08-30T16:42:34.484286+09:00",
+  "generated_at": "2026-08-30T16:49:18.283133+09:00",
   "note": "各経営単位の最新データ。freee_api_sync.py で生成。",
   "data": {
     "unit_blue_estate": {
+      "period": "2026-08",
+      "source_file": "Freee API",
+      "revenue": {
+        "total": 2535883,
+        "breakdown": [
+          {
+            "item": "賃貸仲介料",
+            "amount": 621910
+          },
+          {
+            "item": "賃貸仲介付帯売上",
+            "amount": 93000
+          },
+          {
+            "item": "賃貸仲介付帯手数料",
+            "amount": 561220
+          },
+          {
+            "item": "賃貸管理料",
+            "amount": 69812
+          },
+          {
+            "item": "賃貸管理付帯売上",
+            "amount": 1177941
+          },
+          {
+            "item": "賃貸管理付帯手数料",
+            "amount": 12000
+          }
+        ]
+      },
+      "cogs": {
+        "total": 0,
+        "breakdown": []
+      },
+      "sga": {
+        "total": 4615794,
+        "breakdown": [
+          {
+            "item": "給料手当",
+            "amount": 2000000
+          },
+          {
+            "item": "退職金",
+            "amount": 72000
+          },
+          {
+            "item": "法定福利費",
+            "amount": 73625
+          },
+          {
+            "item": "採用費",
+            "amount": 6028
+          },
+          {
+            "item": "外注費",
+            "amount": 293546
+          },
+          {
+            "item": "広告宣伝費",
+            "amount": 316000
+          },
+          {
+            "item": "ブランディング費",
+            "amount": 1591
+          },
+          {
+            "item": "販売促進費",
+            "amount": 61600
+          },
+          {
+            "item": "商品開発調査研究費",
+            "amount": 3000
+          },
+          {
+            "item": "通信費",
+            "amount": 57181
+          },
+          {
+            "item": "旅費交通費",
+            "amount": 86069
+          },
+          {
+            "item": "交際費",
+            "amount": 151479
+          },
+          {
+            "item": "会議費",
+            "amount": 51190
+          },
+          {
+            "item": "地代家賃",
+            "amount": 28000
+          },
+          {
+            "item": "リース料",
+            "amount": 48600
+          },
+          {
+            "item": "車両費",
+            "amount": 49813
+          },
+          {
+            "item": "システム利用料",
+            "amount": 1014556
+          },
+          {
+            "item": "消耗品費",
+            "amount": 63507
+          },
+          {
+            "item": "租税公課",
+            "amount": 10251
+          },
+          {
+            "item": "支払手数料",
+            "amount": 137758
+          },
+          {
+            "item": "管理諸費",
+            "amount": 90000
+          }
+        ]
+      },
+      "non_op_income": {
+        "total": 3795200,
+        "breakdown": [
+          {
+            "item": "自社不動産家賃収入（課税）",
+            "amount": 827750
+          },
+          {
+            "item": "自社不動産家賃収入（非課税売上）",
+            "amount": 1975880
+          },
+          {
+            "item": "WASH BLUE売上",
+            "amount": 300785
+          },
+          {
+            "item": "BLUE HOTELS 売上",
+            "amount": 511008
+          },
+          {
+            "item": "受取利息",
+            "amount": 59777
+          },
+          {
+            "item": "雑収入",
+            "amount": 120000
+          }
+        ]
+      },
+      "non_op_expense": {
+        "total": 1612472,
+        "breakdown": [
+          {
+            "item": "営業外土地使用料",
+            "amount": 852000
+          },
+          {
+            "item": "自社不動産経費（外）",
+            "amount": 13737
+          },
+          {
+            "item": "WASH BLUE経費",
+            "amount": 181782
+          },
+          {
+            "item": "BLUE HOTELS 経費",
+            "amount": 170294
+          },
+          {
+            "item": "新規事業研究開発費",
+            "amount": 12000
+          },
+          {
+            "item": "支払利息",
+            "amount": 382659
+          }
+        ]
+      },
+      "_summary": {
+        "gross_profit": 2535883,
+        "op_profit": -2079911,
+        "ordinary_profit": 102817
+      },
+      "ytd": {
+        "period": "2026-01〜2026-08",
+        "source_file": "Freee API",
+        "revenue": {
+          "total": 150695215,
+          "breakdown": [
+            {
+              "item": "売買売上",
+              "amount": 63307436
+            },
+            {
+              "item": "売買仲介料",
+              "amount": 13419805
+            },
+            {
+              "item": "売買付帯売上",
+              "amount": 3473923
+            },
+            {
+              "item": "売買付帯手数料",
+              "amount": 178247
+            },
+            {
+              "item": "賃貸仲介料",
+              "amount": 19848507
+            },
+            {
+              "item": "賃貸仲介付帯売上",
+              "amount": 1777638
+            },
+            {
+              "item": "賃貸仲介付帯手数料",
+              "amount": 4537365
+            },
+            {
+              "item": "賃貸管理料",
+              "amount": 17364194
+            },
+            {
+              "item": "賃貸管理付帯売上",
+              "amount": 25905316
+            },
+            {
+              "item": "賃貸管理付帯手数料",
+              "amount": 882784
+            }
+          ]
+        },
+        "cogs": {
+          "total": 0,
+          "breakdown": []
+        },
+        "sga": {
+          "total": 103100864,
+          "breakdown": [
+            {
+              "item": "給料手当",
+              "amount": 48840615
+            },
+            {
+              "item": "賞与",
+              "amount": 1700000
+            },
+            {
+              "item": "退職金",
+              "amount": 228000
+            },
+            {
+              "item": "法定福利費",
+              "amount": 5267425
+            },
+            {
+              "item": "福利厚生費",
+              "amount": 1446420
+            },
+            {
+              "item": "採用費",
+              "amount": 1400707
+            },
+            {
+              "item": "外注費",
+              "amount": 4042704
+            },
+            {
+              "item": "広告宣伝費",
+              "amount": 6712377
+            },
+            {
+              "item": "ブランディング費",
+              "amount": 919836
+            },
+            {
+              "item": "販売促進費",
+              "amount": 952241
+            },
+            {
+              "item": "商品開発調査研究費",
+              "amount": 841900
+            },
+            {
+              "item": "研修費",
+              "amount": 408901
+            },
+            {
+              "item": "通信費",
+              "amount": 2158244
+            },
+            {
+              "item": "旅費交通費",
+              "amount": 1636102
+            },
+            {
+              "item": "交際費",
+              "amount": 2221382
+            },
+            {
+              "item": "会議費",
+              "amount": 144279
+            },
+            {
+              "item": "地代家賃",
+              "amount": 232000
+            },
+            {
+              "item": "リース料",
+              "amount": 440838
+            },
+            {
+              "item": "修繕費",
+              "amount": 106544
+            },
+            {
+              "item": "車両費",
+              "amount": 2111942
+            },
+            {
+              "item": "システム利用料",
+              "amount": 7318070
+            },
+            {
+              "item": "消耗品費",
+              "amount": 1491410
+            },
+            {
+              "item": "水道光熱費",
+              "amount": 313822
+            },
+            {
+              "item": "保険料",
+              "amount": 2319965
+            },
+            {
+              "item": "租税公課",
+              "amount": 3400280
+            },
+            {
+              "item": "支払手数料",
+              "amount": 2087413
+            },
+            {
+              "item": "管理諸費",
+              "amount": 3828000
+            },
+            {
+              "item": "諸会費",
+              "amount": 377000
+            },
+            {
+              "item": "雑費",
+              "amount": 80447
+            },
+            {
+              "item": "クレーム対応費",
+              "amount": 72000
+            }
+          ]
+        },
+        "non_op_income": {
+          "total": 65067869,
+          "breakdown": [
+            {
+              "item": "会社間紹介料売上",
+              "amount": 24000
+            },
+            {
+              "item": "自社不動産家賃収入（課税）",
+              "amount": 28773829
+            },
+            {
+              "item": "自社不動産家賃収入（非課税売上）",
+              "amount": 23488840
+            },
+            {
+              "item": "WASH BLUE売上",
+              "amount": 5489166
+            },
+            {
+              "item": "BLUE HOTELS 売上",
+              "amount": 3305722
+            },
+            {
+              "item": "受取利息",
+              "amount": 110606
+            },
+            {
+              "item": "受取配当金",
+              "amount": 1800
+            },
+            {
+              "item": "雑収入",
+              "amount": 3873906
+            }
+          ]
+        },
+        "non_op_expense": {
+          "total": 40297175,
+          "breakdown": [
+            {
+              "item": "営業外土地使用料",
+              "amount": 6826000
+            },
+            {
+              "item": "BLUE DINING経費",
+              "amount": 1400000
+            },
+            {
+              "item": "補助金経費",
+              "amount": 3601818
+            },
+            {
+              "item": "自社不動産経費（外）",
+              "amount": 1056072
+            },
+            {
+              "item": "租税公課（外）",
+              "amount": 1470436
+            },
+            {
+              "item": "WASH BLUE経費",
+              "amount": 2530293
+            },
+            {
+              "item": "BLUE HOTELS 経費",
+              "amount": 1726234
+            },
+            {
+              "item": "BLUE STAYS 経費",
+              "amount": 95005
+            },
+            {
+              "item": "新規事業研究開発費",
+              "amount": 8218775
+            },
+            {
+              "item": "保険料（外）",
+              "amount": 8537708
+            },
+            {
+              "item": "支払利息",
+              "amount": 4834834
+            }
+          ]
+        },
+        "_summary": {
+          "gross_profit": 150695215,
+          "op_profit": 47594351,
+          "ordinary_profit": 72365045
+        }
+      }
+    },
+    "unit_blue_life": {
       "period": "2026-08",
       "source_file": "Freee API",
       "revenue": {
@@ -32,7 +490,7 @@
         "ordinary_profit": 0
       },
       "ytd": {
-        "period": "2026-01〜2026-08",
+        "period": "2026-04〜2026-08",
         "source_file": "Freee API",
         "revenue": {
           "total": 0,
@@ -58,74 +516,6 @@
           "gross_profit": 0,
           "op_profit": 0,
           "ordinary_profit": 0
-        }
-      }
-    },
-    "unit_blue_life": {
-      "period": "2026-08",
-      "source_file": "Freee API",
-      "revenue": {
-        "total": 7573683,
-        "breakdown": [
-          {
-            "item": "売上高",
-            "amount": 7573683
-          }
-        ]
-      },
-      "cogs": {
-        "total": 0,
-        "breakdown": []
-      },
-      "sga": {
-        "total": 0,
-        "breakdown": []
-      },
-      "non_op_income": {
-        "total": 0,
-        "breakdown": []
-      },
-      "non_op_expense": {
-        "total": 0,
-        "breakdown": []
-      },
-      "_summary": {
-        "gross_profit": 7573683,
-        "op_profit": 7573683,
-        "ordinary_profit": 7573683
-      },
-      "ytd": {
-        "period": "2026-04〜2026-08",
-        "source_file": "Freee API",
-        "revenue": {
-          "total": 7573683,
-          "breakdown": [
-            {
-              "item": "売上高",
-              "amount": 7573683
-            }
-          ]
-        },
-        "cogs": {
-          "total": 0,
-          "breakdown": []
-        },
-        "sga": {
-          "total": 0,
-          "breakdown": []
-        },
-        "non_op_income": {
-          "total": 0,
-          "breakdown": []
-        },
-        "non_op_expense": {
-          "total": 0,
-          "breakdown": []
-        },
-        "_summary": {
-          "gross_profit": 7573683,
-          "op_profit": 7573683,
-          "ordinary_profit": 7573683
         }
       }
     }
