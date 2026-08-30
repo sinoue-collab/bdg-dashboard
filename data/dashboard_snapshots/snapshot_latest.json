@@ -1,6 +1,6 @@
 {
   "schema_version": "2.1",
-  "generated_at": "2026-08-30T17:44:51.017385+09:00",
+  "generated_at": "2026-08-30T17:58:15.228306+09:00",
   "data_periods": {
     "BLUE ESTATE": "2026-08",
     "BLUE DESIGN": "2026-08",
@@ -64,9 +64,9 @@
       "latest": {
         "revenue": 3291290,
         "gross_profit": 3291290,
-        "sga_total": 1095911,
-        "op_profit": 2195379,
-        "ordinary_profit": 2197287
+        "sga_total": 1100121,
+        "op_profit": 2191169,
+        "ordinary_profit": 2193077
       },
       "prior": {
         "revenue": 3799329,
@@ -78,9 +78,9 @@
       "ytd": {
         "revenue": 10784983,
         "gross_profit": 10784983,
-        "sga_total": 10554607,
-        "op_profit": 230376,
-        "ordinary_profit": 652293
+        "sga_total": 10558817,
+        "op_profit": 226166,
+        "ordinary_profit": 648083
       }
     },
     "青天堂": {
