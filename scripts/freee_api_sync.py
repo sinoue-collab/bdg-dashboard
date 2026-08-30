@@ -260,12 +260,73 @@ def enrich_with_departments(cur_data, company_id, access_token,
             dept_list.sort(key=lambda d: -d['amount'])
 
 
+def fetch_items_all(company_id, access_token):
+    """全品目マスタを取得。"""
+    try:
+        d = freee_get('/api/1/items', access_token, {'company_id': company_id})
+        return d.get('items', [])
+    except RuntimeError as e:
+        print(f'  ⚠️  品目マスタ取得失敗: {e}')
+        return []
+
+
+def enrich_with_items(cur_data, company_id, access_token,
+                      cur_fy, cur_month, items, mapping, debug=False):
+    """
+    cur_data の各 breakdown アイテムに by_item を付与する（当月のみ）。
+    品目ごとに trial_pl を呼び出し、科目金額を品目別に集計する。
+    """
+    SECTION_KEYS = ['revenue', 'cogs', 'sga', 'non_op_income', 'non_op_expense']
+
+    for itm in items:
+        itm_id   = itm.get('id')
+        itm_name = (itm.get('name') or '').strip()
+        if not itm_id or not itm_name:
+            continue
+
+        try:
+            itm_bal  = fetch_trial_pl(
+                company_id, access_token,
+                cur_fy, cur_month, cur_month,
+                item_id=itm_id,
+            )
+            itm_data = parse_balances(itm_bal, mapping)
+        except RuntimeError as e:
+            if debug:
+                print(f'    [DEBUG] 品目 "{itm_name}"(id={itm_id}) 取得失敗: {e}')
+            continue
+
+        for sk in SECTION_KEYS:
+            for acct in cur_data[sk]['breakdown']:
+                itm_item = next(
+                    (i for i in itm_data[sk]['breakdown'] if i['item'] == acct['item']),
+                    None,
+                )
+                if itm_item and itm_item['amount'] > 0:
+                    acct.setdefault('by_item', []).append({
+                        'name':   itm_name,
+                        'amount': itm_item['amount'],
+                    })
+
+    # 品目合計と科目合計の差分 = 品目未設定分 を末尾に追加
+    for sk in SECTION_KEYS:
+        for acct in cur_data[sk]['breakdown']:
+            item_list = acct.get('by_item')
+            if not item_list:
+                continue
+            item_sum = sum(i['amount'] for i in item_list)
+            untagged = acct['amount'] - item_sum
+            if untagged > 100:
+                item_list.append({'name': '（品目未設定）', 'amount': untagged})
+            item_list.sort(key=lambda i: -i['amount'])
+
+
 def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month,
-                   section_id=None, debug=False):
+                   section_id=None, item_id=None, debug=False):
     """
     指定した会計年度・会計月番号で損益試算表を取得。
     start_month / end_month は freee の「会計月番号」（会計年度の第N月）。
-    section_id を指定すると当該部門のみに絞り込む。
+    section_id を指定すると当該部門のみに絞り込む。item_id を指定すると品目のみ。
     """
     params = {
         'company_id':  company_id,
@@ -275,6 +336,8 @@ def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month
     }
     if section_id is not None:
         params['section_id'] = section_id
+    if item_id is not None:
+        params['item_id'] = item_id
     data     = freee_get('/api/1/reports/trial_pl', access_token, params)
     balances = data.get('trial_pl', {}).get('balances', [])
 
@@ -532,6 +595,15 @@ def main():
             enrich_with_departments(
                 cur_data, company_id, access_token,
                 cur_fy, cur_month, sections, mapping, debug=args.debug,
+            )
+
+            # 品目別内訳を当月データに付与
+            print(f'    品目別内訳取得中...')
+            items_master = fetch_items_all(company_id, access_token)
+            print(f'      品目数: {len(items_master)}件')
+            enrich_with_items(
+                cur_data, company_id, access_token,
+                cur_fy, cur_month, items_master, mapping, debug=args.debug,
             )
 
             print(f'    前月    {prv_year}-{prv_month:02d}...')

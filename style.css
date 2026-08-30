@@ -1153,6 +1153,16 @@ body {
 }
 .cd-co-name { font-size: 18px; font-weight: 800; color: var(--navy); }
 .cd-period  { font-size: 11px; color: var(--sub); margin-top: 3px; }
+.cd-drill-toggle { display: flex; gap: 4px; margin-top: 8px; }
+.cd-drill-btn {
+  font-size: 11px; font-family: inherit;
+  padding: 3px 10px; border-radius: 20px; cursor: pointer;
+  border: 1px solid var(--border);
+  background: none; color: var(--sub);
+}
+.cd-drill-btn.active {
+  background: var(--blue); color: #fff; border-color: var(--blue);
+}
 
 .cd-close {
   background: none;

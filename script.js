@@ -97,6 +97,7 @@ let state = {
   s4Unit:         'unit_blue_estate',
   s4Period:       'ytd',
   s8Period:       'monthly',
+  s8DrillMode:    'dept',
 };
 
 // ══════════════════════════════════════════════════════
@@ -1487,6 +1488,27 @@ function openCostDrawer(coName) {
   const hdrEl   = document.getElementById('cd-hdr');
   if (!drawer || !body) return;
 
+  state.s8DrawerCo = coName;
+
+  // ドリルダウントグル（部門別 / 品目別）
+  let drillToggle = document.getElementById('cd-drill-toggle');
+  if (!drillToggle) {
+    drillToggle = document.createElement('div');
+    drillToggle.id = 'cd-drill-toggle';
+    drillToggle.className = 'cd-drill-toggle';
+    hdrEl.querySelector('div').appendChild(drillToggle);
+    drillToggle.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-drill]');
+      if (!btn) return;
+      state.s8DrillMode = btn.dataset.drill;
+      openCostDrawer(state.s8DrawerCo);
+    });
+  }
+  drillToggle.innerHTML = `
+    <button data-drill="dept" class="cd-drill-btn${state.s8DrillMode === 'dept' ? ' active' : ''}">部門別</button>
+    <button data-drill="item" class="cd-drill-btn${state.s8DrillMode === 'item' ? ' active' : ''}">品目別</button>
+  `;
+
   const co     = state.current?.companies?.[coName];
   const unitId = CO_UNIT[coName];
 
@@ -1541,8 +1563,8 @@ function openCostDrawer(coName) {
     return `<span class="cd-summary-mom" style="color:${col}">${up ? '▲' : '▼'}${Math.abs(pct).toFixed(1)}%</span>`;
   };
 
-  // barItem: 科目行（前回比差分列付き・部門アコーディオン対応）
-  const barItem = (item, amount, total, color, prevAmount, inv = false, deptList = null) => {
+  // barItem: 科目行（前回比差分列付き・部門/品目アコーディオン対応）
+  const barItem = (item, amount, total, color, prevAmount, inv = false, deptList = null, itemList = null) => {
     const pct  = (rev && rev >= RATE_MIN_REVENUE && amount !== null) ? (amount / rev * 100) : null;
     const barW = total && total !== 0 ? Math.min(100, Math.abs(amount) / Math.abs(total) * 100).toFixed(1) + '%' : '0%';
     let diffHtml = '<span class="cd-item-diff muted">—</span>';
@@ -1558,19 +1580,21 @@ function openCostDrawer(coName) {
         diffHtml = '<span class="cd-item-diff muted">±0</span>';
       }
     }
-    const hasDept = deptList && deptList.length > 0;
-    const expandIcon = hasDept ? '<span class="cd-expand-icon">›</span>' : '';
-    let html = `<div class="cd-item${hasDept ? ' has-dept' : ''}">
+    const drillList = state.s8DrillMode === 'item' ? itemList : deptList;
+    const hasDrill  = drillList && drillList.length > 0;
+    const expandIcon = hasDrill ? '<span class="cd-expand-icon">›</span>' : '';
+    let html = `<div class="cd-item${hasDrill ? ' has-dept' : ''}">
       <span class="cd-item-name" title="${item}">${item}${expandIcon}</span>
       <div class="cd-bar-w"><div class="cd-bar" style="width:${barW};background:${color}"></div></div>
       <span class="cd-item-amt">${fmtFull(amount)}</span>
       <span class="cd-item-pct">${pct !== null ? pct.toFixed(1) + '%' : '—'}</span>
       ${diffHtml}
     </div>`;
-    if (hasDept) {
-      const rows = deptList.map(d => {
-        const dep = d.deprecated;
-        const cls = dep ? 'deprecated' : (d.name === '（部門未設定）' ? 'untagged' : '');
+    if (hasDrill) {
+      const rows = drillList.map(d => {
+        const dep  = d.deprecated ?? false;
+        const isUntagged = d.name === '（部門未設定）' || d.name === '（品目未設定）';
+        const cls  = dep ? 'deprecated' : (isUntagged ? 'untagged' : '');
         const warn = dep ? '⚠' : '';
         return `<div class="cd-dept-row${cls ? ' ' + cls : ''}">
           <span class="cd-dept-warn">${warn}</span>
@@ -1610,7 +1634,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of sorted) {
         const prev = findPrev(prevRevBk, it.item);
-        html += barItem(it.item, it.amount, ytdRev, CO_COLOR[coName] + '99', prev, false, it.by_department ?? null);
+        html += barItem(it.item, it.amount, ytdRev, CO_COLOR[coName] + '99', prev, false, it.by_department ?? null, it.by_item ?? null);
       }
       html += '</div>';
     }
@@ -1632,7 +1656,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of sorted) {
         const prev = findPrev(prevSgaBk, it.item);
-        html += barItem(it.item, it.amount, ytdSga, '#B4530988', prev, true, it.by_department ?? null);
+        html += barItem(it.item, it.amount, ytdSga, '#B4530988', prev, true, it.by_department ?? null, it.by_item ?? null);
       }
       html += '</div>';
     }
@@ -1651,7 +1675,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of cogsBreak) {
         const prev = findPrev(prevCogsBk, it.item);
-        html += barItem(it.item, it.amount, ytdCogs, '#e74c3c88', prev, true, it.by_department ?? null);
+        html += barItem(it.item, it.amount, ytdCogs, '#e74c3c88', prev, true, it.by_department ?? null, it.by_item ?? null);
       }
       html += '</div>';
     }
@@ -1673,7 +1697,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of sorted) {
         const prev = findPrev(prevNoiBk, it.item);
-        html += barItem(it.item, it.amount, ytdNoi, '#05966999', prev, false, it.by_department ?? null);
+        html += barItem(it.item, it.amount, ytdNoi, '#05966999', prev, false, it.by_department ?? null, it.by_item ?? null);
       }
       html += '</div>';
     }
@@ -1695,7 +1719,7 @@ function openCostDrawer(coName) {
         </div>`;
       for (const it of sorted) {
         const prev = findPrev(prevNoeBk, it.item);
-        html += barItem(it.item, it.amount, ytdNoe, '#e74c3c88', prev, true, it.by_department ?? null);
+        html += barItem(it.item, it.amount, ytdNoe, '#e74c3c88', prev, true, it.by_department ?? null, it.by_item ?? null);
       }
       html += '</div>';
     }
