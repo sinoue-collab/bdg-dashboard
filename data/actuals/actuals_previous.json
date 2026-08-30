@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-08-30T16:10:58.964152+09:00",
+  "generated_at": "2026-08-30T16:32:26.521567+09:00",
   "note": "各経営単位の最新データ。freee_api_sync.py で生成。",
   "data": {
     "unit_blue_estate": {
@@ -58,6 +58,74 @@
           "gross_profit": 0,
           "op_profit": 0,
           "ordinary_profit": 0
+        }
+      }
+    },
+    "unit_blue_life": {
+      "period": "2026-08",
+      "source_file": "Freee API",
+      "revenue": {
+        "total": 7573683,
+        "breakdown": [
+          {
+            "item": "売上高",
+            "amount": 7573683
+          }
+        ]
+      },
+      "cogs": {
+        "total": 0,
+        "breakdown": []
+      },
+      "sga": {
+        "total": 0,
+        "breakdown": []
+      },
+      "non_op_income": {
+        "total": 0,
+        "breakdown": []
+      },
+      "non_op_expense": {
+        "total": 0,
+        "breakdown": []
+      },
+      "_summary": {
+        "gross_profit": 7573683,
+        "op_profit": 7573683,
+        "ordinary_profit": 7573683
+      },
+      "ytd": {
+        "period": "2026-04〜2026-08",
+        "source_file": "Freee API",
+        "revenue": {
+          "total": 7573683,
+          "breakdown": [
+            {
+              "item": "売上高",
+              "amount": 7573683
+            }
+          ]
+        },
+        "cogs": {
+          "total": 0,
+          "breakdown": []
+        },
+        "sga": {
+          "total": 0,
+          "breakdown": []
+        },
+        "non_op_income": {
+          "total": 0,
+          "breakdown": []
+        },
+        "non_op_expense": {
+          "total": 0,
+          "breakdown": []
+        },
+        "_summary": {
+          "gross_profit": 7573683,
+          "op_profit": 7573683,
+          "ordinary_profit": 7573683
         }
       }
     }
