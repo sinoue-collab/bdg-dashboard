@@ -53,7 +53,7 @@ COMPANIES = {
     'BLUE LIFE': {
         'env_key':            'FREEE_COMPANY_ID_BLUE_LIFE',
         'unit_key':           'unit_blue_life',
-        'fiscal_start_month': 1,   # 1月期（400エラーなしの動作実績より）
+        'fiscal_start_month': 4,   # 4月期（1月指定でYTD 400エラーが発生したため修正）
     },
 }
 
@@ -215,9 +215,9 @@ def parse_balances(balances, mapping):
 
         if not name or name in end_markers or name in seen:
             continue
-        # セクション集計行をスキップ（account_item_name == account_category_name のケース）
-        # 例: cat='売上原価', name='売上原価' → 上位合計行 → 下位項目とのダブルカウント防止
-        if name == category:
+        # COGS セクション合計行をスキップ（cat='売上原価', name='売上原価' のパターン）。
+        # 売上高 等では name==category が実勘定科目名と一致するケースがあるため COGS 限定。
+        if name == category and category in cogs_markers:
             continue
         seen.add(name)
 
