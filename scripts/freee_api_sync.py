@@ -177,12 +177,15 @@ def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month
 
     if debug:
         print(f'    [DEBUG] balances 件数: {len(balances)}')
-        print(f'    [DEBUG] 最初の5件（全フィールド）:')
-        for i, b in enumerate(balances[:5]):
-            compact = json.dumps(b, ensure_ascii=False, separators=(',', ':'))
-            print(f'    [DEBUG]   [{i}] {compact[:350]}')
-        if len(balances) > 5:
-            print(f'    [DEBUG]   ... 残り {len(balances)-5} 件')
+        for b in balances[:12]:
+            name     = b.get('account_item_name')     or '(不明)'
+            category = b.get('account_category_name') or '(なし)'
+            opening  = b.get('opening_balance', 0) or 0
+            closing  = b.get('closing_balance',  0) or 0
+            diff     = closing - opening
+            print(f'    [DEBUG]   cat={category!r:25s} name={name!r:25s} diff={diff:>13,}')
+        if len(balances) > 12:
+            print(f'    [DEBUG]   ... 残り {len(balances)-12} 件')
 
     return balances
 
@@ -195,15 +198,14 @@ def parse_balances(balances, mapping):
     """
     freee balances → {revenue, cogs, sga, non_op_income, non_op_expense}
 
-    freee は「子アイテムを先に出力し、最後に親（合計行）を出力する」順序を取る。
-    合計行（section_starters / cogs_markers に対応）は account_item_name が
-    null になる場合があるため、各アイテムの parent_account_item_name を辿って
-    どのセクションに属するか判定する。
+    判定キー: account_category_name（例: "売上高", "販売費及び一般管理費"）
+    期間金額: closing_balance - opening_balance
+      月次リクエスト → 当該月の取引高
+      YTD リクエスト → 期首からの累計（P&L 科目は期首残高=0 のため closing ≒ YTD）
     """
     section_starters = mapping['section_starters']
     cogs_markers     = set(mapping['cogs_markers'])
     end_markers      = set(mapping['section_end_markers'])
-    skip_names       = set(section_starters) | cogs_markers | end_markers
 
     result = {
         'revenue':        {'total': 0, 'breakdown': []},
@@ -213,76 +215,34 @@ def parse_balances(balances, mapping):
         'non_op_expense': {'total': 0, 'breakdown': []},
     }
 
-    # name → parent_name のルックアップテーブルを構築
-    parent_of = {}
-    for row in balances:
-        name   = (row.get('account_item_name')        or '').strip()
-        parent = (row.get('parent_account_item_name') or '').strip()
-        if name:
-            parent_of[name] = parent
-
-    # 子を持つアイテム（非リーフ）を特定
-    has_children = set()
-    for row in balances:
-        p = (row.get('parent_account_item_name') or '').strip()
-        if p:
-            has_children.add(p)
-
-    def resolve_section(name, depth=0):
-        """親を辿って所属セクションを返す。見つからなければ None。"""
-        if depth > 8 or not name:
-            return None
-        p = parent_of.get(name, '')
-        if p in section_starters:
-            return section_starters[p]
-        if p in cogs_markers:
-            return 'cogs'
-        if p:
-            return resolve_section(p, depth + 1)
-        return None
-
     seen = set()
     for row in balances:
-        name   = (row.get('account_item_name') or '').strip()
-        amount = row.get('closing_balance') or 0
+        name     = (row.get('account_item_name')     or '').strip()
+        category = (row.get('account_category_name') or '').strip()
+        opening  = row.get('opening_balance', 0) or 0
+        closing  = row.get('closing_balance',  0) or 0
+        amount   = closing - opening   # 当期変動額（月次 or YTD）
 
-        # 名前なし・金額ゼロ・重複はスキップ
-        if not name or not amount or name in seen:
+        if not name or name in end_markers or name in seen:
             continue
         seen.add(name)
 
-        # セクションヘッダー・小計名はスキップ
-        if name in skip_names:
+        if amount == 0:
             continue
 
-        # 中間ノード（子を持つアイテム）はスキップ
-        if name in has_children:
-            continue
+        # account_category_name でセクション判定
+        section = None
+        if category in section_starters:
+            section = section_starters[category]
+        elif category in cogs_markers:
+            section = 'cogs'
 
-        section = resolve_section(name)
         if section:
             result[section]['breakdown'].append({
                 'item':   name,
                 'amount': abs(int(amount)),
             })
 
-    # フォールバック: セクション名そのものがリーフになっている場合
-    # （例: BLUE LIFE の '売上高' が内訳なしで lv2 に存在するケース）
-    for row in balances:
-        name   = (row.get('account_item_name') or '').strip()
-        amount = row.get('closing_balance') or 0
-        if not name or not amount:
-            continue
-
-        if name in section_starters:
-            sec = section_starters[name]
-            if result[sec]['total'] == 0 and name not in has_children:
-                result[sec]['breakdown'].append({'item': name, 'amount': abs(int(amount))})
-
-        if name in cogs_markers and result['cogs']['total'] == 0 and name not in has_children:
-            result['cogs']['breakdown'].append({'item': name, 'amount': abs(int(amount))})
-
-    # 合計を算出
     for sec in result.values():
         sec['total'] = sum(i['amount'] for i in sec['breakdown'])
 
