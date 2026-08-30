@@ -36,10 +36,10 @@ const CO_UNIT = {
   '青天堂':      'unit_seitendo',
 };
 const CO_SEGMENTS = {
-  'BLUE ESTATE': '不動産 / 宿泊 / ランドリー / BDG運営',
-  'BLUE DESIGN': '建築',
-  'BLUE LIFE':   '福祉',
-  '青天堂':      '飲食',
+  'BLUE ESTATE': '不動産売買・賃貸仲介・賃貸管理 / 宿泊（BLUE HOTELS）/ ランドリー（WASH BLUE）',
+  'BLUE DESIGN': '建築（新築・リフォーム）',
+  'BLUE LIFE':   '福祉（デイサービス）',
+  '青天堂':      '飲食（青天堂）',
 };
 
 // 売上が少なすぎる場合は率を非表示
