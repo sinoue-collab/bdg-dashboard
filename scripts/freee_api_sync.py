@@ -293,15 +293,84 @@ def fetch_items_all(company_id, access_token):
     return all_items
 
 
+def _finalize_by_item(cur_data, SECTION_KEYS):
+    """by_item に（品目未設定）分を追加して金額降順ソート。"""
+    for sk in SECTION_KEYS:
+        for acct in cur_data[sk]['breakdown']:
+            item_list = acct.get('by_item')
+            if not item_list:
+                continue
+            item_sum = sum(i['amount'] for i in item_list)
+            untagged = acct['amount'] - item_sum
+            if untagged > 100:
+                item_list.append({'name': '（品目未設定）', 'amount': untagged})
+            item_list.sort(key=lambda i: -i['amount'])
+
+
 def enrich_with_items(cur_data, company_id, access_token,
                       cur_fy, cur_month, items, mapping, debug=False):
     """
     cur_data の各 breakdown アイテムに by_item を付与する（当月のみ）。
-    品目ごとに trial_pl を呼び出し、科目金額を品目別に集計する。
+
+    まず breakdown_display_type=item で1回のみ試算表を取得し、レスポンスの
+    balances に items サブ配列が含まれる場合は一括パースする（API呼び出し1回）。
+    含まれない場合は品目ごとに個別取得するが、タイムアウト対策として
+    MAX_ITEMS_FALLBACK 件に制限する。
     """
     SECTION_KEYS = ['revenue', 'cogs', 'sga', 'non_op_income', 'non_op_expense']
+    MAX_ITEMS_FALLBACK = 80  # フォールバック時の上限（タイムアウト対策）
 
-    for itm in items:
+    # ── ① 一括取得: breakdown_display_type=item で試みる ─────────────
+    try:
+        bulk_resp = freee_get('/api/1/reports/trial_pl', access_token, {
+            'company_id':             company_id,
+            'fiscal_year':            cur_fy,
+            'start_month':            cur_month,
+            'end_month':              cur_month,
+            'breakdown_display_type': 'item',
+        })
+        bulk_balances = bulk_resp.get('trial_pl', {}).get('balances', [])
+
+        if debug and bulk_balances:
+            b0 = bulk_balances[0]
+            print(f'    [DEBUG] breakdown=item balances 件数: {len(bulk_balances)}')
+            print(f'    [DEBUG]   balances[0] keys: {list(b0.keys())}')
+            print(f'    [DEBUG]   "items" in balances[0]: {"items" in b0}')
+            if 'items' in b0:
+                print(f'    [DEBUG]   items 件数: {len(b0.get("items") or [])}  例: {(b0.get("items") or [{}])[:1]}')
+
+        # items サブ配列があれば一括パース（API 呼び出しはこの1回のみ）
+        if bulk_balances and 'items' in bulk_balances[0]:
+            if debug:
+                print('    [DEBUG] → 一括パースモードで処理（per-item 呼び出しなし）')
+            for bal in bulk_balances:
+                acct_name  = bal.get('account_item_name') or ''
+                item_array = bal.get('items') or []
+                for sk in SECTION_KEYS:
+                    for acct in cur_data[sk]['breakdown']:
+                        if acct['item'] != acct_name:
+                            continue
+                        for itm in item_array:
+                            name   = (itm.get('name') or itm.get('item_name') or '').strip()
+                            amount = (itm.get('closing_balance') or itm.get('amount') or 0)
+                            if name and amount > 0:
+                                acct.setdefault('by_item', []).append({'name': name, 'amount': amount})
+            _finalize_by_item(cur_data, SECTION_KEYS)
+            return
+
+        if debug:
+            print('    [DEBUG] → items サブ配列なし。フォールバック（個別取得）へ')
+
+    except RuntimeError as e:
+        if debug:
+            print(f'    [DEBUG] 一括取得失敗、フォールバックへ: {e}')
+
+    # ── ② フォールバック: 品目1件ずつ取得（上限あり） ──────────────
+    fetch_targets = items[:MAX_ITEMS_FALLBACK]
+    if len(items) > MAX_ITEMS_FALLBACK:
+        print(f'    ⚠️  品目数 {len(items)}件 → タイムアウト対策で先頭 {MAX_ITEMS_FALLBACK}件のみ取得')
+
+    for itm in fetch_targets:
         itm_id   = itm.get('id')
         itm_name = (itm.get('name') or '').strip()
         if not itm_id or not itm_name:
@@ -335,22 +404,9 @@ def enrich_with_items(cur_data, company_id, access_token,
                     None,
                 )
                 if itm_item and itm_item['amount'] > 0:
-                    acct.setdefault('by_item', []).append({
-                        'name':   itm_name,
-                        'amount': itm_item['amount'],
-                    })
+                    acct.setdefault('by_item', []).append({'name': itm_name, 'amount': itm_item['amount']})
 
-    # 品目合計と科目合計の差分 = 品目未設定分 を末尾に追加
-    for sk in SECTION_KEYS:
-        for acct in cur_data[sk]['breakdown']:
-            item_list = acct.get('by_item')
-            if not item_list:
-                continue
-            item_sum = sum(i['amount'] for i in item_list)
-            untagged = acct['amount'] - item_sum
-            if untagged > 100:
-                item_list.append({'name': '（品目未設定）', 'amount': untagged})
-            item_list.sort(key=lambda i: -i['amount'])
+    _finalize_by_item(cur_data, SECTION_KEYS)
 
 
 def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month,
