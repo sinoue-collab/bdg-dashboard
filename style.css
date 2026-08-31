@@ -1615,9 +1615,12 @@ body {
 }
 .sbiz-wf-amt.pos { color: var(--sbiz-good); }
 .sbiz-wf-amt.neg { color: var(--sbiz-bad); }
-.sbiz-wf-mom { text-align: right; font-size: 11px; color: var(--sbiz-ink-faint); }
+.sbiz-wf-mom { text-align: right; font-size: 11px; color: var(--sbiz-ink-faint); line-height: 1.6; }
 .sbiz-wf-mom .up   { color: var(--sbiz-good); }
 .sbiz-wf-mom .down { color: var(--sbiz-bad); }
+.sbiz-wf-bgt-line { font-size: 10px; color: var(--sbiz-ink-faint); opacity: 0.8; }
+.sbiz-wf-bgt-line .up   { color: var(--sbiz-good); }
+.sbiz-wf-bgt-line .down { color: var(--sbiz-bad); }
 
 /* ブレークダウン行 */
 .sbiz-bk-list { display: none; }

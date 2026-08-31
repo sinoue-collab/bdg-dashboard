@@ -3,19 +3,28 @@
   "target_month": "2026-07",
   "companies": {
     "BLUE ESTATE": {
+      "note": "新R8ブルーエステート予算説明資料 予算タブより。歴年（2026年1月〜12月）。詳細は budget_detail_BLUE_ESTATE.json 参照。",
+      "fy_start": "2026-01",
+      "annual_budget": {
+        "revenue":         251400000,
+        "gross_profit":    190960000,
+        "sga_total":       196736759,
+        "op_profit":        -5776759,
+        "ordinary_profit":  -5776759
+      },
       "budget_monthly": {
-        "revenue":          null,
-        "gross_profit":     null,
-        "sga_total":        null,
-        "op_profit":        null,
-        "ordinary_profit":  null
+        "revenue":          20100000,
+        "gross_profit":     17730000,
+        "sga_total":        16606626,
+        "op_profit":         1123374,
+        "ordinary_profit":   1123374
       },
       "budget_ytd": {
-        "revenue":          null,
-        "gross_profit":     null,
-        "sga_total":        null,
-        "op_profit":        null,
-        "ordinary_profit":  null
+        "revenue":         150050000,
+        "gross_profit":    101460000,
+        "sga_total":       120438214,
+        "op_profit":       -18978214,
+        "ordinary_profit": -18978214
       },
       "py_monthly": {
         "revenue":          null,
@@ -33,8 +42,8 @@
       },
       "cash": null,
       "landing_forecast": {
-        "revenue":   null,
-        "op_profit": null
+        "revenue":   251400000,
+        "op_profit": -5776759
       }
     },
     "BLUE DESIGN": {

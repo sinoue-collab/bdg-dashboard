@@ -5,7 +5,8 @@
 // ══════════════════════════════════════════════════════
 
 const SNAPSHOT_FILE = 'data/dashboard_snapshots/snapshot_latest.json';
-const BUDGET_FILE   = 'data/budget/budget_FY2026.json';
+const BUDGET_FILE        = 'data/budget/budget_FY2026.json';
+const BUDGET_DETAIL_BE   = 'data/budget/budget_detail_BLUE_ESTATE.json';
 const ACTUALS_FILE            = 'data/actuals/actuals_latest.json';
 const ACTUALS_PREV_FILE       = 'data/actuals/actuals_previous.json';
 const ACTUALS_MONTH_START_FILE= 'data/actuals/actuals_month_start.json';
@@ -84,6 +85,7 @@ const S2_METRICS = [
 let state = {
   current:   null,
   budget:    null,
+  budgetDetail: null,
   actuals:           null,
   actualsPrev:       null,
   actualsMonthStart: null,
@@ -1166,6 +1168,38 @@ function renderSbizKpis() {
     + kpiCard(`${pfx}営業利益`, op, pOp);
 }
 
+// BLUE ESTATE予算詳細から勘定科目予算を取得
+function getSbizAcctBudget(section, accountName) {
+  if (!state.budgetDetail) return null;
+  const node = state.sbizNode;
+  if (node === 'group' || node.startsWith('dept:')) return null;
+  if (node !== 'unit_blue_estate') return null;
+
+  const CAT_MAP = { revenue: '売上高', cogs: '売上原価', sga: '販売管理費' };
+  const NAME_MAP = { '給料手当': '給与手当', '福利厚生費': '福利厚生費' };
+  const cat = CAT_MAP[section];
+  if (!cat) return null;
+
+  const budgetName = NAME_MAP[accountName] ?? accountName;
+  const acct = state.budgetDetail.categories?.[cat]?.[budgetName];
+  if (!acct) return null;
+
+  const targetMonth = state.budget?.target_month ?? '2026-07';
+  const isYtd = state.sbizPeriod === 'ytd';
+  if (!isYtd) return acct.monthly_budget?.[targetMonth] ?? null;
+
+  // YTD: fy_start から targetMonth までの累計
+  const fyStart = state.budgetDetail.fy_start ?? '2026-01';
+  let ytd = 0;
+  let cur = fyStart;
+  while (cur <= targetMonth) {
+    ytd += acct.monthly_budget?.[cur] ?? 0;
+    const [y, m] = cur.split('-').map(Number);
+    cur = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+  }
+  return ytd;
+}
+
 function renderSbizWaterfall() {
   const el = document.getElementById('sbiz-waterfall');
   if (!el) return;
@@ -1209,17 +1243,38 @@ function renderSbizWaterfall() {
     return `<span class="${good ? 'up' : 'down'}">${up ? '▲' : '▼'}${fmtYen(Math.abs(d))}</span>`;
   };
 
+  // BLUE ESTATE 予算対比バッジ
+  const bgtBadge = (cur, bgt, inv = false) => {
+    if (cur === null || bgt === null) return '';
+    const d = cur - bgt;
+    if (d === 0) return '<div class="sbiz-wf-bgt-line">予算比 <span>±0</span></div>';
+    const up = d > 0;
+    const good = inv ? !up : up;
+    return `<div class="sbiz-wf-bgt-line">予算比 <span class="${good ? 'up' : 'down'}">${up ? '▲' : '▼'}${fmtYen(Math.abs(d))}</span></div>`;
+  };
+
+  // 要約行の予算値（budget_FY2026.jsonから）
+  const isBeUnit = state.sbizNode === 'unit_blue_estate';
+  const bePeriod = state.sbizPeriod;
+  const beBudget = isBeUnit ? getBudget('BLUE ESTATE', bePeriod) : null;
+  const bgtRev  = beBudget?.revenue        ?? null;
+  const bgtCogs = beBudget ? ((beBudget.revenue ?? 0) - (beBudget.gross_profit ?? 0)) : null;
+  const bgtGp   = beBudget?.gross_profit   ?? null;
+  const bgtSga  = beBudget?.sga_total      ?? null;
+  const bgtOp   = beBudget?.op_profit      ?? null;
+
   const barW = (v) => Math.min(100, Math.abs(v) / maxAbs * 100).toFixed(1) + '%';
-  const wfRow = (lbl, val, prevVal, color, clickable = true, extraClass = '') => {
+  const wfRow = (lbl, val, prevVal, color, clickable = true, extraClass = '', bgtVal = null) => {
     const isNeg = val < 0;
     const expand = clickable ? '<span class="expand-icon">›</span>' : '';
+    const inv = lbl === '販管費' || lbl === '売上原価';
     return `<div class="sbiz-wf-row${extraClass ? ' ' + extraClass : ''}${clickable ? ' clickable-row' : ''}" data-section="${lbl}">
       <div class="sbiz-wf-lbl${clickable ? ' clickable' : ''}">${expand}${lbl}</div>
       <div class="sbiz-wf-bar-cell">
         <div class="sbiz-wf-bar-bg"><div class="sbiz-wf-bar" style="width:${barW(val)};background:${color}"></div></div>
       </div>
       <div class="sbiz-wf-amt${isNeg ? ' neg' : (val > 0 ? ' pos' : '')}">${fmtYen(val)}</div>
-      <div class="sbiz-wf-mom">${momBadge(val, prevVal, lbl === '販管費' || lbl === '売上原価')}</div>
+      <div class="sbiz-wf-mom">${momBadge(val, prevVal, inv)}${bgtBadge(val, bgtVal, inv)}</div>
     </div>`;
   };
 
@@ -1234,13 +1289,14 @@ function renderSbizWaterfall() {
       const hasDept = it.by_department?.length > 0;
       const hasItem = it.by_item?.length > 0;
       const hasDrill = hasDept || hasItem;
+      const acctBgt = getSbizAcctBudget(section, it.item);
       rows += `<div class="sbiz-bk-row${hasDrill ? ' has-drill' : ''}" data-bk="${it.item}" data-section-key="${sectionKey}">
         <div class="sbiz-wf-lbl">${it.item}</div>
         <div class="sbiz-wf-bar-cell">
           <div class="sbiz-wf-bar-bg"><div class="sbiz-wf-bar" style="width:${barW(it.amount)};background:${color}88"></div></div>
         </div>
         <div class="sbiz-wf-amt">${fmtYen(it.amount)}</div>
-        <div class="sbiz-wf-mom">${momBadge(it.amount, prevIt?.amount ?? null, inv)}</div>
+        <div class="sbiz-wf-mom">${momBadge(it.amount, prevIt?.amount ?? null, inv)}${bgtBadge(it.amount, acctBgt, inv)}</div>
       </div>`;
 
       if (hasDrill) {
@@ -1274,14 +1330,14 @@ function renderSbizWaterfall() {
   };
 
   el.innerHTML = ytdNote +
-    wfRow('売上', rev, pRev, '#3452d9') +
+    wfRow('売上', rev, pRev, '#3452d9', true, '', bgtRev) +
     renderBkList('revenue', 'revenue', '#3452d9') +
-    wfRow('売上原価', cogs, pCogs, '#e74c3c', true) +
+    wfRow('売上原価', cogs, pCogs, '#e74c3c', true, '', bgtCogs) +
     renderBkList('cogs', 'cogs', '#e74c3c', true) +
-    wfRow('粗利', gp, pGp, '#1c8a53', false, 'summary') +
-    wfRow('販管費', sga, pSga, '#b45309', true) +
+    wfRow('粗利', gp, pGp, '#1c8a53', false, 'summary', bgtGp) +
+    wfRow('販管費', sga, pSga, '#b45309', true, '', bgtSga) +
     renderBkList('sga', 'sga', '#b45309', true) +
-    wfRow('営業利益', op, pOp, '#1c8a53', false, op >= 0 ? 'summary' : 'summary neg-row') +
+    wfRow('営業利益', op, pOp, '#1c8a53', false, op >= 0 ? 'summary' : 'summary neg-row', bgtOp) +
     (noi > 0 ? wfRow('営業外収益', noi, pOrd, '#059669') + renderBkList('noi', 'non_op_income', '#059669') : '') +
     (noe > 0 ? wfRow('営業外費用', noe, null,  '#e74c3c', true) + renderBkList('noe', 'non_op_expense', '#e74c3c', true) : '') +
     wfRow('経常利益', ord, pOrd, '#1c8a53', false, ord >= 0 ? 'total-row' : 'total-row neg-row');
@@ -1856,7 +1912,7 @@ async function init() {
   const DAILY_YD = `${DAILY_HISTORY_BASE}/${_jstDate(_ydDate)}.json`;
   const DAILY_WK = `${DAILY_HISTORY_BASE}/${_jstDate(_wkDate)}.json`;
 
-  const [snapshot, budget, actualsRaw, actualsPrevRaw, actualsMonthStartRaw, mapping, portals, hrRaw, ydRaw, wkRaw] = await Promise.all([
+  const [snapshot, budget, actualsRaw, actualsPrevRaw, actualsMonthStartRaw, mapping, portals, hrRaw, ydRaw, wkRaw, budgetDetailBE] = await Promise.all([
     tryFetch(SNAPSHOT_FILE),
     tryFetch(BUDGET_FILE),
     tryFetch(ACTUALS_FILE),
@@ -1867,10 +1923,12 @@ async function init() {
     tryFetch(HR_FILE),
     tryFetch(DAILY_YD),
     tryFetch(DAILY_WK),
+    tryFetch(BUDGET_DETAIL_BE),
   ]);
 
   state.current          = snapshot;
   state.budget           = budget;
+  state.budgetDetail     = budgetDetailBE;
   state.actuals          = actualsRaw?.data          ?? null;
   state.actualsPrev      = actualsPrevRaw?.data      ?? null;
   state.actualsMonthStart= actualsMonthStartRaw?.data ?? null;
