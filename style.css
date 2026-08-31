@@ -1642,6 +1642,18 @@ body {
   cursor: pointer; font-family: inherit; color: var(--sbiz-ink-dim);
 }
 .sbiz-drill-tab.active { background: var(--sbiz-accent); color: #fff; border-color: var(--sbiz-accent); }
+.sbiz-drill-count {
+  display: inline-block; min-width: 16px; padding: 0 4px;
+  background: rgba(0,0,0,.12); border-radius: 8px;
+  font-size: 9px; font-weight: 700; line-height: 16px; text-align: center;
+  margin-left: 3px; vertical-align: middle;
+}
+.sbiz-drill-tab.active .sbiz-drill-count { background: rgba(255,255,255,.3); }
+.sbiz-drill-empty {
+  padding: 10px 16px 10px 64px;
+  font-size: 11px; color: var(--sbiz-ink-faint); font-style: italic;
+  background: var(--sbiz-surface);
+}
 .sbiz-drill-list { display: none; }
 .sbiz-drill-list.open { display: block; }
 .sbiz-drill-row {

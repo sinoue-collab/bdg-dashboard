@@ -1223,19 +1223,28 @@ function renderSbizWaterfall() {
       </div>`;
 
       if (hasDrill) {
-        rows += `<div class="sbiz-drill-header" id="drill-hdr-${it.item.replace(/\s/g,'_')}" style="display:none">
-          <button class="sbiz-drill-tab${state.sbizDrillMode === 'dept' ? ' active' : ''}" data-drill="dept">部門別</button>
-          <button class="sbiz-drill-tab${state.sbizDrillMode === 'item' ? ' active' : ''}" data-drill="item">品目別</button>
-        </div>`;
-        const drillList = state.sbizDrillMode === 'item' ? it.by_item : it.by_department;
+        // タブは実際にデータがある方だけ表示
+        const tabDept = hasDept ? `<button class="sbiz-drill-tab${state.sbizDrillMode === 'dept' ? ' active' : ''}" data-drill="dept">部門別 <span class="sbiz-drill-count">${it.by_department.length}</span></button>` : '';
+        const tabItem = hasItem ? `<button class="sbiz-drill-tab${state.sbizDrillMode === 'item' ? ' active' : ''}" data-drill="item">品目別 <span class="sbiz-drill-count">${it.by_item.length}</span></button>` : '';
+        rows += `<div class="sbiz-drill-header" id="drill-hdr-${it.item.replace(/\s/g,'_')}" style="display:none">${tabDept}${tabItem}</div>`;
+
+        // 現在のモードにデータがなければ反対側にフォールバック
+        const effectiveMode = state.sbizDrillMode === 'item' && hasItem ? 'item'
+                            : state.sbizDrillMode === 'dept' && hasDept ? 'dept'
+                            : hasItem ? 'item' : 'dept';
+        const drillList = effectiveMode === 'item' ? it.by_item : it.by_department;
         rows += `<div class="sbiz-drill-list" id="drill-${it.item.replace(/\s/g,'_')}">`;
-        for (const d of (drillList ?? [])) {
-          const isUntagged = d.name === '（部門未設定）' || d.name === '（品目未設定）';
-          const isDepr = d.deprecated ?? false;
-          rows += `<div class="sbiz-drill-row${isUntagged ? ' untagged' : ''}${isDepr ? ' deprecated' : ''}">
-            <span>${isDepr ? '⚠ ' : ''}${d.name}</span>
-            <span class="sbiz-drill-amt">${fmtYen(d.amount)}</span>
-          </div>`;
+        if (!drillList?.length) {
+          rows += `<div class="sbiz-drill-empty">データなし（freeeで品目を設定してください）</div>`;
+        } else {
+          for (const d of drillList) {
+            const isUntagged = d.name === '（部門未設定）' || d.name === '（品目未設定）';
+            const isDepr = d.deprecated ?? false;
+            rows += `<div class="sbiz-drill-row${isUntagged ? ' untagged' : ''}${isDepr ? ' deprecated' : ''}">
+              <span>${isDepr ? '⚠ ' : ''}${d.name}</span>
+              <span class="sbiz-drill-amt">${fmtYen(d.amount)}</span>
+            </div>`;
+          }
         }
         rows += `</div>`;
       }
@@ -1290,12 +1299,31 @@ function renderSbizWaterfall() {
     });
   });
 
-  // 部門/品目タブ切り替え
+  // 部門/品目タブ切り替え（展開状態を保持して再描画）
   el.querySelectorAll('.sbiz-drill-tab').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      // 現在開いている大項目・科目を記憶
+      const openSecEl = el.querySelector('.sbiz-bk-list.open');
+      const openBkEl  = el.querySelector('.sbiz-bk-row.expanded');
+      const openSecId = openSecEl?.id;
+      const openBkKey = openBkEl?.dataset.bk?.replace(/\s/g,'_');
+
       state.sbizDrillMode = btn.dataset.drill;
       renderSbizWaterfall();
+
+      // 再描画後に同じ行を復元
+      if (openSecId) {
+        el.querySelector(`#${openSecId}`)?.classList.add('open');
+        const secLabel = openSecId.replace('bk-','');
+        const secLabelMap = { revenue:'売上', cogs:'売上原価', sga:'販管費', noi:'営業外収益', noe:'営業外費用' };
+        el.querySelector(`.sbiz-wf-row[data-section="${secLabelMap[secLabel] ?? secLabel}"]`)?.classList.add('expanded');
+      }
+      if (openBkKey) {
+        el.querySelector(`#drill-${openBkKey}`)?.classList.add('open');
+        el.querySelector(`#drill-hdr-${openBkKey}`)?.style.setProperty('display','flex');
+        el.querySelector(`.sbiz-bk-row[data-bk="${openBkEl.dataset.bk}"]`)?.classList.add('expanded');
+      }
     });
   });
 }
