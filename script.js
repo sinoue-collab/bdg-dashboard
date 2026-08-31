@@ -1125,8 +1125,13 @@ function renderSbizBreadcrumb() {
 function renderSbizKpis() {
   const el = document.getElementById('sbiz-kpis');
   if (!el) return;
-  const data = getSbizNodeData();
-  const prev = getSbizPrevData();
+  const data    = getSbizNodeData();
+  const prev    = getSbizPrevData();
+  const isYtd   = state.sbizPeriod === 'ytd';
+  const isDept  = state.sbizNode.startsWith('dept:');
+  // 部門はYTD集計データなし→当月を表示、それ以外はperiodに従う
+  const pfx     = isYtd && !isDept ? '累計' : '当月';
+  const momLbl  = isYtd && !isDept ? '前月比' : '前月比';
 
   const kpiCard = (lbl, val, prevVal) => {
     const isNeg = val !== null && val < 0;
@@ -1140,7 +1145,7 @@ function renderSbizKpis() {
     return `<div class="sbiz-kpi">
       <div class="sbiz-kpi-lbl">${lbl}</div>
       <div class="sbiz-kpi-val${isNeg ? ' neg' : (val > 0 ? ' pos' : '')}">${val !== null ? fmtYen(val) : '—'}</div>
-      <div class="sbiz-kpi-mom">前月比 ${momHtml}</div>
+      <div class="sbiz-kpi-mom">${momLbl} ${momHtml}</div>
     </div>`;
   };
 
@@ -1151,19 +1156,32 @@ function renderSbizKpis() {
   const pGp  = prev?._summary?.gross_profit ?? null;
   const pOp  = prev?._summary?.op_profit ?? null;
 
-  el.innerHTML = kpiCard('当月売上', rev, pRev) + kpiCard('当月粗利', gp, pGp) + kpiCard('当月営業利益', op, pOp);
+  const deptYtdNote = isDept && isYtd
+    ? `<div class="sbiz-period-note">⚠ 部門別の年度累計データは対象外のため当月値を表示しています</div>`
+    : '';
+
+  el.innerHTML = deptYtdNote
+    + kpiCard(`${pfx}売上`, rev, pRev)
+    + kpiCard(`${pfx}粗利`, gp, pGp)
+    + kpiCard(`${pfx}営業利益`, op, pOp);
 }
 
 function renderSbizWaterfall() {
   const el = document.getElementById('sbiz-waterfall');
   if (!el) return;
-  const data = getSbizNodeData();
-  const prev = getSbizPrevData();
+  const data   = getSbizNodeData();
+  const prev   = getSbizPrevData();
+  const isYtd  = state.sbizPeriod === 'ytd';
+  const isDept = state.sbizNode.startsWith('dept:');
 
   if (!data) {
     el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--sbiz-ink-faint)">データを読み込めませんでした</div>';
     return;
   }
+
+  const ytdNote = isYtd && !isDept
+    ? `<div class="sbiz-period-note">📋 年度累計では科目別内訳のみ表示。部門・品目ドリルダウンは当月モードで確認できます</div>`
+    : '';
 
   const rev  = data.revenue?.total ?? 0;
   const cogs = data.cogs?.total ?? 0;
@@ -1255,7 +1273,7 @@ function renderSbizWaterfall() {
     return `<div class="sbiz-bk-list" id="bk-${section}">${rows}</div>`;
   };
 
-  el.innerHTML =
+  el.innerHTML = ytdNote +
     wfRow('売上', rev, pRev, '#3452d9') +
     renderBkList('revenue', 'revenue', '#3452d9') +
     wfRow('売上原価', cogs, pCogs, '#e74c3c', true) +

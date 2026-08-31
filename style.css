@@ -1546,6 +1546,13 @@ body {
 }
 
 /* KPIカード */
+.sbiz-period-note {
+  font-size: 11px; color: var(--sbiz-ink-dim);
+  background: var(--sbiz-surface-2);
+  border-left: 3px solid var(--sbiz-ink-faint);
+  padding: 7px 14px; margin-bottom: 12px;
+  border-radius: 0 6px 6px 0;
+}
 .sbiz-kpis {
   display: flex;
   gap: 12px;
