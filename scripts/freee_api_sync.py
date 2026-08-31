@@ -23,6 +23,7 @@ import json
 import os
 import shutil
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -218,16 +219,25 @@ def enrich_with_departments(cur_data, company_id, access_token,
             continue
         deprecated = is_deprecated_section(sec_name)
 
-        try:
-            sec_bal  = fetch_trial_pl(
-                company_id, access_token,
-                cur_fy, cur_month, cur_month,
-                section_id=sec_id,
-            )
-            sec_data = parse_balances(sec_bal, mapping)
-        except RuntimeError as e:
-            if debug:
-                print(f'    [DEBUG] 部門 "{sec_name}"(id={sec_id}) 取得失敗: {e}')
+        sec_data = None
+        for attempt in range(2):
+            try:
+                sec_bal  = fetch_trial_pl(
+                    company_id, access_token,
+                    cur_fy, cur_month, cur_month,
+                    section_id=sec_id,
+                )
+                sec_data = parse_balances(sec_bal, mapping)
+                break
+            except RuntimeError as e:
+                if attempt == 0:
+                    if debug:
+                        print(f'    [DEBUG] 部門 "{sec_name}"(id={sec_id}) 一時失敗、5秒後再試行: {e}')
+                    time.sleep(5)
+                else:
+                    if debug:
+                        print(f'    [DEBUG] 部門 "{sec_name}"(id={sec_id}) 取得失敗（再試行済）: {e}')
+        if sec_data is None:
             continue
 
         for sk in SECTION_KEYS:
@@ -262,13 +272,25 @@ def enrich_with_departments(cur_data, company_id, access_token,
 
 
 def fetch_items_all(company_id, access_token):
-    """全品目マスタを取得。"""
-    try:
-        d = freee_get('/api/1/items', access_token, {'company_id': company_id})
-        return d.get('items', [])
-    except RuntimeError as e:
-        print(f'  ⚠️  品目マスタ取得失敗: {e}')
-        return []
+    """全品目マスタを取得（ページネーション対応・全件）。"""
+    all_items = []
+    offset = 0
+    while True:
+        try:
+            d = freee_get('/api/1/items', access_token, {
+                'company_id': company_id,
+                'offset':     offset,
+                'limit':      100,
+            })
+        except RuntimeError as e:
+            print(f'  ⚠️  品目マスタ取得失敗 (offset={offset}): {e}')
+            break
+        items = d.get('items', [])
+        all_items.extend(items)
+        if len(items) < 100:
+            break
+        offset += 100
+    return all_items
 
 
 def enrich_with_items(cur_data, company_id, access_token,
@@ -285,16 +307,25 @@ def enrich_with_items(cur_data, company_id, access_token,
         if not itm_id or not itm_name:
             continue
 
-        try:
-            itm_bal  = fetch_trial_pl(
-                company_id, access_token,
-                cur_fy, cur_month, cur_month,
-                item_id=itm_id,
-            )
-            itm_data = parse_balances(itm_bal, mapping)
-        except RuntimeError as e:
-            if debug:
-                print(f'    [DEBUG] 品目 "{itm_name}"(id={itm_id}) 取得失敗: {e}')
+        itm_data = None
+        for attempt in range(2):
+            try:
+                itm_bal  = fetch_trial_pl(
+                    company_id, access_token,
+                    cur_fy, cur_month, cur_month,
+                    item_id=itm_id,
+                )
+                itm_data = parse_balances(itm_bal, mapping)
+                break
+            except RuntimeError as e:
+                if attempt == 0:
+                    if debug:
+                        print(f'    [DEBUG] 品目 "{itm_name}"(id={itm_id}) 一時失敗、5秒後再試行: {e}')
+                    time.sleep(5)
+                else:
+                    if debug:
+                        print(f'    [DEBUG] 品目 "{itm_name}"(id={itm_id}) 取得失敗（再試行済）: {e}')
+        if itm_data is None:
             continue
 
         for sk in SECTION_KEYS:
