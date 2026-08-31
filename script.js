@@ -974,18 +974,21 @@ function renderSbizNav() {
 function getSbizDepts(unitId) {
   const act = state.actuals?.[unitId];
   if (!act) return [];
-  // 売上 breakdown の by_department から部門名を収集（廃止部門除く）
+  // 全セクションの by_department を合計して部門リストを作成
   const deptAmts = {};
-  for (const item of act.revenue?.breakdown ?? []) {
-    for (const d of item.by_department ?? []) {
-      if (!d.deprecated && d.name !== '（部門未設定）') {
-        deptAmts[d.name] = (deptAmts[d.name] ?? 0) + d.amount;
+  const SECTIONS = ['revenue', 'cogs', 'sga', 'non_op_income', 'non_op_expense'];
+  for (const sec of SECTIONS) {
+    for (const item of act[sec]?.breakdown ?? []) {
+      for (const d of item.by_department ?? []) {
+        if (!d.deprecated && d.name !== '（部門未設定）') {
+          deptAmts[d.name] = (deptAmts[d.name] ?? 0) + Math.abs(d.amount);
+        }
       }
     }
   }
   return Object.entries(deptAmts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
+    .slice(0, 10)
     .map(([name]) => name);
 }
 
