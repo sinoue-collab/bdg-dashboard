@@ -63,7 +63,7 @@ jobs:
           python3 scripts/freee_api_sync.py $ARGS
 
       - name: Commit and push updated JSON
-        if: ${{ inputs.dry_run != 'true' }}
+        if: ${{ !inputs.dry_run }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
