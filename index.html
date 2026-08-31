@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BDG 経営ダッシュボード</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -28,11 +30,10 @@
     <button class="screen-btn active" data-screen="s1">S1 経営TOP</button>
     <button class="screen-btn" data-screen="s2">S2 財務・管理会計</button>
     <button class="screen-btn" data-screen="s3">S3 会社別分析</button>
-    <button class="screen-btn" data-screen="s4">S4 利益構造分析</button>
+    <button class="screen-btn" data-screen="s4">事業分析</button>
     <button class="screen-btn" data-screen="s5">S5 KPIポータル</button>
     <button class="screen-btn" data-screen="s6">S6 人事・生産性</button>
     <button class="screen-btn" data-screen="s7">S7 AI分析</button>
-    <button class="screen-btn" data-screen="s8">S8 費用サマリー</button>
   </nav>
 
   <!-- ════════════════════════════════════
@@ -204,26 +205,25 @@
   </section>
 
   <!-- ════════════════════════════════════
-       S4: 経営単位詳細分析
+       S4: 事業分析
   ════════════════════════════════════ -->
   <section id="screen-s4" class="screen">
-    <div class="controls-bar">
-      <div class="s4-label">利益構造分析</div>
-      <div class="co-tabs" id="s4-unit-tabs">
-        <button class="co-tab active" data-unit="unit_blue_estate">BLUE ESTATE</button>
-        <button class="co-tab" data-unit="unit_blue_design">BLUE DESIGN</button>
-        <button class="co-tab" data-unit="unit_blue_life">BLUE LIFE</button>
-        <button class="co-tab" data-unit="unit_seitendo">青天堂</button>
-      </div>
-      <div class="period-toggle" id="s4-period-toggle">
-        <button class="period-btn" data-period="monthly">当月</button>
-        <button class="period-btn active" data-period="ytd">年度累計</button>
+    <div class="sbiz-layout">
+      <aside class="sbiz-sidebar">
+        <div id="sbiz-nav"></div>
+      </aside>
+      <div class="sbiz-main">
+        <div class="sbiz-topbar">
+          <div class="sbiz-bc" id="sbiz-bc">全体</div>
+          <div class="sbiz-period-toggle" id="sbiz-period-toggle">
+            <button class="sbiz-period-btn active" data-period="monthly">当月</button>
+            <button class="sbiz-period-btn" data-period="ytd">年度累計</button>
+          </div>
+        </div>
+        <div id="sbiz-kpis" class="sbiz-kpis"></div>
+        <div id="sbiz-waterfall" class="sbiz-waterfall"></div>
       </div>
     </div>
-    <div class="info-bar" id="s4-info-bar">読込中…</div>
-    <main class="main">
-      <div id="s4-content"></div>
-    </main>
   </section>
 
   <!-- ════════════════════════════════════
@@ -294,38 +294,6 @@
       </div>
     </main>
   </section>
-
-  <!-- ════════════════════════════════════
-       S8: 費用サマリー
-  ════════════════════════════════════ -->
-  <section id="screen-s8" class="screen">
-    <div class="controls-bar">
-      <div class="s8-label">3社 費用サマリー</div>
-      <div class="period-toggle" id="s8-period-toggle">
-        <button class="period-btn active" data-period="monthly">当月</button>
-        <button class="period-btn" data-period="ytd">当期累計</button>
-      </div>
-    </div>
-    <div class="info-bar" id="s8-info-bar">読込中…</div>
-    <main class="main">
-      <div id="s8-cards" class="s8-cards"></div>
-    </main>
-  </section>
-
-  <!-- 費用明細ドロワー -->
-  <div id="cost-drawer" class="cost-drawer" hidden>
-    <div class="cd-overlay" id="cd-overlay"></div>
-    <div class="cd-panel">
-      <div class="cd-hdr" id="cd-hdr">
-        <div>
-          <div class="cd-co-name" id="cd-co-name">—</div>
-          <div class="cd-period" id="cd-period">—</div>
-        </div>
-        <button class="cd-close" id="cd-close">✕</button>
-      </div>
-      <div class="cd-body" id="cd-body"></div>
-    </div>
-  </div>
 
   <!-- フッター -->
   <footer class="footer">

@@ -101,6 +101,9 @@ let state = {
   s4Period:       'ytd',
   s8Period:       'monthly',
   s8DrillMode:    'dept',
+  sbizNode:       'group',
+  sbizPeriod:     'monthly',
+  sbizDrillMode:  'dept',
 };
 
 // ══════════════════════════════════════════════════════
@@ -187,7 +190,14 @@ function groupMonthStart() {
   return addRates(sumRaw(COMPANIES.map(c => {
     const u = state.actualsMonthStart[CO_UNIT[c]];
     if (!u) return null;
-    return u.ytd ?? u;
+    const src = u.ytd ?? u;
+    return {
+      revenue:         src.revenue?.total ?? null,
+      gross_profit:    src._summary?.gross_profit ?? null,
+      sga_total:       src.sga?.total ?? null,
+      op_profit:       src._summary?.op_profit ?? null,
+      ordinary_profit: src._summary?.ordinary_profit ?? null,
+    };
   })));
 }
 
@@ -340,8 +350,10 @@ function renderS1Delta() {
     if (!data) return null;
     let total = 0, found = false;
     for (const u of UNIT_KEYS) {
-      const v = data[u]?._summary?.[summaryKey];
-      if (v !== undefined && v !== null) { total += v; found = true; }
+      const v = summaryKey === 'revenue'
+        ? (data[u]?.revenue?.total ?? null)
+        : (data[u]?._summary?.[summaryKey] ?? null);
+      if (v !== null && v !== undefined) { total += v; found = true; }
     }
     return found ? total : null;
   };
@@ -883,20 +895,8 @@ function renderS3Table() {
 }
 
 // ══════════════════════════════════════════════════════
-//  S4: 利益構造分析
+//  事業分析（S4 新版）
 // ══════════════════════════════════════════════════════
-
-const UNIT_META = {
-  unit_blue_estate: { label: 'BLUE ESTATE', color: '#1A3A5C' },
-  unit_blue_design: { label: 'BLUE DESIGN', color: '#0090BA' },
-  unit_blue_life:   { label: 'BLUE LIFE',   color: '#059669' },
-  unit_seitendo:    { label: '青天堂',       color: '#B45309' },
-};
-
-// 展開状態（ユニット切替時にリセット）
-let s4Exp = { revenue: false, cogs: false, sga: true, sgaCats: {}, sgaOther: false };
-function resetS4Exp() { s4Exp = { revenue: false, cogs: false, sga: true, sgaCats: {}, sgaOther: false }; }
-
 
 // 円表示（完全形：1,234,567円）
 function fmtFull(n) {
@@ -904,178 +904,400 @@ function fmtFull(n) {
   return (n < 0 ? '▲' : '') + Math.abs(n).toLocaleString() + '円';
 }
 
-// 対売上比率（%）
-function wfPct(n, rev) {
-  if (!rev || rev < RATE_MIN_REVENUE || n === null) return null;
-  return n / rev * 100;
-}
-function wfFmtPct(p) {
-  if (p === null) return '—';
-  return (p < 0 ? '▲' : '') + Math.abs(p).toFixed(1) + '%';
-}
-// バー幅（対売上比率 0–100%）
-function wfBw(n, rev) {
-  if (!rev || !n) return '0%';
-  return Math.min(100, Math.abs(n) / Math.abs(rev) * 100).toFixed(1) + '%';
-}
+const UNIT_COLOR = {
+  'unit_blue_estate': '#0d2957',
+  'unit_blue_design': '#2f7fd1',
+  'unit_blue_life':   '#1c8a53',
+  'unit_seitendo':    '#b25b1e',
+};
+const UNIT_LABEL = {
+  'unit_blue_estate': 'BLUE ESTATE',
+  'unit_blue_design': 'BLUE DESIGN',
+  'unit_blue_life':   'BLUE LIFE',
+  'unit_seitendo':    '青天堂',
+};
 
 function renderS4() {
-  renderS4InfoBar();
-  renderS4Waterfall();
+  renderSbizNav();
+  renderSbizContent();
 }
 
-function renderS4InfoBar() {
-  const el = document.getElementById('s4-info-bar');
+// ── サイドバー ──────────────────────────────────────────
+
+function renderSbizNav() {
+  const el = document.getElementById('sbiz-nav');
   if (!el) return;
-  if (!state.actuals) { el.textContent = '実績データ未読込'; return; }
-  const u = state.actuals[state.s4Unit];
-  if (!u) { el.textContent = `データなし: ${state.s4Unit}`; return; }
-  const data = (state.s4Period === 'ytd' && u.ytd) ? u.ytd : u;
-  const period = data.period || '';
-  const [yr, mo] = period.split('-');
-  const label = yr && mo ? `${yr}年${parseInt(mo)}月` : period;
-  const periodLabel = state.s4Period === 'ytd' ? `年度累計 (${label})` : `対象月: ${label}`;
-  el.innerHTML = `<span class="info-item"><strong>${periodLabel}</strong></span>
-    <span class="info-item">ソース: ${u.source_file}</span>`;
-}
 
-function renderS4Waterfall() {
-  const el = document.getElementById('s4-content');
-  if (!el) return;
-  if (!state.actuals) { el.innerHTML = '<div class="wf-empty">actuals_latest.json を読み込めませんでした</div>'; return; }
-  const u = state.actuals[state.s4Unit];
-  if (!u) { el.innerHTML = '<div class="wf-empty">このユニットのデータがありません</div>'; return; }
+  const cur = state.sbizNode;
 
-  const meta = UNIT_META[state.s4Unit] || { color: '#0090BA' };
-  const data = (state.s4Period === 'ytd' && u.ytd) ? u.ytd : u;
-  const rev  = data.revenue.total;
-  const cogs = data.cogs.total;
-  const sga  = data.sga.total;
-  const gp   = data._summary.gross_profit;
-  const op   = data._summary.op_profit;
-  const ord  = data._summary.ordinary_profit;
-  const noi  = data.non_op_income.total;
-  const noe  = data.non_op_expense.total;
-  const p    = n => wfPct(n, rev);
-  const bw   = n => wfBw(n, rev);
-  const sgaSorted = [...data.sga.breakdown].sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+  // 全体ノード
+  let html = `<div class="sbiz-nav-item level-group${cur === 'group' ? ' active' : ''}" data-node="group">
+    <span class="sbiz-nav-dot" style="background:#3452d9"></span>全体
+  </div>`;
 
-  const wfRow = (key, label, amount, color, isExpense, revPct) => {
-    const open = s4Exp[key];
-    return `<div class="wf-row${open ? ' open' : ''}">
-      <div class="wf-main" data-expand="${key}">
-        <button class="wf-tog">${open ? '▼' : '▶'}</button>
-        <span class="wf-lbl">${label}</span>
-        <div class="wf-bar-w"><div class="wf-bar" style="width:${bw(Math.abs(amount))};background:${color}"></div></div>
-        <span class="wf-amt${isExpense ? ' neg' : ''}">${d(fmtYen(amount))}</span>
-        <span class="wf-rate">${wfFmtPct(revPct)}</span>
-      </div>`;
-  };
+  const units = Object.keys(UNIT_LABEL);
+  for (const unitId of units) {
+    const label = UNIT_LABEL[unitId];
+    const color = UNIT_COLOR[unitId];
+    const nodeId = unitId;
+    const isCo = cur === nodeId;
 
-  const wfItem = (label, amount, color, revPct) =>
-    `<div class="wf-item">
-      <span class="wf-item-lbl">${label}</span>
-      <div class="wf-bar-w"><div class="wf-bar" style="width:${bw(amount)};background:${color}"></div></div>
-      <span class="wf-item-amt">${fmtFull(amount)}</span>
-      <span class="wf-item-rate">${wfFmtPct(revPct)}</span>
+    html += `<div class="sbiz-nav-sep"></div>`;
+    html += `<div class="sbiz-nav-item level-company${isCo ? ' active' : ''}" data-node="${nodeId}">
+      <span class="sbiz-nav-dot" style="background:${color}"></span>${label}
     </div>`;
 
-  const wfProfit = (label, amount, revPct, muted) => {
-    const cls = muted ? 'muted' : (amount >= 0 ? 'pos' : 'neg');
-    const barW = Math.max(0, revPct ?? 0).toFixed(1) + '%';
-    return `<div class="wf-profit ${cls}">
-      <span class="wf-profit-lbl">${label}</span>
-      <div class="wf-bar-w"><div class="wf-profit-bar" style="width:${barW}"></div></div>
-      <span class="wf-profit-amt">${d(fmtYen(amount))}</span>
-      <span class="wf-profit-rate">${wfFmtPct(revPct)}</span>
-    </div>`;
-  };
-
-  let h = '<div class="wf-container">';
-
-  // ── 売上 ──
-  h += wfRow('revenue', '売上', rev, meta.color, false, 100);
-  if (s4Exp.revenue) {
-    h += '<div class="wf-sub">';
-    for (const it of data.revenue.breakdown) {
-      h += wfItem(it.item, it.amount, meta.color + '88', p(it.amount));
-    }
-    h += '</div>';
-  }
-  h += '</div>';
-
-  // ── 売上原価 ──
-  h += wfRow('cogs', '売上原価', -cogs, '#e74c3c88', true, p(cogs));
-  if (s4Exp.cogs) {
-    h += '<div class="wf-sub">';
-    if (!data.cogs.breakdown.length) {
-      h += '<div class="wf-no-items">原価内訳なし（サービス業）</div>';
-    } else {
-      for (const it of data.cogs.breakdown) {
-        h += wfItem(it.item, it.amount, '#e74c3c88', p(it.amount));
+    // BLUE ESTATEのみ部門サブ項目を表示
+    if (unitId === 'unit_blue_estate') {
+      const depts = getSbizDepts('unit_blue_estate');
+      for (const dept of depts) {
+        const deptNodeId = `dept:unit_blue_estate:${dept}`;
+        const isDept = cur === deptNodeId;
+        html += `<div class="sbiz-nav-item level-dept${isDept ? ' active' : ''}" data-node="${deptNodeId}">
+          <span class="sbiz-nav-dot" style="background:${color};opacity:0.5"></span>${dept}
+        </div>`;
       }
     }
-    h += '</div>';
   }
-  h += '</div>';
 
-  // ══ 粗利 ══
-  h += wfProfit('粗利', gp, p(gp), false);
+  el.innerHTML = html;
 
-  // ── 販管費（常時展開・勘定科目を金額順でフラット表示）──
-  h += wfRow('sga', '販売費・一般管理費', -sga, '#B4530988', true, p(sga));
-  if (s4Exp.sga) {
-    const MAIN_N     = 8;
-    const mainItems  = sgaSorted.slice(0, MAIN_N);
-    const minorItems = sgaSorted.slice(MAIN_N);
-    const minorTotal = minorItems.reduce((s, it) => s + it.amount, 0);
+  el.querySelectorAll('[data-node]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.sbizNode = btn.dataset.node;
+      renderSbizNav();
+      renderSbizContent();
+    });
+  });
+}
 
-    h += '<div class="wf-sub">';
-    for (const it of mainItems) {
-      h += wfItem(it.item, it.amount, '#B4530988', p(it.amount));
+function getSbizDepts(unitId) {
+  const act = state.actuals?.[unitId];
+  if (!act) return [];
+  // 売上 breakdown の by_department から部門名を収集（廃止部門除く）
+  const deptAmts = {};
+  for (const item of act.revenue?.breakdown ?? []) {
+    for (const d of item.by_department ?? []) {
+      if (!d.deprecated && d.name !== '（部門未設定）') {
+        deptAmts[d.name] = (deptAmts[d.name] ?? 0) + d.amount;
+      }
     }
-    if (minorItems.length > 0) {
-      const otherOpen = !!s4Exp.sgaOther;
-      h += `<div class="wf-cat${otherOpen ? ' open' : ''}">
-        <div class="wf-cat-main" data-expand="sgaOther">
-          <button class="wf-tog sm">${otherOpen ? '▼' : '▶'}</button>
-          <span class="wf-item-lbl">その他（${minorItems.length}件）</span>
-          <div class="wf-bar-w"><div class="wf-bar" style="width:${bw(minorTotal)};background:#B4530955"></div></div>
-          <span class="wf-item-amt">${fmtFull(minorTotal)}</span>
-          <span class="wf-item-rate">${wfFmtPct(p(minorTotal))}</span>
+  }
+  return Object.entries(deptAmts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([name]) => name);
+}
+
+// ── データ取得 ──────────────────────────────────────────
+
+function getSbizActuals(unitId, period) {
+  const u = state.actuals?.[unitId];
+  if (!u) return null;
+  return period === 'ytd' ? (u.ytd ?? u) : u;
+}
+
+function getSbizNodeData() {
+  const node   = state.sbizNode;
+  const period = state.sbizPeriod;
+
+  if (node === 'group') {
+    // 全4社合計
+    return mergeSbizActuals(Object.keys(UNIT_LABEL).map(uid => getSbizActuals(uid, period)));
+  }
+  if (node.startsWith('dept:')) {
+    const [, unitId, ...nameParts] = node.split(':');
+    const deptName = nameParts.join(':');
+    return extractDeptData(unitId, deptName);
+  }
+  // 単社
+  return getSbizActuals(node, period);
+}
+
+function getSbizPrevData() {
+  const node   = state.sbizNode;
+  if (node.startsWith('dept:')) {
+    const [, unitId, ...nameParts] = node.split(':');
+    return extractDeptData(unitId, nameParts.join(':'), true);
+  }
+  if (node === 'group') {
+    return mergeSbizActuals(Object.keys(UNIT_LABEL).map(uid => state.actuals?.[uid]?.previous_month));
+  }
+  return state.actuals?.[node]?.previous_month ?? null;
+}
+
+function mergeSbizActuals(list) {
+  const valid = list.filter(Boolean);
+  if (!valid.length) return null;
+  const mergeSection = (key) => {
+    const totals = valid.map(v => v[key]?.total ?? 0);
+    const total  = totals.reduce((a, b) => a + b, 0);
+    // breakdown: merge by item name
+    const bkMap = {};
+    for (const v of valid) {
+      for (const it of v[key]?.breakdown ?? []) {
+        if (!bkMap[it.item]) bkMap[it.item] = { item: it.item, amount: 0, by_department: [], by_item: [] };
+        bkMap[it.item].amount += it.amount;
+        for (const d of it.by_department ?? []) {
+          const ex = bkMap[it.item].by_department.find(x => x.name === d.name);
+          if (ex) ex.amount += d.amount;
+          else bkMap[it.item].by_department.push({ ...d });
+        }
+        for (const i of it.by_item ?? []) {
+          const ex = bkMap[it.item].by_item.find(x => x.name === i.name);
+          if (ex) ex.amount += i.amount;
+          else bkMap[it.item].by_item.push({ ...i });
+        }
+      }
+    }
+    return { total, breakdown: Object.values(bkMap).sort((a, b) => b.amount - a.amount) };
+  };
+  const revenue = mergeSection('revenue');
+  const cogs    = mergeSection('cogs');
+  const sga     = mergeSection('sga');
+  const noi     = mergeSection('non_op_income');
+  const noe     = mergeSection('non_op_expense');
+  const gp  = revenue.total - cogs.total;
+  const op  = gp - sga.total;
+  const ord = op + noi.total - noe.total;
+  return {
+    revenue, cogs, sga,
+    non_op_income: noi, non_op_expense: noe,
+    _summary: { gross_profit: gp, op_profit: op, ordinary_profit: ord },
+  };
+}
+
+function extractDeptData(unitId, deptName, usePrevMonth = false) {
+  const u = state.actuals?.[unitId];
+  if (!u) return null;
+  const src = usePrevMonth ? (u.previous_month ?? u) : u;
+
+  const extractSection = (sec) => {
+    let total = 0;
+    const breakdown = [];
+    for (const item of sec?.breakdown ?? []) {
+      const d = item.by_department?.find(x => x.name === deptName);
+      if (d && d.amount > 0) {
+        total += d.amount;
+        breakdown.push({ item: item.item, amount: d.amount, by_department: [], by_item: item.by_item ?? [] });
+      }
+    }
+    return { total, breakdown };
+  };
+
+  const revenue = extractSection(src.revenue);
+  const cogs    = extractSection(src.cogs);
+  const sga     = extractSection(src.sga);
+  const noi     = extractSection(src.non_op_income);
+  const noe     = extractSection(src.non_op_expense);
+  const gp = revenue.total - cogs.total;
+  const op = gp - sga.total;
+  return {
+    revenue, cogs, sga, non_op_income: noi, non_op_expense: noe,
+    _summary: { gross_profit: gp, op_profit: op, ordinary_profit: op + noi.total - noe.total },
+  };
+}
+
+// ── コンテンツ描画 ──────────────────────────────────────
+
+function renderSbizContent() {
+  renderSbizBreadcrumb();
+  renderSbizKpis();
+  renderSbizWaterfall();
+}
+
+function renderSbizBreadcrumb() {
+  const el = document.getElementById('sbiz-bc');
+  if (!el) return;
+  const node = state.sbizNode;
+  if (node === 'group') { el.textContent = '全体'; return; }
+  if (node.startsWith('dept:')) {
+    const [, unitId, ...nameParts] = node.split(':');
+    el.textContent = `全体 › ${UNIT_LABEL[unitId]} › ${nameParts.join(':')}`;
+    return;
+  }
+  el.textContent = `全体 › ${UNIT_LABEL[node] ?? node}`;
+}
+
+function renderSbizKpis() {
+  const el = document.getElementById('sbiz-kpis');
+  if (!el) return;
+  const data = getSbizNodeData();
+  const prev = getSbizPrevData();
+
+  const kpiCard = (lbl, val, prevVal) => {
+    const isNeg = val !== null && val < 0;
+    const momHtml = (() => {
+      if (val === null || prevVal === null) return '<span>—</span>';
+      const d = val - prevVal;
+      if (d === 0) return '<span>±0</span>';
+      const up = d > 0;
+      return `<span class="${up ? 'up' : 'down'}">${up ? '▲' : '▼'}${fmtYen(Math.abs(d))}</span>`;
+    })();
+    return `<div class="sbiz-kpi">
+      <div class="sbiz-kpi-lbl">${lbl}</div>
+      <div class="sbiz-kpi-val${isNeg ? ' neg' : (val > 0 ? ' pos' : '')}">${val !== null ? fmtYen(val) : '—'}</div>
+      <div class="sbiz-kpi-mom">前月比 ${momHtml}</div>
+    </div>`;
+  };
+
+  const rev  = data?.revenue?.total ?? null;
+  const gp   = data?._summary?.gross_profit ?? null;
+  const op   = data?._summary?.op_profit ?? null;
+  const pRev = prev?.revenue?.total ?? null;
+  const pGp  = prev?._summary?.gross_profit ?? null;
+  const pOp  = prev?._summary?.op_profit ?? null;
+
+  el.innerHTML = kpiCard('当月売上', rev, pRev) + kpiCard('当月粗利', gp, pGp) + kpiCard('当月営業利益', op, pOp);
+}
+
+function renderSbizWaterfall() {
+  const el = document.getElementById('sbiz-waterfall');
+  if (!el) return;
+  const data = getSbizNodeData();
+  const prev = getSbizPrevData();
+
+  if (!data) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--sbiz-ink-faint)">データを読み込めませんでした</div>';
+    return;
+  }
+
+  const rev  = data.revenue?.total ?? 0;
+  const cogs = data.cogs?.total ?? 0;
+  const sga  = data.sga?.total ?? 0;
+  const noi  = data.non_op_income?.total ?? 0;
+  const noe  = data.non_op_expense?.total ?? 0;
+  const gp   = data._summary?.gross_profit ?? (rev - cogs);
+  const op   = data._summary?.op_profit    ?? (gp - sga);
+  const ord  = data._summary?.ordinary_profit ?? (op + noi - noe);
+  const maxAbs = Math.max(rev, Math.abs(op), 1);
+
+  const pRev  = prev?.revenue?.total ?? null;
+  const pCogs = prev?.cogs?.total ?? null;
+  const pSga  = prev?.sga?.total ?? null;
+  const pGp   = prev?._summary?.gross_profit ?? null;
+  const pOp   = prev?._summary?.op_profit ?? null;
+  const pOrd  = prev?._summary?.ordinary_profit ?? null;
+
+  const momBadge = (cur, prv, inv = false) => {
+    if (cur === null || prv === null) return '<span>—</span>';
+    const d = cur - prv;
+    if (d === 0) return '<span>±0</span>';
+    const up   = d > 0;
+    const good = inv ? !up : up;
+    return `<span class="${good ? 'up' : 'down'}">${up ? '▲' : '▼'}${fmtYen(Math.abs(d))}</span>`;
+  };
+
+  const barW = (v) => Math.min(100, Math.abs(v) / maxAbs * 100).toFixed(1) + '%';
+  const wfRow = (lbl, val, prevVal, color, clickable = true, extraClass = '') => {
+    const isNeg = val < 0;
+    const expand = clickable ? '<span class="expand-icon">›</span>' : '';
+    return `<div class="sbiz-wf-row${extraClass ? ' ' + extraClass : ''}${clickable ? ' clickable-row' : ''}" data-section="${lbl}">
+      <div class="sbiz-wf-lbl${clickable ? ' clickable' : ''}">${expand}${lbl}</div>
+      <div class="sbiz-wf-bar-cell">
+        <div class="sbiz-wf-bar-bg"><div class="sbiz-wf-bar" style="width:${barW(val)};background:${color}"></div></div>
+      </div>
+      <div class="sbiz-wf-amt${isNeg ? ' neg' : (val > 0 ? ' pos' : '')}">${fmtYen(val)}</div>
+      <div class="sbiz-wf-mom">${momBadge(val, prevVal, lbl === '販管費' || lbl === '売上原価')}</div>
+    </div>`;
+  };
+
+  const renderBkList = (section, sectionKey, color, inv = false) => {
+    const bk   = data[sectionKey]?.breakdown ?? [];
+    const prevBk = prev?.[sectionKey]?.breakdown ?? [];
+    if (!bk.length) return '';
+
+    let rows = '';
+    for (const it of bk) {
+      const prevIt = prevBk.find(p => p.item === it.item);
+      const hasDept = it.by_department?.length > 0;
+      const hasItem = it.by_item?.length > 0;
+      const hasDrill = hasDept || hasItem;
+      rows += `<div class="sbiz-bk-row${hasDrill ? ' has-drill' : ''}" data-bk="${it.item}" data-section-key="${sectionKey}">
+        <div class="sbiz-wf-lbl">${it.item}</div>
+        <div class="sbiz-wf-bar-cell">
+          <div class="sbiz-wf-bar-bg"><div class="sbiz-wf-bar" style="width:${barW(it.amount)};background:${color}88"></div></div>
+        </div>
+        <div class="sbiz-wf-amt">${fmtYen(it.amount)}</div>
+        <div class="sbiz-wf-mom">${momBadge(it.amount, prevIt?.amount ?? null, inv)}</div>
+      </div>`;
+
+      if (hasDrill) {
+        rows += `<div class="sbiz-drill-header" id="drill-hdr-${it.item.replace(/\s/g,'_')}" style="display:none">
+          <button class="sbiz-drill-tab${state.sbizDrillMode === 'dept' ? ' active' : ''}" data-drill="dept">部門別</button>
+          <button class="sbiz-drill-tab${state.sbizDrillMode === 'item' ? ' active' : ''}" data-drill="item">品目別</button>
         </div>`;
-      if (otherOpen) {
-        h += '<div class="wf-sub-items">';
-        for (const it of minorItems) {
-          h += `<div class="wf-item indented">
-            <span class="wf-item-lbl">${it.item}</span>
-            <div class="wf-bar-w"><div class="wf-bar" style="width:${bw(it.amount)};background:#B4530944"></div></div>
-            <span class="wf-item-amt">${fmtFull(it.amount)}</span>
-            <span class="wf-item-rate">${wfFmtPct(p(it.amount))}</span>
+        const drillList = state.sbizDrillMode === 'item' ? it.by_item : it.by_department;
+        rows += `<div class="sbiz-drill-list" id="drill-${it.item.replace(/\s/g,'_')}">`;
+        for (const d of (drillList ?? [])) {
+          const isUntagged = d.name === '（部門未設定）' || d.name === '（品目未設定）';
+          const isDepr = d.deprecated ?? false;
+          rows += `<div class="sbiz-drill-row${isUntagged ? ' untagged' : ''}${isDepr ? ' deprecated' : ''}">
+            <span>${isDepr ? '⚠ ' : ''}${d.name}</span>
+            <span class="sbiz-drill-amt">${fmtYen(d.amount)}</span>
           </div>`;
         }
-        h += '</div>';
+        rows += `</div>`;
       }
-      h += '</div>';
     }
-    h += '</div>';
-  }
-  h += '</div>';
+    return `<div class="sbiz-bk-list" id="bk-${section}">${rows}</div>`;
+  };
 
-  // ══ 営業利益 ══
-  h += wfProfit('営業利益', op, p(op), false);
+  el.innerHTML =
+    wfRow('売上', rev, pRev, '#3452d9') +
+    renderBkList('revenue', 'revenue', '#3452d9') +
+    wfRow('売上原価', cogs, pCogs, '#e74c3c', true) +
+    renderBkList('cogs', 'cogs', '#e74c3c', true) +
+    wfRow('粗利', gp, pGp, '#1c8a53', false, 'summary') +
+    wfRow('販管費', sga, pSga, '#b45309', true) +
+    renderBkList('sga', 'sga', '#b45309', true) +
+    wfRow('営業利益', op, pOp, '#1c8a53', false, op >= 0 ? 'summary' : 'summary neg-row') +
+    (noi > 0 ? wfRow('営業外収益', noi, pOrd, '#059669') + renderBkList('noi', 'non_op_income', '#059669') : '') +
+    (noe > 0 ? wfRow('営業外費用', noe, null,  '#e74c3c', true) + renderBkList('noe', 'non_op_expense', '#e74c3c', true) : '') +
+    wfRow('経常利益', ord, pOrd, '#1c8a53', false, ord >= 0 ? 'total-row' : 'total-row neg-row');
 
-  // ── 営業外（コンパクト） ──
-  if (noi > 0 || noe > 0) {
-    h += `<div class="wf-nonop">
-      ${noi > 0 ? `<span>営業外収益 <strong class="wf-pos">+${d(fmtYen(noi))}</strong></span>` : ''}
-      ${noe > 0 ? `<span>営業外費用 <strong class="wf-neg">▲${d(fmtYen(noe))}</strong></span>` : ''}
-    </div>`;
-    h += wfProfit('経常利益', ord, p(ord), true);
-  }
+  // アコーディオン: 大項目クリック → breakdown 開閉
+  el.querySelectorAll('.clickable-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const sec   = row.dataset.section;
+      const secMap = { '売上':'revenue','売上原価':'cogs','販管費':'sga','営業外収益':'noi','営業外費用':'noe' };
+      const bkId  = 'bk-' + secMap[sec];
+      const bkEl  = el.querySelector(`#${bkId}`);
+      if (!bkEl) return;
+      const open = bkEl.classList.contains('open');
+      el.querySelectorAll('.sbiz-bk-list').forEach(x => x.classList.remove('open'));
+      el.querySelectorAll('.sbiz-wf-row').forEach(x => x.classList.remove('expanded'));
+      if (!open) { bkEl.classList.add('open'); row.classList.add('expanded'); }
+    });
+  });
 
-  h += '</div>';
-  el.innerHTML = h;
+  // 科目行クリック → 部門/品目ドリル開閉
+  el.querySelectorAll('.sbiz-bk-row.has-drill').forEach(row => {
+    row.addEventListener('click', () => {
+      const bkKey = row.dataset.bk?.replace(/\s/g,'_');
+      const drillEl = el.querySelector(`#drill-${bkKey}`);
+      const hdrEl   = el.querySelector(`#drill-hdr-${bkKey}`);
+      if (!drillEl) return;
+      const open = drillEl.classList.contains('open');
+      el.querySelectorAll('.sbiz-drill-list').forEach(x => x.classList.remove('open'));
+      el.querySelectorAll('.sbiz-drill-header').forEach(x => x.style.display = 'none');
+      el.querySelectorAll('.sbiz-bk-row').forEach(x => x.classList.remove('expanded'));
+      if (!open) {
+        drillEl.classList.add('open');
+        if (hdrEl) hdrEl.style.display = 'flex';
+        row.classList.add('expanded');
+      }
+    });
+  });
+
+  // 部門/品目タブ切り替え
+  el.querySelectorAll('.sbiz-drill-tab').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.sbizDrillMode = btn.dataset.drill;
+      renderSbizWaterfall();
+    });
+  });
 }
 
 // ══════════════════════════════════════════════════════
@@ -1480,399 +1702,6 @@ function updateClock() {
 }
 
 // ══════════════════════════════════════════════════════
-//  S8: 費用サマリー
-// ══════════════════════════════════════════════════════
-
-function renderS8() {
-  renderS8InfoBar();
-  renderS8Cards();
-}
-
-function renderS8InfoBar() {
-  const bar  = document.getElementById('s8-info-bar');
-  if (!bar) return;
-  const snap = state.current;
-  if (!snap) { bar.textContent = 'データ未読込'; return; }
-  let html = '';
-  for (const co of COMPANIES) {
-    const month = snap.companies?.[co]?.latest_month ?? '—';
-    const [yr, mo] = (month || '').split('-');
-    const label = yr && mo ? `${yr}年${parseInt(mo)}月` : '—';
-    html += `<span class="info-item">
-      <span class="info-dot" style="background:${CO_COLOR[co]}"></span>
-      ${co}: <strong>${label}</strong>
-    </span>`;
-  }
-  const at = snap.generated_at
-    ? new Date(snap.generated_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : '';
-  if (at) html += `<span class="info-item" style="margin-left:auto">更新: ${at}</span>`;
-  bar.innerHTML = html;
-}
-
-function renderS8Cards() {
-  const container = document.getElementById('s8-cards');
-  if (!container) return;
-  container.innerHTML = '';
-  const period = state.s8Period;
-
-  for (const name of COMPANIES) {
-    const co  = state.current?.companies?.[name];
-    const src = period === 'ytd' ? co?.ytd    : co?.latest;
-    const prSrc = period === 'monthly' ? co?.prior : null;
-
-    const month = co?.latest_month ?? '';
-    const [yr, mo] = month.split('-');
-    const periodLabel = (yr && mo && !isNaN(parseInt(mo)))
-      ? (period === 'ytd'
-          ? `累計: ${yr}年${parseInt(mo)}月まで`
-          : `最新: ${yr}年${parseInt(mo)}月`)
-      : 'データなし';
-
-    const rev = src?.revenue        ?? null;
-    const gp  = src?.gross_profit   ?? null;
-    const sga = src?.sga_total      ?? null;
-    const op  = src?.op_profit      ?? null;
-
-    const prRev = prSrc?.revenue        ?? null;
-    const prGp  = prSrc?.gross_profit   ?? null;
-    const prSga = prSrc?.sga_total      ?? null;
-    const prOp  = prSrc?.op_profit      ?? null;
-
-    // MoM バッジ（pct + 差額）
-    const momTag = (cur, prev, inv = false) => {
-      if (cur === null || prev === null || prev === 0) {
-        return '<span class="s8-mom-pct muted" style="color:var(--sub)">—</span>';
-      }
-      const pct  = (cur - prev) / Math.abs(prev) * 100;
-      const diff = cur - prev;
-      const up   = pct >= 0;
-      const cls  = inv ? (up ? 'up inv' : 'down inv') : (up ? 'up' : 'down');
-      return `<span class="s8-mom-pct ${cls}">${up ? '▲' : '▼'}${Math.abs(pct).toFixed(1)}%</span>
-              <span class="s8-mom-diff">${fmtDiff(cur, prev)}</span>`;
-    };
-
-    const metricRow = (lbl, val, prVal, inv = false) => {
-      const negCls = val !== null && val < 0 ? ' neg' : '';
-      const posCls = val !== null && val > 0 && lbl === '営業利益' ? ' pos' : '';
-      return `<div class="s8-metric-row">
-        <span class="s8-metric-lbl">${lbl}</span>
-        <span class="s8-metric-val${negCls}${posCls}">${d(fmtYen(val))}</span>
-        <div class="s8-mom">${momTag(val, prVal, inv)}</div>
-      </div>`;
-    };
-
-    const card = document.createElement('div');
-    card.className = 's8-card';
-    card.innerHTML = `
-      <div class="s8-card-hdr" style="background:${CO_COLOR[name]}">
-        <div>
-          <div class="s8-co-name">${name}</div>
-          <div class="s8-co-segs">${CO_SEGMENTS[name] ?? ''}</div>
-          <div class="s8-co-period">${periodLabel}</div>
-        </div>
-        <button class="s8-detail-btn" data-co="${name}">費用明細 →</button>
-      </div>
-      <div class="s8-card-body">
-        ${metricRow('売上',     rev, prRev)}
-        ${metricRow('粗利',     gp,  prGp)}
-        ${metricRow('販管費',   sga, prSga, true)}
-        ${metricRow('営業利益', op,  prOp)}
-      </div>`;
-    container.appendChild(card);
-  }
-}
-
-// ── 費用明細ドロワー ──
-
-function openCostDrawer(coName) {
-  const drawer  = document.getElementById('cost-drawer');
-  const body    = document.getElementById('cd-body');
-  const nameEl  = document.getElementById('cd-co-name');
-  const periodEl= document.getElementById('cd-period');
-  const hdrEl   = document.getElementById('cd-hdr');
-  if (!drawer || !body) return;
-
-  state.s8DrawerCo = coName;
-
-  // ドリルダウントグル（部門別 / 品目別）
-  let drillToggle = document.getElementById('cd-drill-toggle');
-  if (!drillToggle) {
-    drillToggle = document.createElement('div');
-    drillToggle.id = 'cd-drill-toggle';
-    drillToggle.className = 'cd-drill-toggle';
-    hdrEl.querySelector('div').appendChild(drillToggle);
-    drillToggle.addEventListener('click', e => {
-      const btn = e.target.closest('button[data-drill]');
-      if (!btn) return;
-      state.s8DrillMode = btn.dataset.drill;
-      openCostDrawer(state.s8DrawerCo);
-    });
-  }
-  drillToggle.innerHTML = `
-    <button data-drill="dept" class="cd-drill-btn${state.s8DrillMode === 'dept' ? ' active' : ''}">部門別</button>
-    <button data-drill="item" class="cd-drill-btn${state.s8DrillMode === 'item' ? ' active' : ''}">品目別</button>
-  `;
-
-  const co     = state.current?.companies?.[coName];
-  const unitId = CO_UNIT[coName];
-
-  // 内訳は当月データを使用し、前月データ（same JSON内の previous_month）と比較
-  const act      = state.actuals?.[unitId];
-  const actData  = act;                        // 当月 breakdown
-  const prevData = act?.previous_month ?? null; // 前月 breakdown（同一 JSON 内）
-
-  // サマリー数値はS8の期間設定に従う
-  const period = state.s8Period;
-  const src    = period === 'ytd' ? co?.ytd : co?.latest;
-  const prSrc  = period === 'monthly' ? co?.prior : null;
-
-  const month = co?.latest_month ?? '';
-  const [yr, mo] = month.split('-');
-  const prevMonth = act?.previous_month?.period ?? null;
-  const [pyr, pmo] = (prevMonth ?? '').split('-');
-  const prevLabel = (pyr && pmo) ? `${pyr}年${parseInt(pmo)}月` : '前月';
-
-  nameEl.textContent   = coName;
-  periodEl.textContent = `当月内訳（前月比: ${prevLabel}）`;
-  hdrEl.style.borderTopColor = CO_COLOR[coName];
-
-  const rev = src?.revenue        ?? null;
-  const gp  = src?.gross_profit   ?? null;
-  const sga = src?.sga_total      ?? null;
-  const op  = src?.op_profit      ?? null;
-  const ord = src?.ordinary_profit ?? null;
-
-  const prGp  = prSrc?.gross_profit   ?? null;
-  const prOp  = prSrc?.op_profit      ?? null;
-  const prOrd = prSrc?.ordinary_profit ?? null;
-
-  // 前回同名科目の金額をルックアップ
-  const findPrev = (prevBreakdown, itemName) =>
-    prevBreakdown?.find(i => i.item === itemName)?.amount ?? null;
-
-  const momBadge = (cur, prev, inv = false) => {
-    if (cur === null || prev === null || prev === 0) return '';
-    const pct  = (cur - prev) / Math.abs(prev) * 100;
-    const up   = pct >= 0;
-    const good = inv ? !up : up;
-    return `<span class="cd-section-mom ${good ? 'var-good' : 'var-bad'}">${up ? '▲' : '▼'}${Math.abs(pct).toFixed(1)}%</span>`;
-  };
-
-  const summaryMom = (cur, prev, inv = false) => {
-    if (cur === null || prev === null || prev === 0) return '';
-    const pct  = (cur - prev) / Math.abs(prev) * 100;
-    const up   = pct >= 0;
-    const good = inv ? !up : up;
-    const col  = good ? 'var(--green)' : 'var(--red)';
-    return `<span class="cd-summary-mom" style="color:${col}">${up ? '▲' : '▼'}${Math.abs(pct).toFixed(1)}%</span>`;
-  };
-
-  // barItem: 科目行（前回比差分列付き・部門/品目アコーディオン対応）
-  const barItem = (item, amount, total, color, prevAmount, inv = false, deptList = null, itemList = null) => {
-    const pct  = (rev && rev >= RATE_MIN_REVENUE && amount !== null) ? (amount / rev * 100) : null;
-    const barW = total && total !== 0 ? Math.min(100, Math.abs(amount) / Math.abs(total) * 100).toFixed(1) + '%' : '0%';
-    let diffHtml = '<span class="cd-item-diff muted">—</span>';
-    if (prevAmount !== null && prevAmount !== undefined) {
-      const diff = amount - prevAmount;
-      if (diff !== 0) {
-        const up   = diff > 0;
-        const good = inv ? !up : up;
-        const cls  = good ? 'cost-good' : 'cost-bad';
-        const sign = up ? '+' : '▲';
-        diffHtml = `<span class="cd-item-diff ${cls}">${sign}${Math.abs(diff).toLocaleString()}</span>`;
-      } else {
-        diffHtml = '<span class="cd-item-diff muted">±0</span>';
-      }
-    }
-    const drillList = state.s8DrillMode === 'item' ? itemList : deptList;
-    const hasDrill  = drillList && drillList.length > 0;
-    const expandIcon = hasDrill ? '<span class="cd-expand-icon">›</span>' : '';
-    let html = `<div class="cd-item${hasDrill ? ' has-dept' : ''}">
-      <span class="cd-item-name" title="${item}">${item}${expandIcon}</span>
-      <div class="cd-bar-w"><div class="cd-bar" style="width:${barW};background:${color}"></div></div>
-      <span class="cd-item-amt">${fmtFull(amount)}</span>
-      <span class="cd-item-pct">${pct !== null ? pct.toFixed(1) + '%' : '—'}</span>
-      ${diffHtml}
-    </div>`;
-    if (hasDrill) {
-      const rows = drillList.map(d => {
-        const dep  = d.deprecated ?? false;
-        const isUntagged = d.name === '（部門未設定）' || d.name === '（品目未設定）';
-        const cls  = dep ? 'deprecated' : (isUntagged ? 'untagged' : '');
-        const warn = dep ? '⚠' : '';
-        return `<div class="cd-dept-row${cls ? ' ' + cls : ''}">
-          <span class="cd-dept-warn">${warn}</span>
-          <span class="cd-dept-name">${d.name}</span>
-          <span class="cd-dept-amt">${fmtFull(d.amount)}</span>
-        </div>`;
-      }).join('');
-      html += `<div class="cd-dept-list">${rows}</div>`;
-    }
-    return html;
-  };
-
-  let html = '';
-
-  if (!actData) {
-    html = '<p style="color:var(--sub);text-align:center;padding:40px">詳細データ未読込（actuals_latest.json）</p>';
-  } else {
-    const hasPrev = !!prevData;
-    if (!hasPrev) {
-      html += `<div class="cd-prev-note">前回データなし — 次回更新後から前回更新比が表示されます</div>`;
-    }
-
-    // 売上内訳
-    const revBreak  = actData.revenue?.breakdown ?? [];
-    const prevRevBk = prevData?.revenue?.breakdown;
-    if (revBreak.length) {
-      const ytdRev = revBreak.reduce((s, i) => s + i.amount, 0);
-      const prevYtdRev = prevRevBk ? prevRevBk.reduce((s, i) => s + i.amount, 0) : null;
-      const sorted = [...revBreak].sort((a, b) => b.amount - a.amount);
-      html += `<div class="cd-section">
-        <div class="cd-section-hdr">
-          <span class="cd-section-title">売上内訳（YTD累計）</span>
-          <div class="cd-section-right">
-            <span class="cd-section-total">${d(fmtYen(ytdRev))}</span>
-            ${momBadge(ytdRev, prevYtdRev)}
-          </div>
-        </div>`;
-      for (const it of sorted) {
-        const prev = findPrev(prevRevBk, it.item);
-        html += barItem(it.item, it.amount, ytdRev, CO_COLOR[coName] + '99', prev, false, it.by_department ?? null, it.by_item ?? null);
-      }
-      html += '</div>';
-    }
-
-    // 販管費内訳（金額大順・費用増=赤）
-    const sgaBreak  = actData.sga?.breakdown ?? [];
-    const prevSgaBk = prevData?.sga?.breakdown;
-    if (sgaBreak.length) {
-      const ytdSga = sgaBreak.reduce((s, i) => s + i.amount, 0);
-      const prevYtdSga = prevSgaBk ? prevSgaBk.reduce((s, i) => s + i.amount, 0) : null;
-      const sorted = [...sgaBreak].sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
-      html += `<div class="cd-section">
-        <div class="cd-section-hdr">
-          <span class="cd-section-title">販管費内訳（YTD累計）</span>
-          <div class="cd-section-right">
-            <span class="cd-section-total">${d(fmtYen(ytdSga))}</span>
-            ${momBadge(ytdSga, prevYtdSga, true)}
-          </div>
-        </div>`;
-      for (const it of sorted) {
-        const prev = findPrev(prevSgaBk, it.item);
-        html += barItem(it.item, it.amount, ytdSga, '#B4530988', prev, true, it.by_department ?? null, it.by_item ?? null);
-      }
-      html += '</div>';
-    }
-
-    // 売上原価内訳
-    const cogsBreak  = actData.cogs?.breakdown ?? [];
-    const prevCogsBk = prevData?.cogs?.breakdown;
-    if (cogsBreak.length) {
-      const ytdCogs = cogsBreak.reduce((s, i) => s + i.amount, 0);
-      html += `<div class="cd-section">
-        <div class="cd-section-hdr">
-          <span class="cd-section-title">売上原価内訳（YTD累計）</span>
-          <div class="cd-section-right">
-            <span class="cd-section-total">${d(fmtYen(ytdCogs))}</span>
-          </div>
-        </div>`;
-      for (const it of cogsBreak) {
-        const prev = findPrev(prevCogsBk, it.item);
-        html += barItem(it.item, it.amount, ytdCogs, '#e74c3c88', prev, true, it.by_department ?? null, it.by_item ?? null);
-      }
-      html += '</div>';
-    }
-
-    // 営業外収益
-    const noiBreak  = actData.non_op_income?.breakdown ?? [];
-    const prevNoiBk = prevData?.non_op_income?.breakdown;
-    if (noiBreak.length) {
-      const ytdNoi = noiBreak.reduce((s, i) => s + i.amount, 0);
-      const prevYtdNoi = prevNoiBk ? prevNoiBk.reduce((s, i) => s + i.amount, 0) : null;
-      const sorted = [...noiBreak].sort((a, b) => b.amount - a.amount);
-      html += `<div class="cd-section">
-        <div class="cd-section-hdr">
-          <span class="cd-section-title">営業外収益内訳（YTD累計）</span>
-          <div class="cd-section-right">
-            <span class="cd-section-total">${d(fmtYen(ytdNoi))}</span>
-            ${momBadge(ytdNoi, prevYtdNoi)}
-          </div>
-        </div>`;
-      for (const it of sorted) {
-        const prev = findPrev(prevNoiBk, it.item);
-        html += barItem(it.item, it.amount, ytdNoi, '#05966999', prev, false, it.by_department ?? null, it.by_item ?? null);
-      }
-      html += '</div>';
-    }
-
-    // 営業外費用
-    const noeBreak  = actData.non_op_expense?.breakdown ?? [];
-    const prevNoeBk = prevData?.non_op_expense?.breakdown;
-    if (noeBreak.length) {
-      const ytdNoe = noeBreak.reduce((s, i) => s + i.amount, 0);
-      const prevYtdNoe = prevNoeBk ? prevNoeBk.reduce((s, i) => s + i.amount, 0) : null;
-      const sorted = [...noeBreak].sort((a, b) => b.amount - a.amount);
-      html += `<div class="cd-section">
-        <div class="cd-section-hdr">
-          <span class="cd-section-title">営業外費用内訳（YTD累計）</span>
-          <div class="cd-section-right">
-            <span class="cd-section-total">${d(fmtYen(ytdNoe))}</span>
-            ${momBadge(ytdNoe, prevYtdNoe, true)}
-          </div>
-        </div>`;
-      for (const it of sorted) {
-        const prev = findPrev(prevNoeBk, it.item);
-        html += barItem(it.item, it.amount, ytdNoe, '#e74c3c88', prev, true, it.by_department ?? null, it.by_item ?? null);
-      }
-      html += '</div>';
-    }
-
-    // サマリー（S8期間設定の合計値）
-    const valCls = v => v === null ? '' : v < 0 ? ' neg' : v > 0 ? ' pos' : '';
-    html += `<div class="cd-summary">
-      <div class="cd-summary-row">
-        <span class="cd-summary-lbl">粗利（${period === 'ytd' ? 'YTD' : '当月'}）</span>
-        <span>${summaryMom(gp, prGp)}</span>
-        <span class="cd-summary-val${valCls(gp)}">${d(fmtYen(gp))}</span>
-      </div>
-      <div class="cd-summary-row">
-        <span class="cd-summary-lbl">営業利益（${period === 'ytd' ? 'YTD' : '当月'}）</span>
-        <span>${summaryMom(op, prOp)}</span>
-        <span class="cd-summary-val${valCls(op)}">${d(fmtYen(op))}</span>
-      </div>
-      <div class="cd-summary-row">
-        <span class="cd-summary-lbl">経常利益（${period === 'ytd' ? 'YTD' : '当月'}）</span>
-        <span>${summaryMom(ord, prOrd)}</span>
-        <span class="cd-summary-val${valCls(ord)}">${d(fmtYen(ord))}</span>
-      </div>
-    </div>`;
-  }
-
-  body.innerHTML = html;
-  drawer.hidden  = false;
-
-  // 部門アコーディオン — 開閉トグル（innerHTML 更新後に毎回再設定）
-  if (body._deptHandler) body.removeEventListener('click', body._deptHandler);
-  body._deptHandler = e => {
-    const item = e.target.closest('.cd-item.has-dept');
-    if (!item) return;
-    const list = item.nextElementSibling;
-    if (!list?.classList.contains('cd-dept-list')) return;
-    const open = list.style.display === 'block';
-    list.style.display = open ? 'none' : 'block';
-    item.classList.toggle('expanded', !open);
-  };
-  body.addEventListener('click', body._deptHandler);
-}
-
-function closeCostDrawer() {
-  const drawer = document.getElementById('cost-drawer');
-  if (drawer) drawer.hidden = true;
-}
-
-// ══════════════════════════════════════════════════════
 //  画面切替・イベント
 // ══════════════════════════════════════════════════════
 
@@ -1885,7 +1714,6 @@ function switchScreen(screenId) {
   if (screenId === 's4') renderS4();
   if (screenId === 's5') renderS5();
   if (screenId === 's6') renderS6();
-  if (screenId === 's8') renderS8();
 }
 
 function bindEvents() {
@@ -1947,56 +1775,14 @@ function bindEvents() {
     });
   });
 
-  // S4: ユニット切替
-  document.querySelectorAll('#s4-unit-tabs .co-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#s4-unit-tabs .co-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.s4Unit = btn.dataset.unit;
-      resetS4Exp();
-      renderS4();
-    });
-  });
-
-  // S4: 期間切替
-  document.querySelectorAll('#s4-period-toggle .period-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#s4-period-toggle .period-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.s4Period = btn.dataset.period;
-      resetS4Exp();
-      renderS4();
-    });
-  });
-
-  // S8: 期間切替
-  document.getElementById('s8-period-toggle')?.addEventListener('click', e => {
-    const btn = e.target.closest('.period-btn');
+  // 事業分析（S4新版）: 期間切替
+  document.getElementById('sbiz-period-toggle')?.addEventListener('click', e => {
+    const btn = e.target.closest('.sbiz-period-btn');
     if (!btn) return;
-    state.s8Period = btn.dataset.period;
-    document.querySelectorAll('#s8-period-toggle .period-btn')
-      .forEach(b => b.classList.toggle('active', b === btn));
-    renderS8();
-  });
-
-  // S8: 費用明細ドロワーを開く
-  document.getElementById('s8-cards')?.addEventListener('click', e => {
-    const btn = e.target.closest('.s8-detail-btn');
-    if (!btn) return;
-    openCostDrawer(btn.dataset.co);
-  });
-
-  // ドロワーを閉じる
-  document.getElementById('cd-close')?.addEventListener('click', closeCostDrawer);
-  document.getElementById('cd-overlay')?.addEventListener('click', closeCostDrawer);
-
-  // S4: ウォーターフォール展開/折畳み（イベント委譲）
-  document.getElementById('screen-s4')?.addEventListener('click', e => {
-    const target = e.target.closest('.wf-main[data-expand], .wf-cat-main[data-expand]');
-    if (!target?.dataset?.expand) return;
-    const key = target.dataset.expand;
-    s4Exp[key] = !s4Exp[key];
-    renderS4Waterfall();
+    document.querySelectorAll('.sbiz-period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.sbizPeriod = btn.dataset.period;
+    renderSbizContent();
   });
 }
 
