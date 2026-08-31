@@ -25,10 +25,10 @@ const SUGOI_TARGETS = {
 };
 
 const CO_COLOR = {
-  'BLUE ESTATE': '#1A3A5C',
-  'BLUE DESIGN': '#0090BA',
-  'BLUE LIFE':   '#059669',
-  '青天堂':      '#B45309',
+  'BLUE ESTATE': '#0d2957',
+  'BLUE DESIGN': '#2f7fd1',
+  'BLUE LIFE':   '#1c8a53',
+  '青天堂':      '#b25b1e',
 };
 
 const CO_UNIT = {
