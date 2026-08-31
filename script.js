@@ -641,6 +641,11 @@ function renderS1CoCards() {
         </div>`;
     }
     container.appendChild(card);
+    const unitId = CO_UNIT[name];
+    if (unitId) {
+      card.classList.add('drill-link');
+      card.addEventListener('click', () => navigateToS4(unitId));
+    }
   }
 }
 
@@ -767,6 +772,13 @@ function renderS2Table() {
       <td class="${diffClass(pmDiff, m.isExpense)}">${d(fmtDiff(aVal, pmVal, m.isRate))}</td>
       <td class="${diffClass(pmDiff, m.isExpense)}">${m.isRate ? '—' : d(fmtDiffRate(aVal, pmVal))}</td>
     `;
+    if (!m.isRate && !['cash', 'land_r', 'land_p'].includes(m.id)) {
+      const navUnit = co === 'group' ? 'group' : CO_UNIT[co];
+      if (navUnit) {
+        tr.classList.add('drill-link');
+        tr.addEventListener('click', () => navigateToS4(navUnit));
+      }
+    }
     tbody.appendChild(tr);
   }
 }
@@ -825,12 +837,12 @@ function renderS3Table() {
     const groupVal = getValue(groupData, m.id, 'group');
 
     let cells = `<td class="td-metric${m.isRate ? ' rate-row' : ''}">${m.label}</td>`;
-    cells += `<td class="${valClass(groupVal, m.isExpense)}">${d(fmt(groupVal))}</td>`;
+    cells += `<td class="${valClass(groupVal, m.isExpense)}" data-s3-co="group">${d(fmt(groupVal))}</td>`;
 
     for (const co of ALL_COMPANIES) {
       const data = coDataMap[co];
       const val  = data !== null ? getValue(data, m.id, co) : null;
-      cells += `<td class="${valClass(val, m.isExpense)}">${d(fmt(val))}</td>`;
+      cells += `<td class="${valClass(val, m.isExpense)}" data-s3-co="${co}">${d(fmt(val))}</td>`;
     }
 
     const tr = document.createElement('tr');
@@ -877,7 +889,7 @@ function renderS3Table() {
       let lHtml = `<td class="td-metric" style="padding-left:1em">${m.label}（前年実績）</td><td class="v-dash">—</td>`;
       for (const co of ALL_COMPANIES) {
         const val = histMap[co].latest ? getValue(histMap[co].latest.data, m.id, co) : null;
-        lHtml += `<td class="${valClass(val, m.isExpense)}">${d(fmtYen(val))}</td>`;
+        lHtml += `<td class="${valClass(val, m.isExpense)}" data-s3-co="${co}">${d(fmtYen(val))}</td>`;
       }
       trL.innerHTML = lHtml;
       tbody.appendChild(trL);
@@ -888,7 +900,7 @@ function renderS3Table() {
       for (const co of ALL_COMPANIES) {
         const lv = histMap[co].latest ? getValue(histMap[co].latest.data, m.id, co) : null;
         const pv = histMap[co].prev   ? getValue(histMap[co].prev.data,   m.id, co) : null;
-        dHtml += `<td class="${diffClass(lv !== null && pv !== null ? lv - pv : null, m.isExpense)}">${d(fmtDiff(lv, pv, false))}</td>`;
+        dHtml += `<td class="${diffClass(lv !== null && pv !== null ? lv - pv : null, m.isExpense)}" data-s3-co="${co}">${d(fmtDiff(lv, pv, false))}</td>`;
       }
       trD.innerHTML = dHtml;
       tbody.appendChild(trD);
@@ -1821,6 +1833,13 @@ function switchScreen(screenId) {
   if (screenId === 's6') renderS6();
 }
 
+function navigateToS4(unitId) {
+  state.sbizNode = unitId ?? 'group';
+  document.querySelectorAll('.screen-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.screen-btn[data-screen="s4"]')?.classList.add('active');
+  switchScreen('s4');
+}
+
 function bindEvents() {
   // 画面切替
   document.querySelectorAll('.screen-btn[data-screen]').forEach(btn => {
@@ -1878,6 +1897,27 @@ function bindEvents() {
       state.s3Period = btn.dataset.period;
       renderS3Table();
     });
+  });
+
+  // S3: 会社セルクリックでS4ドリルダウン
+  document.getElementById('s3-tbody')?.addEventListener('click', e => {
+    const td = e.target.closest('td[data-s3-co]');
+    if (!td) return;
+    const co = td.dataset.s3Co;
+    navigateToS4(co === 'group' ? 'group' : (CO_UNIT[co] ?? 'group'));
+  });
+  // S3: 列ヘッダークリック
+  const s3Ths = document.querySelectorAll('.s3-co-hdr th');
+  if (s3Ths.length >= 2) {
+    s3Ths[1].classList.add('drill-link');
+    s3Ths[1].addEventListener('click', () => navigateToS4('group'));
+  }
+  ALL_COMPANIES.forEach((co, i) => {
+    const th = s3Ths[i + 2];
+    if (th) {
+      th.classList.add('drill-link');
+      th.addEventListener('click', () => navigateToS4(CO_UNIT[co] ?? 'group'));
+    }
   });
 
   // 事業分析（S4新版）: 期間切替

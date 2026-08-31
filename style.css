@@ -339,7 +339,10 @@ body {
   border-radius: 10px;
   box-shadow: var(--shadow);
   overflow: hidden;
+  transition: box-shadow .15s, opacity .15s;
 }
+.s1-co-card.drill-link { cursor: pointer; }
+.s1-co-card.drill-link:hover { box-shadow: 0 4px 16px rgba(0,0,0,.18); opacity: .92; }
 .s1-co-hdr    { padding: 12px 16px; color: #fff; }
 .s1-co-name   { font-size: 14px; font-weight: 700; }
 .s1-co-segs   { font-size: 10px; opacity: .8; margin-top: 3px; }
@@ -494,6 +497,12 @@ body {
 .metrics-tbl tbody tr:nth-child(even) { background: var(--stripe); }
 .metrics-tbl tbody tr:hover td        { background: var(--sbiz-accent-soft); }
 .metrics-tbl tbody tr:last-child td   { border-bottom: none; }
+tr.drill-link { cursor: pointer; }
+tr.drill-link:hover td { background: rgba(52,82,217,.07) !important; }
+td[data-s3-co] { cursor: pointer; }
+td[data-s3-co]:hover { background: rgba(52,82,217,.07) !important; }
+th.drill-link { cursor: pointer; }
+th.drill-link:hover { filter: brightness(1.15); }
 .metrics-tbl tr.sep td {
   background: var(--stripe);
   border-top: 2px solid var(--border);
