@@ -1299,7 +1299,12 @@ function renderSbizWaterfall() {
     for (const it of bk) {
       const prevIt = prevBk.find(p => p.item === it.item);
       const hasDept = it.by_department?.length > 0;
-      const hasItem = it.by_item?.length > 0;
+      const curByItem  = it.by_item ?? [];
+      const prevByItem = prevIt?.by_item ?? [];
+      // 当月品目なし・前月品目あり → 前月をフォールバック表示
+      const itemFallback = !curByItem.length && prevByItem.length > 0;
+      const effectiveByItem = curByItem.length > 0 ? curByItem : (itemFallback ? prevByItem : []);
+      const hasItem  = effectiveByItem.length > 0;
       const hasDrill = hasDept || hasItem;
       const acctBgt = getSbizAcctBudget(section, it.item);
       rows += `<div class="sbiz-bk-row${hasDrill ? ' has-drill' : ''}" data-bk="${it.item}" data-section-key="${sectionKey}">
@@ -1314,14 +1319,14 @@ function renderSbizWaterfall() {
       if (hasDrill) {
         // タブは実際にデータがある方だけ表示
         const tabDept = hasDept ? `<button class="sbiz-drill-tab${state.sbizDrillMode === 'dept' ? ' active' : ''}" data-drill="dept">部門別 <span class="sbiz-drill-count">${it.by_department.length}</span></button>` : '';
-        const tabItem = hasItem ? `<button class="sbiz-drill-tab${state.sbizDrillMode === 'item' ? ' active' : ''}" data-drill="item">品目別 <span class="sbiz-drill-count">${it.by_item.length}</span></button>` : '';
+        const tabItem = hasItem ? `<button class="sbiz-drill-tab${state.sbizDrillMode === 'item' ? ' active' : ''}" data-drill="item">品目別 <span class="sbiz-drill-count">${effectiveByItem.length}</span>${itemFallback ? '<span class="prev-month-tag">前月</span>' : ''}</button>` : '';
         rows += `<div class="sbiz-drill-header" id="drill-hdr-${it.item.replace(/\s/g,'_')}" style="display:none">${tabDept}${tabItem}</div>`;
 
         // 現在のモードにデータがなければ反対側にフォールバック
         const effectiveMode = state.sbizDrillMode === 'item' && hasItem ? 'item'
                             : state.sbizDrillMode === 'dept' && hasDept ? 'dept'
                             : hasItem ? 'item' : 'dept';
-        const drillList = effectiveMode === 'item' ? it.by_item : it.by_department;
+        const drillList = effectiveMode === 'item' ? effectiveByItem : it.by_department;
         rows += `<div class="sbiz-drill-list" id="drill-${it.item.replace(/\s/g,'_')}">`;
         if (!drillList?.length) {
           rows += `<div class="sbiz-drill-empty">データなし（freeeで品目を設定してください）</div>`;

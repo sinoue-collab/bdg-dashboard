@@ -357,6 +357,27 @@ def enrich_with_items(cur_data, company_id, access_token,
                             amount  = abs(closing - opening)  # 当期変動額（parse_balances と同じ計算）
                             if name and amount > 0:
                                 acct.setdefault('by_item', []).append({'name': name, 'amount': amount})
+            if debug:
+                # "BLUE" または "MAGAZINE" を含む品目をすべてトレース
+                print('    [DEBUG] === BLUE/MAGAZINE 品目サーチ ===')
+                found_any = False
+                for bal in bulk_balances:
+                    for itm in (bal.get('items') or []):
+                        nm = itm.get('name') or itm.get('item_name') or ''
+                        if 'BLUE' in nm.upper() or 'MAGAZINE' in nm.upper():
+                            op = itm.get('opening_balance') or 0
+                            cl = itm.get('closing_balance') or 0
+                            print(f'    [DEBUG]   acct={bal.get("account_item_name")!r}  item={nm!r}  diff={cl-op:,}')
+                            found_any = True
+                if not found_any:
+                    print('    [DEBUG]   → 該当品目なし（APIレスポンスに存在しない）')
+                # by_item が設定されたアカウント一覧
+                print('    [DEBUG] === by_item 設定済アカウント ===')
+                for sk in SECTION_KEYS:
+                    for acct in cur_data[sk]['breakdown']:
+                        if acct.get('by_item'):
+                            names = [i['name'] for i in acct['by_item']]
+                            print(f'    [DEBUG]   [{sk}] {acct["item"]!r}: {names[:5]}{"…" if len(names)>5 else ""}')
             _finalize_by_item(cur_data, SECTION_KEYS)
             return
 
@@ -700,6 +721,12 @@ def main():
             prv_bal  = fetch_trial_pl(company_id, access_token, prv_fy, prv_month, prv_month, debug=args.debug)
             prv_data = parse_balances(prv_bal, mapping)
             prv_sum  = compute_summary(prv_data)
+
+            # 前月にも品目別内訳を付与（当月がゼロの月初はこちらをS4で使用）
+            enrich_with_items(
+                prv_data, company_id, access_token,
+                prv_fy, prv_month, items_master, mapping, debug=args.debug,
+            )
 
             print(f'    ✓ 完了  売上={cur_data["revenue"]["total"]:,}  経常={cur_sum["ordinary_profit"]:,}')
             if cur_data['revenue']['total'] == 0:

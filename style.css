@@ -1668,6 +1668,12 @@ th.drill-link:hover { filter: brightness(1.15); }
   margin-left: 3px; vertical-align: middle;
 }
 .sbiz-drill-tab.active .sbiz-drill-count { background: rgba(255,255,255,.3); }
+.prev-month-tag {
+  display: inline-block; margin-left: 4px; padding: 0 4px;
+  background: #f59e0b22; color: #92400e; border: 1px solid #f59e0b88;
+  border-radius: 4px; font-size: 9px; font-weight: 600; line-height: 14px;
+  vertical-align: middle;
+}
 .sbiz-drill-empty {
   padding: 10px 16px 10px 64px;
   font-size: 11px; color: var(--sbiz-ink-faint); font-style: italic;
