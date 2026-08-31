@@ -351,8 +351,10 @@ def enrich_with_items(cur_data, company_id, access_token,
                         if acct['item'] != acct_name:
                             continue
                         for itm in item_array:
-                            name   = (itm.get('name') or itm.get('item_name') or '').strip()
-                            amount = (itm.get('closing_balance') or itm.get('amount') or 0)
+                            name    = (itm.get('name') or itm.get('item_name') or '').strip()
+                            closing = itm.get('closing_balance') or 0
+                            opening = itm.get('opening_balance') or 0
+                            amount  = abs(closing - opening)  # 当期変動額（parse_balances と同じ計算）
                             if name and amount > 0:
                                 acct.setdefault('by_item', []).append({'name': name, 'amount': amount})
             _finalize_by_item(cur_data, SECTION_KEYS)
