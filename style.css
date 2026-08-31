@@ -5,17 +5,17 @@
 :root {
   --blue:   #0090BA;
   --navy:   #1A3A5C;
-  --green:  #059669;
-  --red:    #DC2626;
+  --green:  #1c8a53;
+  --red:    #c23b3b;
   --amber:  #D97706;
   --brown:  #B45309;
-  --bg:     #F2F6FA;
+  --bg:     #e4e9f2;
   --card:   #FFFFFF;
-  --border: #DDE4ED;
-  --text:   #1A1A2E;
-  --sub:    #64748B;
-  --stripe: #F7FAFD;
-  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 14px rgba(0,0,0,.04);
+  --border: #ccd4e4;
+  --text:   #131c30;
+  --sub:    #52607c;
+  --stripe: #eef1f8;
+  --shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
 
   /* ── 事業分析 デザイントークン ── */
   --sbiz-bg: #e4e9f2;
@@ -38,7 +38,7 @@
 }
 
 body {
-  font-family: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
+  font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
   background: var(--bg);
   color: var(--text);
   font-size: 13px;
@@ -107,11 +107,12 @@ body {
 ════════════════════════════════════════ */
 
 .s1-section-title {
-  font-size: 13px; font-weight: 700;
-  color: var(--navy);
-  border-left: 4px solid var(--blue);
+  font-size: 12px; font-weight: 700;
+  color: var(--text);
+  border-left: 3px solid var(--blue);
   padding-left: 10px;
   margin-bottom: 12px;
+  letter-spacing: .3px;
 }
 
 /* ── S1 ヒーローKPIカード ── */
@@ -144,7 +145,7 @@ body {
 .s1-kpi-card.accent::before  { background: var(--blue); }
 .s1-kpi-label { font-size: 11px; color: var(--sub); margin-bottom: 8px; font-weight: 600; letter-spacing: .3px; }
 .s1-kpi-card.accent .s1-kpi-label { color: rgba(255,255,255,.65); }
-.s1-kpi-value { font-size: 24px; font-weight: 700; color: var(--navy); line-height: 1; margin-bottom: 6px; }
+.s1-kpi-value { font-size: 24px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
 .s1-kpi-card.accent .s1-kpi-value { color: #fff; }
 .s1-kpi-sub   { font-size: 11px; color: var(--sub); }
 .s1-kpi-card.accent .s1-kpi-sub   { color: rgba(255,255,255,.6); }
@@ -164,7 +165,7 @@ body {
   align-items: center;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--stripe);
 }
 .s1-block-hdr .s1-section-title { margin: 0; border: none; padding: 0; font-size: 12px; }
 
@@ -186,9 +187,9 @@ body {
 }
 .delta-lbl { text-align: left !important; color: var(--text); font-weight: 500; }
 .delta-sga-lbl { color: var(--sub); font-size: 11px; padding-left: 20px !important; }
-.delta-cur { color: var(--text); font-weight: 700; }
-.delta-good { color: var(--green); font-weight: 600; }
-.delta-bad  { color: var(--red);   font-weight: 600; }
+.delta-cur  { color: var(--text); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.delta-good { color: var(--green); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+.delta-bad  { color: var(--red);   font-weight: 600; font-family: 'JetBrains Mono', monospace; }
 .delta-zero { color: var(--sub); }
 .delta-dash { color: var(--sub); }
 .delta-note {
@@ -223,7 +224,7 @@ body {
   white-space: nowrap;
 }
 .s1-tbl thead th {
-  background: #EEF2F7;
+  background: var(--stripe);
   color: var(--sub);
   padding: 7px 12px;
   font-size: 10px; font-weight: 700;
@@ -233,16 +234,18 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .s1-tbl thead .th-metric { text-align: left; width: 140px; }
-.s1-tbl thead .th-actual { color: var(--navy); }
+.s1-tbl thead .th-actual { color: var(--text); }
 .s1-tbl td {
   padding: 8px 12px;
   text-align: right;
   border-bottom: 1px solid var(--border);
   font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
 }
 .s1-tbl td.td-metric {
   text-align: left; font-weight: 600;
-  color: var(--navy); font-size: 12px;
+  color: var(--text); font-size: 12px;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
 }
 .s1-tbl td.td-metric.rate-row {
   padding-left: 24px;
@@ -250,7 +253,7 @@ body {
   color: var(--sub); font-size: 11px;
 }
 .s1-tbl tbody tr:nth-child(even) { background: var(--stripe); }
-.s1-tbl tbody tr:hover td        { background: #EDF5FF; }
+.s1-tbl tbody tr:hover td        { background: var(--sbiz-accent-soft); }
 .s1-tbl tbody tr:last-child td   { border-bottom: none; }
 
 /* ── S1 注目事項 ── */
@@ -305,7 +308,7 @@ body {
 }
 .s1-co-row:last-child  { border-bottom: none; }
 .s1-co-row-lbl  { color: var(--sub); font-size: 11px; flex-shrink: 0; }
-.s1-co-row-val  { font-weight: 700; color: var(--navy); text-align: right; flex: 1; }
+.s1-co-row-val  { font-weight: 700; color: var(--text); text-align: right; flex: 1; font-family: 'JetBrains Mono', monospace; }
 .s1-co-row-rate { font-size: 10px; color: var(--sub); min-width: 38px; text-align: right; flex-shrink: 0; }
 .s1-co-row-val.neg   { color: var(--red); }
 .s1-co-row-val.pos   { color: var(--green); }
@@ -330,7 +333,7 @@ body {
 ════════════════════════════════════════ */
 
 .controls-bar {
-  background: #fff;
+  background: var(--card);
   border-bottom: 1px solid var(--border);
   padding: 10px 24px;
   display: flex;
@@ -372,7 +375,7 @@ body {
 .period-btn:not(.active):hover { background: var(--bg); }
 
 .info-bar {
-  background: #EEF4FA;
+  background: var(--stripe);
   border-bottom: 1px solid var(--border);
   padding: 6px 24px;
   font-size: 11px; color: var(--sub);
@@ -429,20 +432,22 @@ body {
   text-align: right;
   border-bottom: 1px solid var(--border);
   font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
 }
 .metrics-tbl td.td-metric {
   text-align: left; font-weight: 600;
-  color: var(--navy); padding-left: 14px;
+  color: var(--text); padding-left: 14px;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
 }
 .metrics-tbl td.td-metric.rate-row {
   font-weight: 400; color: var(--sub);
   font-size: 11px; padding-left: 28px;
 }
 .metrics-tbl tbody tr:nth-child(even) { background: var(--stripe); }
-.metrics-tbl tbody tr:hover td        { background: #EDF5FF; }
+.metrics-tbl tbody tr:hover td        { background: var(--sbiz-accent-soft); }
 .metrics-tbl tbody tr:last-child td   { border-bottom: none; }
 .metrics-tbl tr.sep td {
-  background: #F0F4F8;
+  background: var(--stripe);
   border-top: 2px solid var(--border);
   padding: 4px 14px;
   font-size: 10px; font-weight: 700;
@@ -686,7 +691,7 @@ body {
 ════════════════════════════════════════ */
 
 .s5-bar {
-  background: var(--navy);
+  background: var(--sbiz-ink);
   color: #fff;
   padding: 14px 24px;
   display: flex;
@@ -828,7 +833,7 @@ body {
 ════════════════════════════════════════ */
 
 .s6-bar {
-  background: var(--navy);
+  background: var(--sbiz-ink);
   color: #fff;
   padding: 14px 24px;
   display: flex;
@@ -841,7 +846,7 @@ body {
 .s6-section-title {
   font-size: 12px;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--text);
   border-left: 3px solid var(--blue);
   padding-left: 10px;
   margin: 20px 0 10px;
@@ -864,7 +869,7 @@ body {
   box-shadow: var(--shadow);
 }
 .s6-hero-label { font-size: 10px; color: var(--sub); margin-bottom: 4px; }
-.s6-hero-value { font-size: 22px; font-weight: 700; color: var(--navy); line-height: 1.1; }
+.s6-hero-value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.1; font-family: 'JetBrains Mono', monospace; }
 .s6-hero-sub   { font-size: 10px; color: var(--sub); margin-top: 4px; }
 
 /* ② 経営単位別サマリー */
@@ -907,7 +912,7 @@ body {
 .s6-kv-row:last-child { border-bottom: none; }
 .s6-kv-row.sub .s6-kv-lbl { padding-left: 12px; color: var(--sub); }
 .s6-kv-lbl { font-size: 11px; color: var(--text); }
-.s6-kv-val { font-size: 12px; font-weight: 600; color: var(--navy); }
+.s6-kv-val { font-size: 12px; font-weight: 600; color: var(--text); font-family: 'JetBrains Mono', monospace; }
 .s6-kv-sep { height: 6px; }
 
 /* ③ 比較表 */
@@ -929,11 +934,11 @@ body {
   font-weight: 700;
   font-size: 11px;
   white-space: nowrap;
-  background: var(--navy);
+  background: var(--sbiz-ink);
   color: #fff;
 }
 .s6-tbl th:first-child { text-align: left; min-width: 160px; }
-.s6-tbl td { padding: 7px 12px; text-align: right; border-bottom: 1px solid var(--border); color: var(--navy); }
+.s6-tbl td { padding: 7px 12px; text-align: right; border-bottom: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; }
 .s6-tbl-lbl { text-align: left !important; color: var(--text) !important; font-size: 11px; }
 .s6-tbl-val { font-size: 12px; font-weight: 500; }
 .s6-sub-row .s6-tbl-lbl { color: var(--sub) !important; }
@@ -1025,6 +1030,7 @@ body {
   font-weight: 700;
   color: #f1f5f9;
   margin-bottom: 2px;
+  font-family: 'JetBrains Mono', monospace;
 }
 .sg-kpi-target {
   font-size: 11px;
