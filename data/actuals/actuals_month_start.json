@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-08-30T17:58:15.228306+09:00",
+  "generated_at": "2026-08-31T08:19:55.928908+09:00",
   "note": "各経営単位の最新データ。freee_api_sync.py で生成。",
   "data": {
     "unit_blue_estate": {
@@ -11,27 +11,99 @@
         "breakdown": [
           {
             "item": "賃貸仲介料",
-            "amount": 621910
+            "amount": 621910,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 621910,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸仲介課",
+                "amount": 621910,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "賃貸仲介付帯売上",
-            "amount": 93000
+            "amount": 93000,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 93000,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸仲介課",
+                "amount": 93000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "賃貸仲介付帯手数料",
-            "amount": 561220
+            "amount": 561220,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 561220,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸仲介課",
+                "amount": 561220,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "賃貸管理料",
-            "amount": 69812
+            "amount": 69812,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 69812,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 69812,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "賃貸管理付帯売上",
-            "amount": 1177941
+            "amount": 1177941,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 1177941,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 1177941,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "賃貸管理付帯手数料",
-            "amount": 12000
+            "amount": 12000,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 12000,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 12000,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -40,7 +112,24 @@
         "breakdown": [
           {
             "item": "売上原価",
-            "amount": 350451
+            "amount": 350451,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 350451,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 309951,
+                "deprecated": false
+              },
+              {
+                "name": "賃貸仲介課",
+                "amount": 40500,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -49,87 +138,467 @@
         "breakdown": [
           {
             "item": "給料手当",
-            "amount": 2000000
+            "amount": 2000000,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 2000000,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 2000000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "退職金",
-            "amount": 72000
+            "amount": 72000,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 72000,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 72000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "法定福利費",
-            "amount": 73625
+            "amount": 73625,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 73625,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 73625,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "健康保険料（個人負担分）",
+                "amount": 37460
+              },
+              {
+                "name": "厚生年金保険料（個人負担分）",
+                "amount": 29737
+              },
+              {
+                "name": "介護保険料（個人負担分）",
+                "amount": 5629
+              },
+              {
+                "name": "（品目未設定）",
+                "amount": 799
+              }
+            ]
           },
           {
             "item": "採用費",
-            "amount": 6028
+            "amount": 6028,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 6028,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 6028,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "外注費",
-            "amount": 293546
+            "amount": 293546,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 278546,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 278546,
+                "deprecated": false
+              },
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 15000,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 15000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "広告宣伝費",
-            "amount": 316000
+            "amount": 316000,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 200500,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸仲介課",
+                "amount": 200500,
+                "deprecated": false
+              },
+              {
+                "name": "<不動産売買部>",
+                "amount": 115500,
+                "deprecated": true
+              },
+              {
+                "name": "売買仲介課",
+                "amount": 115500,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "ブランディング費",
-            "amount": 1591
+            "amount": 1591,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 1591,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 1591,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "販売促進費",
-            "amount": 61600
+            "amount": 61600,
+            "by_department": [
+              {
+                "name": "（部門未設定）",
+                "amount": 58000,
+                "deprecated": false
+              },
+              {
+                "name": "<不動産売買部>",
+                "amount": 1800,
+                "deprecated": true
+              },
+              {
+                "name": "売買仲介課",
+                "amount": 1800,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "商品開発調査研究費",
-            "amount": 3000
+            "amount": 3000,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 3000,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 3000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "通信費",
-            "amount": 57181
+            "amount": 57181,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 34709,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 34709,
+                "deprecated": false
+              },
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 22472,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 22472,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "旅費交通費",
-            "amount": 86069
+            "amount": 86069,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 86069,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 86069,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "交際費",
-            "amount": 151479
+            "amount": 151479,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 138587,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 138587,
+                "deprecated": false
+              },
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 12892,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 12892,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "会議費",
-            "amount": 51190
+            "amount": 51190,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 51190,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 51190,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "地代家賃",
-            "amount": 28000
+            "amount": 28000,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 28000,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 28000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "リース料",
-            "amount": 48600
+            "amount": 48600,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 48600,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 48600,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "車両費",
-            "amount": 49813
+            "amount": 49813,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 49813,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 49813,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "システム利用料",
-            "amount": 1014556
+            "amount": 1014556,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 700611,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 700611,
+                "deprecated": false
+              },
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 288975,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸仲介課",
+                "amount": 238775,
+                "deprecated": false
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 50200,
+                "deprecated": false
+              },
+              {
+                "name": "×<不動産資産部資産運用課>",
+                "amount": 14970,
+                "deprecated": true
+              },
+              {
+                "name": "×売買",
+                "amount": 14970,
+                "deprecated": true
+              },
+              {
+                "name": "<不動産売買部>",
+                "amount": 10000,
+                "deprecated": true
+              },
+              {
+                "name": "売買仲介課",
+                "amount": 10000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "消耗品費",
-            "amount": 63507
+            "amount": 63507,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 46157,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 46157,
+                "deprecated": false
+              },
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 17350,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 17350,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "租税公課",
-            "amount": 10251
+            "amount": 10251,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 10251,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 10251,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "支払手数料",
-            "amount": 137758
+            "amount": 137758,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 128493,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 128493,
+                "deprecated": false
+              },
+              {
+                "name": "<不動産売買部>",
+                "amount": 8665,
+                "deprecated": true
+              },
+              {
+                "name": "売買課",
+                "amount": 8665,
+                "deprecated": false
+              },
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 600,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸管理課",
+                "amount": 600,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "管理諸費",
-            "amount": 90000
+            "amount": 90000,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 90000,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 90000,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -138,27 +607,94 @@
         "breakdown": [
           {
             "item": "自社不動産家賃収入（課税）",
-            "amount": 827750
+            "amount": 827750,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 827750,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 827750,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "自社不動産家賃収入（非課税売上）",
-            "amount": 1975880
+            "amount": 1975880,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 1975880,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 1975880,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "WASH BLUE売上",
-            "amount": 300785
+            "amount": 300785,
+            "by_department": [
+              {
+                "name": "<ウォッシュブルー>",
+                "amount": 300785,
+                "deprecated": true
+              },
+              {
+                "name": "ｳｫｯｼｭﾌﾞﾙｰ",
+                "amount": 300785,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "BLUE HOTELS 売上",
-            "amount": 511008
+            "amount": 511008,
+            "by_department": [
+              {
+                "name": "BLUE HOTELS事業部",
+                "amount": 511008,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "受取利息",
-            "amount": 59777
+            "amount": 59777,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 59777,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 59777,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "雑収入",
-            "amount": 120000
+            "amount": 120000,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 120000,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 120000,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -167,27 +703,99 @@
         "breakdown": [
           {
             "item": "営業外土地使用料",
-            "amount": 852000
+            "amount": 852000,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 852000,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 852000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "自社不動産経費（外）",
-            "amount": 13737
+            "amount": 13737,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 13737,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 13737,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "WASH BLUE経費",
-            "amount": 181782
+            "amount": 181782,
+            "by_department": [
+              {
+                "name": "<ウォッシュブルー>",
+                "amount": 173010,
+                "deprecated": true
+              },
+              {
+                "name": "ｳｫｯｼｭﾌﾞﾙｰ",
+                "amount": 173010,
+                "deprecated": false
+              },
+              {
+                "name": "×ｳｫｯｼｭﾌﾞﾙｰ",
+                "amount": 8772,
+                "deprecated": true
+              }
+            ]
           },
           {
             "item": "BLUE HOTELS 経費",
-            "amount": 170294
+            "amount": 170294,
+            "by_department": [
+              {
+                "name": "BLUE HOTELS事業部",
+                "amount": 170294,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "新規事業研究開発費",
-            "amount": 12000
+            "amount": 12000,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 12000,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 12000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "支払利息",
-            "amount": 382659
+            "amount": 382659,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 382659,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 382659,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -720,15 +1328,59 @@
         "breakdown": [
           {
             "item": "住宅売上",
-            "amount": 174547
+            "amount": 174547,
+            "by_department": [
+              {
+                "name": "1課",
+                "amount": 165456,
+                "deprecated": false
+              },
+              {
+                "name": "（部門未設定）",
+                "amount": 9091,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "商業売上",
-            "amount": 78000
+            "amount": 78000,
+            "by_department": [
+              {
+                "name": "1課",
+                "amount": 78000,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "(有)水野旅館様 本館梅の間入口小窓障子設置工事",
+                "amount": 25000
+              },
+              {
+                "name": "(有)水野旅館様 本館姫の間襖張替え工事",
+                "amount": 22000
+              },
+              {
+                "name": "(有)水野旅館様 本館2F窓清掃9回目",
+                "amount": 16000
+              },
+              {
+                "name": "（品目未設定）",
+                "amount": 15000
+              }
+            ]
           },
           {
             "item": "アフター売上",
-            "amount": 357473
+            "amount": 357473,
+            "by_department": [
+              {
+                "name": "1課",
+                "amount": 357473,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -737,7 +1389,14 @@
         "breakdown": [
           {
             "item": "売上原価",
-            "amount": 20300
+            "amount": 20300,
+            "by_department": [
+              {
+                "name": "1課",
+                "amount": 20300,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -746,91 +1405,245 @@
         "breakdown": [
           {
             "item": "給料手当",
-            "amount": 2000000
+            "amount": 2000000,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 2000000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "法定福利費",
-            "amount": 73625
+            "amount": 73625,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 73625,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "福利厚生費",
-            "amount": 31678
+            "amount": 31678,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 31678,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "採用費",
-            "amount": 35091
+            "amount": 35091,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 35091,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "外注費",
-            "amount": 140000
+            "amount": 140000,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 140000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "広告宣伝費",
-            "amount": 50349
+            "amount": 50349,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 50349,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "販売促進費",
-            "amount": 2730
+            "amount": 2730,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 2730,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "商品開発調査研究費",
-            "amount": 150000
+            "amount": 150000,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 150000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "研修費",
-            "amount": 10200
+            "amount": 10200,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 10200,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "通信費",
-            "amount": 64708
+            "amount": 64708,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 64708,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "システム利用料",
-            "amount": 27071
+            "amount": 27071,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 27071,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "旅費交通費",
-            "amount": 31175
+            "amount": 31175,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 31175,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "交際費",
-            "amount": 200771
+            "amount": 200771,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 200771,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "地代家賃",
-            "amount": 200000
+            "amount": 200000,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 200000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "リース料",
-            "amount": 89079
+            "amount": 89079,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 89079,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "車両費",
-            "amount": 28468
+            "amount": 28468,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 28468,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "水道光熱費",
-            "amount": 44253
+            "amount": 44253,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 44253,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "保険料",
-            "amount": 32380
+            "amount": 32380,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 32380,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "租税公課",
-            "amount": 28568
+            "amount": 28568,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 28568,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "減価償却費",
-            "amount": 389461
+            "amount": 389461,
+            "by_department": [
+              {
+                "name": "固定資産",
+                "amount": 389461,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "支払手数料",
-            "amount": 123287
+            "amount": 123287,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 123287,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "諸会費",
-            "amount": 5500
+            "amount": 5500,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 5500,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -839,11 +1652,25 @@
         "breakdown": [
           {
             "item": "受取利息",
-            "amount": 55956
+            "amount": 55956,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 55956,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "雑収入",
-            "amount": 94449
+            "amount": 94449,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 94449,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -852,15 +1679,41 @@
         "breakdown": [
           {
             "item": "アフター工事",
-            "amount": 88033
+            "amount": 88033,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 238733,
+                "deprecated": false
+              },
+              {
+                "name": "1課",
+                "amount": 150700,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "保険料（営業外）",
-            "amount": 10553
+            "amount": 10553,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 10553,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "支払利息",
-            "amount": 32840
+            "amount": 32840,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 32840,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -1249,7 +2102,29 @@
         "breakdown": [
           {
             "item": "売上高",
-            "amount": 3291290
+            "amount": 3291290,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 3219324,
+                "deprecated": false
+              },
+              {
+                "name": "BLUE LIFE 唐津南店",
+                "amount": 71966,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "（品目未設定）",
+                "amount": 3222325
+              },
+              {
+                "name": "(株)シーエスエス",
+                "amount": 68965
+              }
+            ]
           }
         ]
       },
@@ -1262,47 +2137,234 @@
         "breakdown": [
           {
             "item": "福利厚生費",
-            "amount": 20000
+            "amount": 20000,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 本部",
+                "amount": 20000,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "通信費",
-            "amount": 22510
+            "amount": 22510,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 12108,
+                "deprecated": false
+              },
+              {
+                "name": "BLUE LIFE 唐津南店",
+                "amount": 10402,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "オフィス光119",
+                "amount": 20310
+              },
+              {
+                "name": "（品目未設定）",
+                "amount": 2200
+              }
+            ]
           },
           {
             "item": "システム利用料",
-            "amount": 660
+            "amount": 660,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 本部",
+                "amount": 660,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "freee経費精算利用料金",
+                "amount": 660
+              }
+            ]
           },
           {
             "item": "地代家賃",
-            "amount": 13200
+            "amount": 13200,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 13200,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "リース料",
-            "amount": 84150
+            "amount": 84150,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 49720,
+                "deprecated": false
+              },
+              {
+                "name": "BLUE LIFE 唐津南店",
+                "amount": 34430,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "車両費",
-            "amount": 183120
+            "amount": 183120,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 159187,
+                "deprecated": false
+              },
+              {
+                "name": "BLUE LIFE 唐津南店",
+                "amount": 23933,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "（品目未設定）",
+                "amount": 98615
+              },
+              {
+                "name": "ガソリン代（ヴォクシー41-45）",
+                "amount": 20816
+              },
+              {
+                "name": "ガソリン代（ヴォクシー25-83）",
+                "amount": 17247
+              },
+              {
+                "name": "ガソリン代（セレナ8-21）",
+                "amount": 15115
+              },
+              {
+                "name": "ガソリン代（ヴォクシー43-99）",
+                "amount": 14539
+              },
+              {
+                "name": "ガソリン代（セレナ35-89）",
+                "amount": 8818
+              },
+              {
+                "name": "ガソリン代（ルーミー19-97）",
+                "amount": 7970
+              }
+            ]
           },
           {
             "item": "水道光熱費",
-            "amount": 36348
+            "amount": 36348,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 28465,
+                "deprecated": false
+              },
+              {
+                "name": "BLUE LIFE 唐津南店",
+                "amount": 7883,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "（品目未設定）",
+                "amount": 28659
+              },
+              {
+                "name": "ガス代",
+                "amount": 7689
+              }
+            ]
           },
           {
             "item": "保険料",
-            "amount": 80430
+            "amount": 80430,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 80430,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "租税公課",
-            "amount": 48813
+            "amount": 48813,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 47700,
+                "deprecated": false
+              },
+              {
+                "name": "BLUE LIFE 本部",
+                "amount": 1113,
+                "deprecated": false
+              }
+            ]
           },
           {
             "item": "支払手数料",
-            "amount": 341390
+            "amount": 341390,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津南店",
+                "amount": 167750,
+                "deprecated": false
+              },
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 165330,
+                "deprecated": false
+              },
+              {
+                "name": "BLUE LIFE 本部",
+                "amount": 8310,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "（品目未設定）",
+                "amount": 334680
+              },
+              {
+                "name": "インターネットバンキング利用料",
+                "amount": 3630
+              },
+              {
+                "name": "(株)シーエスエス",
+                "amount": 3080
+              }
+            ]
           },
           {
             "item": "管理諸費",
-            "amount": 269500
+            "amount": 269500,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 本部",
+                "amount": 225500,
+                "deprecated": false
+              },
+              {
+                "name": "BLUE LIFE 唐津店",
+                "amount": 44000,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -1311,7 +2373,14 @@
         "breakdown": [
           {
             "item": "受取利息",
-            "amount": 1908
+            "amount": 1908,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 本部",
+                "amount": 1908,
+                "deprecated": false
+              }
+            ]
           }
         ]
       },
@@ -1583,5 +2652,5 @@
       }
     }
   },
-  "month_start_for": "2026-08"
+  "month_start_for": "2026-09"
 }

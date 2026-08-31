@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-08-31T00:13:41.808882+09:00",
+  "generated_at": "2026-08-31T08:19:55.928908+09:00",
   "note": "各経営単位の最新データ。freee_api_sync.py で生成。",
   "data": {
     "unit_blue_estate": {
@@ -181,6 +181,24 @@
                 "name": "本部事業部",
                 "amount": 73625,
                 "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "健康保険料（個人負担分）",
+                "amount": 37460
+              },
+              {
+                "name": "厚生年金保険料（個人負担分）",
+                "amount": 29737
+              },
+              {
+                "name": "介護保険料（個人負担分）",
+                "amount": 5629
+              },
+              {
+                "name": "（品目未設定）",
+                "amount": 799
               }
             ]
           },
@@ -1333,6 +1351,24 @@
                 "amount": 78000,
                 "deprecated": false
               }
+            ],
+            "by_item": [
+              {
+                "name": "(有)水野旅館様 本館梅の間入口小窓障子設置工事",
+                "amount": 25000
+              },
+              {
+                "name": "(有)水野旅館様 本館姫の間襖張替え工事",
+                "amount": 22000
+              },
+              {
+                "name": "(有)水野旅館様 本館2F窓清掃9回目",
+                "amount": 16000
+              },
+              {
+                "name": "（品目未設定）",
+                "amount": 15000
+              }
             ]
           },
           {
@@ -2078,6 +2114,16 @@
                 "amount": 71966,
                 "deprecated": false
               }
+            ],
+            "by_item": [
+              {
+                "name": "（品目未設定）",
+                "amount": 3222325
+              },
+              {
+                "name": "(株)シーエスエス",
+                "amount": 68965
+              }
             ]
           }
         ]
@@ -2114,6 +2160,16 @@
                 "amount": 10402,
                 "deprecated": false
               }
+            ],
+            "by_item": [
+              {
+                "name": "オフィス光119",
+                "amount": 20310
+              },
+              {
+                "name": "（品目未設定）",
+                "amount": 2200
+              }
             ]
           },
           {
@@ -2124,6 +2180,12 @@
                 "name": "BLUE LIFE 本部",
                 "amount": 660,
                 "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "freee経費精算利用料金",
+                "amount": 660
               }
             ]
           },
@@ -2168,6 +2230,36 @@
                 "amount": 23933,
                 "deprecated": false
               }
+            ],
+            "by_item": [
+              {
+                "name": "（品目未設定）",
+                "amount": 98615
+              },
+              {
+                "name": "ガソリン代（ヴォクシー41-45）",
+                "amount": 20816
+              },
+              {
+                "name": "ガソリン代（ヴォクシー25-83）",
+                "amount": 17247
+              },
+              {
+                "name": "ガソリン代（セレナ8-21）",
+                "amount": 15115
+              },
+              {
+                "name": "ガソリン代（ヴォクシー43-99）",
+                "amount": 14539
+              },
+              {
+                "name": "ガソリン代（セレナ35-89）",
+                "amount": 8818
+              },
+              {
+                "name": "ガソリン代（ルーミー19-97）",
+                "amount": 7970
+              }
             ]
           },
           {
@@ -2183,6 +2275,16 @@
                 "name": "BLUE LIFE 唐津南店",
                 "amount": 7883,
                 "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "（品目未設定）",
+                "amount": 28659
+              },
+              {
+                "name": "ガス代",
+                "amount": 7689
               }
             ]
           },
@@ -2231,6 +2333,20 @@
                 "name": "BLUE LIFE 本部",
                 "amount": 8310,
                 "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "（品目未設定）",
+                "amount": 334680
+              },
+              {
+                "name": "インターネットバンキング利用料",
+                "amount": 3630
+              },
+              {
+                "name": "(株)シーエスエス",
+                "amount": 3080
               }
             ]
           },
