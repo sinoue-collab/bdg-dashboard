@@ -31,6 +31,8 @@ let currentScreen = 's-top';
 let bizPeriod = 'month';
 let budgetPeriod = 'month';
 let selectedBizLine = null;
+let selectedBizCompany = 'BLUE ESTATE';
+let selectedBudgetCompany = 'BLUE ESTATE';
 
 function fmtYen(n) {
   if (n == null) return '—';
@@ -292,23 +294,31 @@ function renderBiz() {
     return;
   }
 
-  const companiesHtml = `
+  el.innerHTML = `
     <div class="biz-tabs">
-      <button class="biz-tab active" data-company="BLUE ESTATE">BLUE ESTATE</button>
-      <button class="biz-tab disabled" disabled>BLUE DESIGN<span class="badge-wip">準備中</span></button>
-      <button class="biz-tab disabled" disabled>BLUE LIFE<span class="badge-wip">準備中</span></button>
+      <button class="biz-tab ${selectedBizCompany === 'BLUE ESTATE' ? 'active' : ''}" data-company="BLUE ESTATE">BLUE ESTATE</button>
+      <button class="biz-tab ${selectedBizCompany === 'BLUE DESIGN' ? 'active' : ''}" data-company="BLUE DESIGN">BLUE DESIGN</button>
+      <button class="biz-tab ${selectedBizCompany === 'BLUE LIFE'   ? 'active' : ''}" data-company="BLUE LIFE">BLUE LIFE</button>
       <button class="biz-tab disabled" disabled>青天堂<span class="badge-wip">準備中</span></button>
     </div>
     <div class="biz-note">事業ラインの区分は暫定的な分類です（freeeセグメント運用の検討中）<br><span class="biz-note-sub">WASH BLUE・BLUE HOTELSの売上はfreee上は営業外収益に計上されていますが、管理会計上は事業売上として集計しています</span></div>
-  `;
-
-  el.innerHTML = companiesHtml + `
     <div class="biz-period-selector">
       <button class="period-btn ${bizPeriod === 'month' ? 'active' : ''}" data-period="month">直近確定月</button>
       <button class="period-btn ${bizPeriod === 'ytd'   ? 'active' : ''}" data-period="ytd">年度累計</button>
     </div>
     <div id="biz-content"></div>
   `;
+
+  el.querySelectorAll('.biz-tab:not(.disabled)').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (selectedBizCompany === tab.dataset.company) return;
+      selectedBizCompany = tab.dataset.company;
+      selectedBizLine = null;
+      el.querySelectorAll('.biz-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderBizContent();
+    });
+  });
 
   el.querySelectorAll('.period-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -327,84 +337,114 @@ function renderBizContent() {
   if (!el) return;
 
   const { actuals, budgetDetail } = appData;
-  const unit = actuals.data.unit_blue_estate;
-  const bizMap = buildBizMap(budgetDetail);
-
   const isYtd = bizPeriod === 'ytd';
-  const confirmed = getConfirmed(unit);
-  const targetData = isYtd ? unit.ytd : confirmed.data;
 
-  if (!targetData) {
-    el.innerHTML = '<p class="error-msg">データがありません</p>';
-    return;
+  let lines, sgaTotal, sgaBreakdown, detailColorFn;
+
+  if (selectedBizCompany === 'BLUE ESTATE') {
+    // ── BLUE ESTATE: BIZ_MAP 駆動（6事業ライン）──────────────────────
+    const unit = actuals.data.unit_blue_estate;
+    const bizMap = buildBizMap(budgetDetail);
+    const confirmed = getConfirmed(unit);
+    const targetData = isYtd ? unit.ytd : confirmed.data;
+
+    if (!targetData) { el.innerHTML = '<p class="error-msg">データがありません</p>'; return; }
+
+    lines = {
+      '売買':        { rev: [], cogs: [] },
+      '賃貸仲介':    { rev: [], cogs: [] },
+      '賃貸管理':    { rev: [], cogs: [] },
+      'WASH BLUE':   { rev: [], cogs: [] },
+      'BLUE HOTELS': { rev: [], cogs: [] },
+    };
+    for (const item of (targetData.revenue?.breakdown ?? [])) {
+      const line = bizMap[item.item];
+      if (line && lines[line]) lines[line].rev.push(item);
+    }
+    for (const item of (targetData.cogs?.breakdown ?? [])) {
+      const line = bizMap[item.item] ?? Object.keys(lines).find(l => item.item.includes(l));
+      if (line && lines[line]) lines[line].cogs.push(item);
+    }
+    for (const item of (targetData.non_op_income?.breakdown ?? [])) {
+      const line = NON_OP_BIZ_LINES.income[item.item];
+      if (line && lines[line]) lines[line].rev.push(item);
+    }
+    for (const item of (targetData.non_op_expense?.breakdown ?? [])) {
+      const line = NON_OP_BIZ_LINES.expense[item.item];
+      if (line && lines[line]) lines[line].cogs.push(item);
+    }
+    sgaTotal = targetData.sga?.total ?? 0;
+    sgaBreakdown = targetData.sga?.breakdown ?? [];
+
+    const lineColors = {
+      '売買': COLORS.sell, '賃貸仲介': COLORS.rent_brokerage,
+      '賃貸管理': COLORS.rent_mgmt, 'WASH BLUE': COLORS.wash_blue,
+      'BLUE HOTELS': COLORS.blue_hotels,
+    };
+    detailColorFn = (name) => lineColors[name];
+
+  } else {
+    // ── BLUE DESIGN / BLUE LIFE: 売上内訳をそのまま事業ラインとして表示 ──
+    const unitKey = { 'BLUE DESIGN': 'unit_blue_design', 'BLUE LIFE': 'unit_blue_life' }[selectedBizCompany];
+    const unit = actuals.data[unitKey];
+    const confirmed = getConfirmed(unit);
+    const targetData = isYtd ? unit?.ytd : confirmed?.data;
+
+    if (!targetData) { el.innerHTML = '<p class="error-msg">データがありません</p>'; return; }
+
+    const PALETTES = {
+      'BLUE DESIGN': ['#1f6fb2', '#0284c7', '#0369a1', '#1585d0', '#075985'],
+      'BLUE LIFE':   ['#1f8a76', '#0d7a61', '#16a085', '#1aab8a', '#0a5a4a'],
+    };
+    const palette = PALETTES[selectedBizCompany];
+
+    const revItems  = targetData.revenue?.breakdown ?? [];
+    const cogsItems = targetData.cogs?.breakdown    ?? [];
+    sgaTotal     = targetData.sga?.total     ?? 0;
+    sgaBreakdown = targetData.sga?.breakdown ?? [];
+
+    const lineColorMap = {};
+    lines = Object.fromEntries(revItems.map((item, i) => {
+      const color = palette[i % palette.length];
+      lineColorMap[item.item] = color;
+      return [item.item, { rev: [item], cogs: [], color }];
+    }));
+
+    for (const item of cogsItems) {
+      const key = Object.keys(lines).find(l => item.item.includes(l) || l.includes(item.item));
+      if (key) lines[key].cogs.push(item);
+    }
+
+    detailColorFn = (name) => lineColorMap[name];
+
+    if (revItems.length === 0) {
+      el.innerHTML = '<p class="biz-hint">データがありません（月中に更新されます）</p>';
+      return;
+    }
   }
 
-  // Build biz line breakdown（6ライン）
-  const lines = {
-    '売買':        { rev: [], cogs: [] },
-    '賃貸仲介':    { rev: [], cogs: [] },
-    '賃貸管理':    { rev: [], cogs: [] },
-    'WASH BLUE':   { rev: [], cogs: [] },
-    'BLUE HOTELS': { rev: [], cogs: [] },
-  };
-
-  // PL売上高 → 売買・賃貸仲介・賃貸管理
-  for (const item of (targetData.revenue?.breakdown ?? [])) {
-    const line = bizMap[item.item];
-    if (line && lines[line]) lines[line].rev.push(item);
-  }
-  // PL売上原価 → 各ライン（bizMapで名称一致、またはフォールバック文字列マッチ）
-  for (const item of (targetData.cogs?.breakdown ?? [])) {
-    const line = bizMap[item.item] ?? Object.keys(lines).find(l => item.item.includes(l));
-    if (line && lines[line]) lines[line].cogs.push(item);
-  }
-  // 営業外収益 → WASH BLUE / BLUE HOTELS 売上
-  for (const item of (targetData.non_op_income?.breakdown ?? [])) {
-    const line = NON_OP_BIZ_LINES.income[item.item];
-    if (line && lines[line]) lines[line].rev.push(item);
-  }
-  // 営業外費用 → WASH BLUE / BLUE HOTELS 費用（原価相当として扱う）
-  for (const item of (targetData.non_op_expense?.breakdown ?? [])) {
-    const line = NON_OP_BIZ_LINES.expense[item.item];
-    if (line && lines[line]) lines[line].cogs.push(item);
-  }
-
-  const sgaTotal     = targetData.sga?.total ?? 0;
-  const sgaBreakdown = targetData.sga?.breakdown ?? [];
-
-  const lineColors = {
-    '売買':        COLORS.sell,
-    '賃貸仲介':    COLORS.rent_brokerage,
-    '賃貸管理':    COLORS.rent_mgmt,
-    'WASH BLUE':   COLORS.wash_blue,
-    'BLUE HOTELS': COLORS.blue_hotels,
-  };
-
-  // 売上合計（構成比計算用）
+  // ── 共通: タイル描画 ──────────────────────────────────────────────
   const totalLineRev = Object.values(lines).reduce((s, l) => s + l.rev.reduce((a, i) => a + i.amount, 0), 0);
 
-  // Left panel tiles（5事業ライン）
-  const tilesHtml = Object.entries(lines).map(([lineName, lineData]) => {
-    const rev  = lineData.rev.reduce((s, i) => s + i.amount, 0);
-    const cogs = lineData.cogs.reduce((s, i) => s + i.amount, 0);
+  const tilesHtml = Object.entries(lines).map(([name, ld]) => {
+    const rev  = ld.rev.reduce((s, i) => s + i.amount, 0);
+    const cogs = ld.cogs.reduce((s, i) => s + i.amount, 0);
     const gp   = rev - cogs;
-    const gpRate = rev ? ((gp / rev) * 100).toFixed(1) : '—';
-    const color = lineColors[lineName];
-    const isSelected = selectedBizLine === lineName;
+    const color = detailColorFn(name) ?? COLORS.accent;
+    const isSelected = selectedBizLine === name;
     const share = (totalLineRev > 0 && rev > 0) ? ((rev / totalLineRev) * 100).toFixed(1) : '0.0';
     return `
-      <div class="biz-tile ${isSelected ? 'selected' : ''}" data-line="${lineName}" style="border-left: 4px solid ${color}">
-        <div class="biz-tile-name" style="color:${color}">${lineName}</div>
+      <div class="biz-tile ${isSelected ? 'selected' : ''}" data-line="${name}" style="border-left: 4px solid ${color}">
+        <div class="biz-tile-name" style="color:${color}">${name}</div>
         <div class="biz-tile-row"><span>売上</span><span>${fmtYen(rev)}</span></div>
         <div class="biz-tile-row"><span>粗利</span><span>${fmtYen(gp)}</span></div>
-        <div class="biz-tile-row"><span>粗利率</span><span>${rev ? gpRate + '%' : '—'}</span></div>
+        <div class="biz-tile-row"><span>粗利率</span><span>${rev ? ((gp / rev) * 100).toFixed(1) + '%' : '—'}</span></div>
         <div class="biz-share-bar-wrap"><div class="biz-share-bar" style="width:${share}%; background:${color}"></div></div>
         <div class="biz-share-pct">構成比 ${share}%</div>
       </div>
     `;
   }).join('');
 
-  // 本部タイル（販管費 = 共通費）
   const honbuSelected = selectedBizLine === '本部';
   const honbuTileHtml = `
     <div class="biz-tile ${honbuSelected ? 'selected' : ''}" data-line="本部" style="border-left: 4px solid ${COLORS.sga}">
@@ -414,15 +454,14 @@ function renderBizContent() {
     </div>
   `;
 
+  const detailHtml = selectedBizLine
+    ? renderBizDetail(selectedBizLine, lines, sgaBreakdown, detailColorFn(selectedBizLine))
+    : '<p class="biz-hint">左の事業ラインをクリックしてください</p>';
+
   el.innerHTML = `
     <div class="biz-layout">
-      <div class="biz-left">
-        ${tilesHtml}
-        ${honbuTileHtml}
-      </div>
-      <div class="biz-right" id="biz-detail">
-        ${selectedBizLine ? renderBizDetail(selectedBizLine, lines, sgaBreakdown) : '<p class="biz-hint">左の事業ラインをクリックしてください</p>'}
-      </div>
+      <div class="biz-left">${tilesHtml}${honbuTileHtml}</div>
+      <div class="biz-right" id="biz-detail">${detailHtml}</div>
     </div>
   `;
 
@@ -432,8 +471,6 @@ function renderBizContent() {
       renderBizContent();
     });
   });
-
-  // accordion handlers
   el.querySelectorAll('.acc-trigger').forEach(trigger => {
     trigger.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -444,7 +481,7 @@ function renderBizContent() {
   });
 }
 
-function renderBizDetail(lineName, lines, sgaBreakdown) {
+function renderBizDetail(lineName, lines, sgaBreakdown, colorOverride = null) {
   if (lineName === '本部') {
     const rows = sgaBreakdown.map(item => `
       <tr class="acc-trigger">
@@ -472,7 +509,7 @@ function renderBizDetail(lineName, lines, sgaBreakdown) {
     'WASH BLUE':   COLORS.wash_blue,
     'BLUE HOTELS': COLORS.blue_hotels,
   };
-  const color = lineColors[lineName];
+  const color = colorOverride ?? lineColors[lineName] ?? COLORS.accent;
 
   const revRows = lineData.rev.map(item => {
     const hasItems = item.by_item?.length > 0;
@@ -551,127 +588,214 @@ function renderBudget() {
   const el = document.getElementById('s-budget');
   if (!el) return;
 
-  const { actuals, budgetDetail } = appData;
+  const { actuals, budget, budgetDetail } = appData;
 
-  if (!actuals || !budgetDetail) {
+  if (!actuals) {
     el.innerHTML = '<p class="error-msg">データ読み込みエラー</p>';
     return;
   }
 
-  const unit = actuals.data.unit_blue_estate;
-  const confirmed = getConfirmed(unit);
   const isYtd = budgetPeriod === 'ytd';
 
-  const actualData   = isYtd ? unit.ytd       : confirmed.data;
-  const targetMonth  = isYtd ? unit.ytd.period : confirmed.period;
-  const periodLabel  = isYtd
-    ? `年度累計（${targetMonth}）`
-    : `対象月: ${targetMonth}${statusBadge(targetMonth)}`;
+  // ── 会社選択タブ ─────────────────────────────────────────────────
+  const tabsHtml = `
+    <div class="budget-tabs">
+      <button class="biz-tab ${selectedBudgetCompany === 'BLUE ESTATE' ? 'active' : ''}" data-company="BLUE ESTATE">BLUE ESTATE</button>
+      <button class="biz-tab ${selectedBudgetCompany === 'BLUE DESIGN' ? 'active' : ''}" data-company="BLUE DESIGN">BLUE DESIGN</button>
+      <button class="biz-tab ${selectedBudgetCompany === 'BLUE LIFE'   ? 'active' : ''}" data-company="BLUE LIFE">BLUE LIFE</button>
+      <button class="biz-tab disabled" disabled>青天堂<span class="badge-wip">準備中</span></button>
+    </div>
+  `;
 
-  const sections = [
-    { key: '売上高',   dataKey: 'revenue', label: '売上高' },
-    { key: '売上原価', dataKey: 'cogs',    label: '売上原価' },
-    { key: '販売管理費', dataKey: 'sga',   label: '販管費' },
-  ];
+  const periodSelectorHtml = `
+    <div class="budget-period-selector">
+      <button class="period-btn ${!isYtd ? 'active' : ''}" data-period="month">直近確定月</button>
+      <button class="period-btn ${ isYtd ? 'active' : ''}" data-period="ytd">年度累計</button>
+    </div>
+  `;
 
-  let sectionsHtml = '';
-  for (const section of sections) {
-    const cats = budgetDetail.categories[section.key];
-    if (!cats) continue;
+  let bodyHtml = '';
 
-    const actualBreakdown = actualData?.[section.dataKey]?.breakdown ?? [];
-    const getActual = (name) => (actualBreakdown.find(b => b.item === name)?.amount ?? 0);
+  // ── BLUE DESIGN / BLUE LIFE: サマリー予実 ─────────────────────────
+  if (selectedBudgetCompany !== 'BLUE ESTATE') {
+    const unitKey = { 'BLUE DESIGN': 'unit_blue_design', 'BLUE LIFE': 'unit_blue_life' }[selectedBudgetCompany];
+    const unit = actuals.data[unitKey];
+    const confirmed = getConfirmed(unit);
+    const actualData  = isYtd ? unit?.ytd       : confirmed?.data;
+    const targetMonth = isYtd ? unit?.ytd?.period : confirmed?.period;
+    const periodLabel = isYtd
+      ? `年度累計（${targetMonth ?? '—'}）`
+      : `対象月: ${targetMonth ?? '—'}${statusBadge(targetMonth)}`;
 
-    const rows = Object.entries(cats).map(([acctName, acctVal]) => {
-      const budgetAmt = isYtd
-        ? (acctVal.annual_budget ?? null)
-        : (acctVal.monthly_budget?.[targetMonth] ?? null);
-      const actualAmt = getActual(acctName);
-      const diff = budgetAmt != null ? budgetAmt - actualAmt : null;
-      const rate = (budgetAmt && actualAmt) ? ((actualAmt / budgetAmt) * 100).toFixed(1) : '—';
+    const budgetCo = budget?.companies?.[selectedBudgetCompany];
+    let bRev, bGp, bSga, bOp, bOrd;
+    if (budgetCo) {
+      const src = isYtd
+        ? (budgetCo.budget_ytd ?? {})
+        : (budgetCo.monthly_plan?.[targetMonth] ?? budgetCo.budget_monthly ?? {});
+      ({ revenue: bRev, gross_profit: bGp, sga_total: bSga, op_profit: bOp, ordinary_profit: bOrd } = src);
+    }
 
-      const actualItem = actualBreakdown.find(b => b.item === acctName);
-      const byItems    = actualItem?.by_item ?? [];
-      const budgetItems = acctVal.items ?? {};
-      const hasDetail  = byItems.length > 0 || Object.keys(budgetItems).length > 0;
+    const aRev = actualData?.revenue?.total ?? 0;
+    const aGp  = actualData?._summary?.gross_profit ?? 0;
+    const aSga = actualData?.sga?.total ?? 0;
+    const aOp  = actualData?._summary?.op_profit ?? 0;
+    const aOrd = actualData?._summary?.ordinary_profit ?? 0;
 
-      const byItemsHtml = hasDetail ? `
-        <tr class="acc-body">
-          <td colspan="6">
-            <table class="by-item-budget-table">
-              <thead>
-                <tr><th>品目</th><th class="td-right">予算</th><th class="td-right">実績</th><th class="td-right">差額</th></tr>
-              </thead>
-              <tbody>${buildByItemRows(budgetItems, byItems, targetMonth, isYtd)}</tbody>
-            </table>
-          </td>
-        </tr>
-      ` : '';
-
+    const summaryRows = [
+      { label: '売上高',   budget: bRev, actual: aRev },
+      { label: '粗利',     budget: bGp,  actual: aGp  },
+      { label: '販管費',   budget: bSga, actual: aSga  },
+      { label: '営業利益', budget: bOp,  actual: aOp  },
+      { label: '経常利益', budget: bOrd, actual: aOrd  },
+    ].map(r => {
+      const diff = r.budget != null ? r.budget - r.actual : null;
+      const rate = (r.budget && r.actual) ? ((r.actual / r.budget) * 100).toFixed(1) : '—';
       return `
-        <tr class="acc-trigger budget-row">
-          <td class="acc-td">${acctName}</td>
-          <td class="td-right">${budgetAmt != null ? fmtYen(budgetAmt) : '—'}</td>
-          <td class="td-right">${fmtYen(actualAmt || null)}</td>
+        <tr>
+          <td>${r.label}</td>
+          <td class="td-right">${r.budget != null ? fmtYen(r.budget) : '—'}</td>
+          <td class="td-right">${fmtYen(r.actual || null)}</td>
           <td class="td-right ${diff != null && diff < 0 ? 'negative' : ''}">${diff != null ? fmtYen(diff) : '—'}</td>
           <td class="td-right">${rate !== '—' ? rate + '%' : '—'}</td>
-          ${hasDetail ? '<td class="acc-icon">▶</td>' : '<td></td>'}
         </tr>
-        ${byItemsHtml}
       `;
     }).join('');
 
-    const budgetTotal = isYtd
-      ? Object.values(cats).reduce((s, v) => s + (v.annual_budget ?? 0), 0)
-      : Object.values(cats).reduce((s, v) => s + (v.monthly_budget?.[targetMonth] ?? 0), 0);
-    const actualTotal = actualData?.[section.dataKey]?.total ?? 0;
-    const totalDiff   = budgetTotal - actualTotal;
-
-    sectionsHtml += `
+    bodyHtml = `
+      <div class="budget-header"><span class="budget-period-label">${periodLabel}</span></div>
       <div class="budget-section">
-        <div class="budget-section-title">${section.label}</div>
         <table class="detail-table budget-table">
           <thead>
             <tr>
-              <th>科目</th>
-              <th class="td-right">${isYtd ? '年間予算' : '予算'}</th>
+              <th>項目</th>
+              <th class="td-right">${isYtd ? '年度累計予算' : '予算'}</th>
               <th class="td-right">実績</th>
               <th class="td-right">差額</th>
               <th class="td-right">達成率</th>
-              <th></th>
             </tr>
           </thead>
-          <tbody>${rows}</tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td>${section.label}合計</td>
-              <td class="td-right">${fmtYen(budgetTotal)}</td>
-              <td class="td-right">${fmtYen(actualTotal)}</td>
-              <td class="td-right ${totalDiff < 0 ? 'negative' : ''}">${fmtYen(totalDiff)}</td>
-              <td></td><td></td>
-            </tr>
-          </tfoot>
+          <tbody>${summaryRows}</tbody>
         </table>
+        <p class="budget-note">科目別詳細は準備中です</p>
       </div>
     `;
+
+  } else {
+    // ── BLUE ESTATE: 科目別詳細予実 ──────────────────────────────────
+    if (!budgetDetail) {
+      bodyHtml = '<p class="error-msg">予算データ読み込みエラー</p>';
+    } else {
+      const unit = actuals.data.unit_blue_estate;
+      const confirmed = getConfirmed(unit);
+      const actualData  = isYtd ? unit.ytd       : confirmed.data;
+      const targetMonth = isYtd ? unit.ytd.period : confirmed.period;
+      const periodLabel = isYtd
+        ? `年度累計（${targetMonth}）`
+        : `対象月: ${targetMonth}${statusBadge(targetMonth)}`;
+
+      const sections = [
+        { key: '売上高',     dataKey: 'revenue', label: '売上高' },
+        { key: '売上原価',   dataKey: 'cogs',    label: '売上原価' },
+        { key: '販売管理費', dataKey: 'sga',     label: '販管費' },
+      ];
+
+      let sectionsHtml = '';
+      for (const section of sections) {
+        const cats = budgetDetail.categories[section.key];
+        if (!cats) continue;
+
+        const actualBreakdown = actualData?.[section.dataKey]?.breakdown ?? [];
+        const getActual = (name) => (actualBreakdown.find(b => b.item === name)?.amount ?? 0);
+
+        const rows = Object.entries(cats).map(([acctName, acctVal]) => {
+          const budgetAmt = isYtd
+            ? (acctVal.annual_budget ?? null)
+            : (acctVal.monthly_budget?.[targetMonth] ?? null);
+          const actualAmt = getActual(acctName);
+          const diff = budgetAmt != null ? budgetAmt - actualAmt : null;
+          const rate = (budgetAmt && actualAmt) ? ((actualAmt / budgetAmt) * 100).toFixed(1) : '—';
+
+          const actualItem  = actualBreakdown.find(b => b.item === acctName);
+          const byItems     = actualItem?.by_item ?? [];
+          const budgetItems = acctVal.items ?? {};
+          const hasDetail   = byItems.length > 0 || Object.keys(budgetItems).length > 0;
+
+          const byItemsHtml = hasDetail ? `
+            <tr class="acc-body">
+              <td colspan="6">
+                <table class="by-item-budget-table">
+                  <thead><tr><th>品目</th><th class="td-right">予算</th><th class="td-right">実績</th><th class="td-right">差額</th></tr></thead>
+                  <tbody>${buildByItemRows(budgetItems, byItems, targetMonth, isYtd)}</tbody>
+                </table>
+              </td>
+            </tr>
+          ` : '';
+
+          return `
+            <tr class="acc-trigger budget-row">
+              <td class="acc-td">${acctName}</td>
+              <td class="td-right">${budgetAmt != null ? fmtYen(budgetAmt) : '—'}</td>
+              <td class="td-right">${fmtYen(actualAmt || null)}</td>
+              <td class="td-right ${diff != null && diff < 0 ? 'negative' : ''}">${diff != null ? fmtYen(diff) : '—'}</td>
+              <td class="td-right">${rate !== '—' ? rate + '%' : '—'}</td>
+              ${hasDetail ? '<td class="acc-icon">▶</td>' : '<td></td>'}
+            </tr>
+            ${byItemsHtml}
+          `;
+        }).join('');
+
+        const budgetTotal = isYtd
+          ? Object.values(cats).reduce((s, v) => s + (v.annual_budget ?? 0), 0)
+          : Object.values(cats).reduce((s, v) => s + (v.monthly_budget?.[targetMonth] ?? 0), 0);
+        const actualTotal = actualData?.[section.dataKey]?.total ?? 0;
+        const totalDiff   = budgetTotal - actualTotal;
+
+        sectionsHtml += `
+          <div class="budget-section">
+            <div class="budget-section-title">${section.label}</div>
+            <table class="detail-table budget-table">
+              <thead>
+                <tr>
+                  <th>科目</th>
+                  <th class="td-right">${isYtd ? '年間予算' : '予算'}</th>
+                  <th class="td-right">実績</th>
+                  <th class="td-right">差額</th>
+                  <th class="td-right">達成率</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td>${section.label}合計</td>
+                  <td class="td-right">${fmtYen(budgetTotal)}</td>
+                  <td class="td-right">${fmtYen(actualTotal)}</td>
+                  <td class="td-right ${totalDiff < 0 ? 'negative' : ''}">${fmtYen(totalDiff)}</td>
+                  <td></td><td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        `;
+      }
+
+      bodyHtml = `
+        <div class="budget-header"><span class="budget-period-label">${periodLabel}</span></div>
+        ${sectionsHtml}
+      `;
+    }
   }
 
-  el.innerHTML = `
-    <div class="budget-tabs">
-      <button class="biz-tab active">BLUE ESTATE</button>
-      <button class="biz-tab disabled" disabled>BLUE DESIGN<span class="badge-wip">準備中</span></button>
-      <button class="biz-tab disabled" disabled>BLUE LIFE<span class="badge-wip">準備中</span></button>
-      <button class="biz-tab disabled" disabled>青天堂<span class="badge-wip">準備中</span></button>
-    </div>
-    <div class="budget-period-selector">
-      <button class="period-btn ${!isYtd ? 'active' : ''}" data-period="month">直近確定月</button>
-      <button class="period-btn ${isYtd  ? 'active' : ''}" data-period="ytd">年度累計</button>
-    </div>
-    <div class="budget-header">
-      <span class="budget-period-label">${periodLabel}</span>
-    </div>
-    ${sectionsHtml}
-  `;
+  el.innerHTML = tabsHtml + periodSelectorHtml + bodyHtml;
+
+  el.querySelectorAll('.biz-tab:not(.disabled)').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (selectedBudgetCompany === tab.dataset.company) return;
+      selectedBudgetCompany = tab.dataset.company;
+      renderBudget();
+    });
+  });
 
   el.querySelectorAll('.period-btn').forEach(btn => {
     btn.addEventListener('click', () => {
