@@ -211,33 +211,58 @@ function renderTop() {
     const wow = (todayRev != null && lastWeekRev != null)  ? fmtDiffPct(todayRev, lastWeekRev)  : '—';
 
     return `
-      <div class="company-card" style="border-top: 4px solid ${color}">
-        <div class="company-card-header">
-          <span class="company-name" style="color:${color}">${name}</span>
-          <span class="company-period">${period}${statusBadge(period)}</span>
+      <div class="company-card">
+        <div class="company-card-header" style="background:${color}">
+          <div class="company-name">${name}</div>
+          <div class="company-period">${period}${statusBadge(period)}</div>
         </div>
-        <div class="company-metrics">
-          <div class="metric"><span class="metric-label">売上</span><span class="metric-value">${fmtYen(rev)}</span></div>
-          <div class="metric"><span class="metric-label">粗利</span><span class="metric-value">${fmtYen(gp)}</span></div>
-          <div class="metric"><span class="metric-label">営業利益</span><span class="metric-value ${op < 0 ? 'negative' : ''}">${fmtYen(op)}</span></div>
-        </div>
-        <div class="company-diffs">
-          <div class="diff-item"><span class="diff-label">前月比</span><span class="diff-value">${mom}</span></div>
-          <div class="diff-item"><span class="diff-label">前週比</span><span class="diff-value">${wow}</span></div>
-          <div class="diff-item"><span class="diff-label">前日比</span><span class="diff-value">${dod}</span></div>
+        <div class="company-card-body">
+          <div class="company-metrics">
+            <div class="metric"><span class="metric-label">売上</span><span class="metric-value">${fmtYen(rev)}</span></div>
+            <div class="metric"><span class="metric-label">粗利</span><span class="metric-value">${fmtYen(gp)}</span></div>
+            <div class="metric"><span class="metric-label">営業利益</span><span class="metric-value ${op < 0 ? 'negative' : ''}">${fmtYen(op)}</span></div>
+          </div>
+          <div class="company-diffs">
+            <div class="diff-item"><span class="diff-label">前月比</span><span class="diff-value">${mom}</span></div>
+            <div class="diff-item"><span class="diff-label">前週比</span><span class="diff-value">${wow}</span></div>
+            <div class="diff-item"><span class="diff-label">前日比</span><span class="diff-value">${dod}</span></div>
+          </div>
         </div>
       </div>
     `;
   }).join('');
 
-  const goalsHtml = `
-    <div class="goals-placeholder">
-      <div class="goals-placeholder-title">経営目標（すごい会議）連携準備中</div>
-      <div class="goals-placeholder-body">データ連携未定</div>
+  const navCardsHtml = `
+    <div class="nav-section-label">くわしく見る</div>
+    <div class="nav-cards">
+      <div class="nav-card" data-nav="s-biz">
+        <div class="nav-card-icon">🏗️</div>
+        <div class="nav-card-title">事業構造マップ</div>
+        <div class="nav-card-sub">事業ライン別の売上・粗利</div>
+      </div>
+      <div class="nav-card" data-nav="s-budget">
+        <div class="nav-card-icon">📊</div>
+        <div class="nav-card-title">予実管理</div>
+        <div class="nav-card-sub">予算vs実績・品目ドリルダウン</div>
+      </div>
+      <div class="nav-card disabled" data-nav="s-goals">
+        <div class="nav-card-icon">🎯</div>
+        <div class="nav-card-title">経営目標</div>
+        <div class="nav-card-sub">すごい会議連携準備中</div>
+      </div>
+      <div class="nav-card disabled" data-nav="s-trend">
+        <div class="nav-card-icon">📈</div>
+        <div class="nav-card-title">年度比較</div>
+        <div class="nav-card-sub">前年度データ整備後に実装予定</div>
+      </div>
     </div>
   `;
 
-  el.innerHTML = heroHtml + `<div class="company-cards">${cardHtml}</div>` + goalsHtml;
+  el.innerHTML = heroHtml + `<div class="company-cards">${cardHtml}</div>` + navCardsHtml;
+
+  el.querySelectorAll('.nav-card:not(.disabled)').forEach(card => {
+    card.addEventListener('click', () => showScreen(card.dataset.nav));
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -342,6 +367,9 @@ function renderBizContent() {
     'BLUE HOTELS': COLORS.blue_hotels,
   };
 
+  // 売上合計（構成比計算用）
+  const totalLineRev = Object.values(lines).reduce((s, l) => s + l.rev.reduce((a, i) => a + i.amount, 0), 0);
+
   // Left panel tiles（5事業ライン）
   const tilesHtml = Object.entries(lines).map(([lineName, lineData]) => {
     const rev  = lineData.rev.reduce((s, i) => s + i.amount, 0);
@@ -350,12 +378,15 @@ function renderBizContent() {
     const gpRate = rev ? ((gp / rev) * 100).toFixed(1) : '—';
     const color = lineColors[lineName];
     const isSelected = selectedBizLine === lineName;
+    const share = (totalLineRev > 0 && rev > 0) ? ((rev / totalLineRev) * 100).toFixed(1) : '0.0';
     return `
       <div class="biz-tile ${isSelected ? 'selected' : ''}" data-line="${lineName}" style="border-left: 4px solid ${color}">
         <div class="biz-tile-name" style="color:${color}">${lineName}</div>
         <div class="biz-tile-row"><span>売上</span><span>${fmtYen(rev)}</span></div>
         <div class="biz-tile-row"><span>粗利</span><span>${fmtYen(gp)}</span></div>
         <div class="biz-tile-row"><span>粗利率</span><span>${rev ? gpRate + '%' : '—'}</span></div>
+        <div class="biz-share-bar-wrap"><div class="biz-share-bar" style="width:${share}%; background:${color}"></div></div>
+        <div class="biz-share-pct">構成比 ${share}%</div>
       </div>
     `;
   }).join('');
