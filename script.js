@@ -299,7 +299,7 @@ function renderBiz() {
       <button class="biz-tab ${selectedBizCompany === 'BLUE ESTATE' ? 'active' : ''}" data-company="BLUE ESTATE">BLUE ESTATE</button>
       <button class="biz-tab ${selectedBizCompany === 'BLUE DESIGN' ? 'active' : ''}" data-company="BLUE DESIGN">BLUE DESIGN</button>
       <button class="biz-tab ${selectedBizCompany === 'BLUE LIFE'   ? 'active' : ''}" data-company="BLUE LIFE">BLUE LIFE</button>
-      <button class="biz-tab disabled" disabled>青天堂<span class="badge-wip">準備中</span></button>
+      <button class="biz-tab ${selectedBizCompany === '青天堂'      ? 'active' : ''}" data-company="青天堂">青天堂</button>
     </div>
     <div class="biz-note">事業ラインの区分は暫定的な分類です（freeeセグメント運用の検討中）<br><span class="biz-note-sub">WASH BLUE・BLUE HOTELSの売上はfreee上は営業外収益に計上されていますが、管理会計上は事業売上として集計しています</span></div>
     <div class="biz-period-selector">
@@ -382,6 +382,56 @@ function renderBizContent() {
       'BLUE HOTELS': COLORS.blue_hotels,
     };
     detailColorFn = (name) => lineColors[name];
+
+  } else if (selectedBizCompany === '青天堂') {
+    // ── 青天堂: by_item（【青天堂】飲食／物販／チケット）から3事業ライン構築 ──
+    const unit = actuals.data.unit_seitendo;
+    const confirmed = getConfirmed(unit);
+    const targetData = isYtd ? unit?.ytd : confirmed?.data;
+
+    if (!targetData) { el.innerHTML = '<p class="error-msg">データがありません</p>'; return; }
+
+    const SEITENDO_PALETTE = { '飲食売上': '#a8632a', '物販売上': '#c4793a', 'チケット売上': '#7a4520' };
+    const LINE_NAMES = ['飲食売上', '物販売上', 'チケット売上'];
+
+    // by_item からライン別売上を集計（売上値引チケットはマイナスで合算）
+    const lineRevMap = { '飲食売上': 0, '物販売上': 0, 'チケット売上': 0 };
+    for (const item of (targetData.revenue?.breakdown ?? [])) {
+      for (const bi of (item.by_item ?? [])) {
+        if (bi.name === '【青天堂】飲食')    lineRevMap['飲食売上']   += bi.amount;
+        if (bi.name === '【青天堂】物販')    lineRevMap['物販売上']   += bi.amount;
+        if (bi.name === '【青天堂】チケット') lineRevMap['チケット売上'] += bi.amount;
+      }
+    }
+
+    sgaTotal     = targetData.sga?.total     ?? 0;
+    sgaBreakdown = targetData.sga?.breakdown ?? [];
+
+    const lineColorMap = {};
+    lines = Object.fromEntries(LINE_NAMES.map(name => {
+      lineColorMap[name] = SEITENDO_PALETTE[name];
+      return [name, { rev: [{ item: name, amount: lineRevMap[name] }], cogs: [] }];
+    }));
+
+    // COGS を売上構成比で按分（食材・飲料は品目別に紐付けられないため）
+    const totalCogsAmt = targetData.cogs?.total ?? 0;
+    const totalRevAmt  = LINE_NAMES.reduce((s, n) => s + Math.max(lineRevMap[n], 0), 0);
+    if (totalCogsAmt > 0 && totalRevAmt > 0) {
+      for (const name of LINE_NAMES) {
+        const lineRev = Math.max(lineRevMap[name], 0);
+        if (lineRev > 0) {
+          const allocated = Math.round(totalCogsAmt * lineRev / totalRevAmt);
+          lines[name].cogs.push({ item: '売上原価（按分）', amount: allocated });
+        }
+      }
+    }
+
+    detailColorFn = (name) => lineColorMap[name];
+
+    if (totalRevAmt === 0) {
+      el.innerHTML = '<p class="biz-hint">データがありません（月中に更新されます）</p>';
+      return;
+    }
 
   } else {
     // ── BLUE DESIGN / BLUE LIFE: 売上内訳をそのまま事業ラインとして表示 ──
