@@ -42,7 +42,11 @@ function fmtDiffPct(a, b) {
 }
 
 function getConfirmed(unitData) {
-  if (unitData && unitData.revenue && unitData.revenue.total > 0) {
+  const curRev = unitData?.revenue?.total ?? 0;
+  const prvRev = unitData?.previous_month?.revenue?.total ?? 0;
+  // 前月の10%以上売上がある場合のみ現在月を「確定月」とみなす
+  // （月初1〜2日で少額だけ入力されたケースを除外するため）
+  if (curRev > 0 && (prvRev === 0 || curRev >= prvRev * 0.1)) {
     return { data: unitData, period: unitData.period };
   }
   return { data: unitData?.previous_month, period: unitData?.previous_month?.period };
