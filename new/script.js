@@ -434,23 +434,17 @@ function renderBudget() {
   const el = document.getElementById('s-budget');
   if (!el) return;
 
-  const { actuals, budget, budgetDetail } = appData;
+  const { actuals, budgetDetail } = appData;
 
-  if (!actuals || !budget || !budgetDetail) {
+  if (!actuals || !budgetDetail) {
     el.innerHTML = '<p class="error-msg">データ読み込みエラー</p>';
     return;
   }
 
-  const beCompany = budget.companies['BLUE ESTATE'];
-  const targetMonth = beCompany?.target_month ?? budget.target_month;
   const unit = actuals.data.unit_blue_estate;
-
-  // Use previous_month data if target_month matches previous month
   const confirmed = getConfirmed(unit);
-  let actualData = confirmed.data;
-  if (actualData?.period !== targetMonth && unit.previous_month?.period === targetMonth) {
-    actualData = unit.previous_month;
-  }
+  const actualData = confirmed.data;
+  const targetMonth = confirmed.period;
 
   const sections = [
     { key: '売上高',   dataKey: 'revenue', label: '売上高' },
