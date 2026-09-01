@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BDG 経営ダッシュボード</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ヘッダー -->
+  <header class="hdr">
+    <div class="hdr-left">
+      <div class="logo-mark">BDG</div>
+      <div>
+        <div class="hdr-title">BLUE DESIGN GROUP <span>経営ダッシュボード</span></div>
+        <div class="hdr-sub">価値ある違いをつくる</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-date" id="hdr-datetime">—</div>
+      <div>佐賀県唐津市 | グループ4社</div>
+    </div>
+  </header>
+
+  <!-- 画面ナビ（S1〜S7） -->
+  <nav class="screen-nav">
+    <button class="screen-btn active" data-screen="s1">S1 経営TOP</button>
+    <button class="screen-btn" data-screen="s2">S2 財務・管理会計</button>
+    <button class="screen-btn" data-screen="s3">S3 会社別分析</button>
+    <button class="screen-btn" data-screen="s4">事業分析</button>
+    <button class="screen-btn" data-screen="s5">S5 KPIポータル</button>
+    <button class="screen-btn" data-screen="s6">S6 人事・生産性</button>
+    <button class="screen-btn" data-screen="s7">S7 AI分析</button>
+  </nav>
+
+  <!-- ════════════════════════════════════
+       S1: 経営TOP
+  ════════════════════════════════════ -->
+  <section id="screen-s1" class="screen active">
+    <main class="main">
+
+      <!-- ① ヒーローKPIカード（年度累計メイン） -->
+      <div class="s1-kpi-grid">
+        <div class="s1-kpi-card accent">
+          <div class="s1-kpi-label">年度累計売上</div>
+          <div class="s1-kpi-value" id="s1-rev-ytd">—</div>
+          <div class="s1-kpi-sub" id="s1-rev-m">当月: —</div>
+        </div>
+        <div class="s1-kpi-card">
+          <div class="s1-kpi-label">年度累計営業利益</div>
+          <div class="s1-kpi-value" id="s1-op-ytd">—</div>
+          <div class="s1-kpi-sub" id="s1-op-m">当月: —</div>
+        </div>
+        <div class="s1-kpi-card">
+          <div class="s1-kpi-label">年度累計経常利益</div>
+          <div class="s1-kpi-value" id="s1-ord-ytd">—</div>
+          <div class="s1-kpi-sub" id="s1-data-date">データ更新: —</div>
+        </div>
+        <div class="s1-kpi-card">
+          <div class="s1-kpi-label">当月売上 前月比</div>
+          <div class="s1-kpi-value" id="s1-mom">—</div>
+          <div class="s1-kpi-sub" id="s1-mom-sub">前月: —</div>
+        </div>
+      </div>
+
+      <!-- ② 4社サマリー（主役） -->
+      <div class="s1-section-title">4社サマリー（直近確定月）</div>
+      <div id="s1-co-grid" class="s1-co-grid"></div>
+
+      <!-- ⑤ 変化（前日比・前週比・前月比） -->
+      <div class="s1-block">
+        <div class="s1-section-title">変化</div>
+        <div id="s1-delta"></div>
+      </div>
+
+      <!-- ③ グループ指標サマリーテーブル -->
+      <div class="s1-block">
+        <div class="s1-block-hdr">
+          <div class="s1-section-title">グループ合計</div>
+          <div class="mini-toggle" id="s1-period-toggle">
+            <button class="mini-btn" data-period="monthly">当月</button>
+            <button class="mini-btn active" data-period="ytd">当期累計</button>
+          </div>
+        </div>
+        <div class="s1-tbl-wrap">
+          <table class="s1-tbl">
+            <thead>
+              <tr>
+                <th class="th-metric">指標</th>
+                <th class="th-actual">実績</th>
+                <th>予算</th>
+                <th>予算差</th>
+                <th>前年差</th>
+                <th>前月差</th>
+              </tr>
+            </thead>
+            <tbody id="s1-tbl-body">
+              <tr><td colspan="6" class="loading">読込中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ④ 注目事項 -->
+      <div class="s1-section-title">注目事項</div>
+      <div id="s1-highlights" class="s1-highlights">
+        <div class="s1-alert pending">
+          <span class="s1-alert-badge">読込中</span>
+          <span class="s1-alert-text">データを読み込み中…</span>
+        </div>
+      </div>
+
+    </main>
+  </section>
+
+  <!-- ════════════════════════════════════
+       S2: 財務・管理会計
+  ════════════════════════════════════ -->
+  <section id="screen-s2" class="screen">
+
+    <div class="controls-bar">
+      <div class="co-tabs" id="s2-company-tabs">
+        <button class="co-tab active" data-co="group">グループ計</button>
+        <button class="co-tab" data-co="BLUE ESTATE">BLUE ESTATE</button>
+        <button class="co-tab" data-co="BLUE DESIGN">BLUE DESIGN</button>
+        <button class="co-tab" data-co="BLUE LIFE">BLUE LIFE</button>
+        <button class="co-tab" data-co="青天堂">青天堂</button>
+      </div>
+      <div class="period-toggle" id="s2-period-toggle">
+        <button class="period-btn" data-period="monthly">当月</button>
+        <button class="period-btn active" data-period="ytd">当期累計</button>
+      </div>
+      <select id="s2-compare-year" class="year-select" title="比較年度を選択（当期累計モード時のみ）">
+        <option value="">— 比較年度 —</option>
+      </select>
+    </div>
+
+    <div class="info-bar" id="s2-info-bar">読込中…</div>
+
+    <main class="main">
+      <div class="metrics-wrap">
+        <table class="metrics-tbl">
+          <thead>
+            <tr class="th-groups">
+              <th rowspan="2" class="th-metric">指標</th>
+              <th rowspan="2" class="th-actual">実績</th>
+              <th colspan="3" class="th-grp th-grp-budget">予算対比</th>
+              <th colspan="3" class="th-grp th-grp-py" id="s2-py-grp-header">比較年度対比</th>
+              <th colspan="3" class="th-grp th-grp-pm">前月対比</th>
+            </tr>
+            <tr class="th-subs">
+              <th>予算</th><th>差額</th><th>差率</th>
+              <th id="s2-py-col-header">比較年度</th><th>差額</th><th>差率</th>
+              <th>前月</th><th>差額</th><th>差率</th>
+            </tr>
+          </thead>
+          <tbody id="s2-tbody">
+            <tr><td colspan="11" class="loading">読込中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="budget-note">
+        予算・前年・着地予測は <code>data/budget/budget_FY2026.json</code> に数値を入力すると自動反映されます
+      </div>
+    </main>
+  </section>
+
+  <!-- ════════════════════════════════════
+       S3: 会社別分析
+  ════════════════════════════════════ -->
+  <section id="screen-s3" class="screen">
+
+    <div class="controls-bar">
+      <div class="s3-label">会社別指標比較</div>
+      <div class="period-toggle" id="s3-period-toggle">
+        <button class="period-btn" data-period="monthly">当月</button>
+        <button class="period-btn active" data-period="ytd">当期累計</button>
+      </div>
+    </div>
+
+    <div class="info-bar" id="s3-info-bar">読込中…</div>
+
+    <main class="main">
+      <div class="metrics-wrap">
+        <table class="metrics-tbl s3-tbl">
+          <thead>
+            <tr class="s3-co-hdr">
+              <th class="th-metric">指標</th>
+              <th class="th-actual">グループ計</th>
+              <th style="background:#0d2957;color:#fff">BLUE ESTATE</th>
+              <th style="background:#2f7fd1;color:#fff">BLUE DESIGN</th>
+              <th style="background:#1c8a53;color:#fff">BLUE LIFE</th>
+              <th style="background:#b25b1e;color:#fff">青天堂</th>
+            </tr>
+          </thead>
+          <tbody id="s3-tbody">
+            <tr><td colspan="6" class="loading">読込中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </section>
+
+  <!-- ════════════════════════════════════
+       S4: 事業分析
+  ════════════════════════════════════ -->
+  <section id="screen-s4" class="screen">
+    <div class="sbiz-layout">
+      <aside class="sbiz-sidebar">
+        <div id="sbiz-nav"></div>
+      </aside>
+      <div class="sbiz-main">
+        <div class="sbiz-topbar">
+          <div class="sbiz-bc" id="sbiz-bc">全体</div>
+          <div class="sbiz-period-toggle" id="sbiz-period-toggle">
+            <button class="sbiz-period-btn active" data-period="monthly">当月</button>
+            <button class="sbiz-period-btn" data-period="ytd">年度累計</button>
+          </div>
+        </div>
+        <div id="sbiz-kpis" class="sbiz-kpis"></div>
+        <div id="sbiz-waterfall" class="sbiz-waterfall"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       S5: KPIポータル
+  ════════════════════════════════════ -->
+  <section id="screen-s5" class="screen">
+    <div class="s5-bar">
+      <div class="s5-bar-title">KPIポータル</div>
+      <div class="s5-bar-sub">経営単位・事業部ごとのKPIダッシュボードへ</div>
+    </div>
+    <main class="main">
+      <div id="s5-content"></div>
+    </main>
+  </section>
+
+  <!-- ════════════════════════════════════
+       S6: 人事・生産性
+  ════════════════════════════════════ -->
+  <section id="screen-s6" class="screen">
+    <div class="s6-bar">
+      <div class="s6-bar-title">人事・生産性</div>
+      <div class="s6-bar-sub" id="s6-period-label">—</div>
+    </div>
+    <main class="main">
+      <div id="s6-content"></div>
+    </main>
+  </section>
+
+  <!-- ════════════════════════════════════
+       S7: AI分析
+  ════════════════════════════════════ -->
+  <section id="screen-s7" class="screen">
+    <main class="main">
+      <div class="sk-placeholder">
+        <div class="sk-header">
+          <div class="sk-screen-id">S7</div>
+          <div>
+            <div class="sk-title">AI分析</div>
+            <div class="sk-phase">Phase 3 実装予定（S1〜S6完成後）</div>
+          </div>
+        </div>
+        <div class="sk-content">
+          <div class="sk-block">
+            <div class="sk-block-title">予測・シミュレーション</div>
+            <ul class="sk-list">
+              <li>経営指標トレンド予測（3ヶ月先）</li>
+              <li>予算達成シナリオ分析</li>
+              <li>キャッシュフロー予測</li>
+            </ul>
+          </div>
+          <div class="sk-block">
+            <div class="sk-block-title">自動アラート</div>
+            <ul class="sk-list">
+              <li>異常値・急変検知</li>
+              <li>季節変動からの逸脱アラート</li>
+              <li>目標未達リスクの早期警告</li>
+            </ul>
+          </div>
+          <div class="sk-block">
+            <div class="sk-block-title">経営コメント自動生成</div>
+            <ul class="sk-list">
+              <li>月次経営サマリー（文章）</li>
+              <li>注目すべき変化の自動説明</li>
+              <li>改善提案候補のリストアップ</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- フッター -->
+  <footer class="footer">
+    <span id="footer-data-src">—</span>
+    &ensp;|&ensp; 更新: <code>scripts/update_dashboard.sh</code>
+    &ensp;|&ensp; ※金額は万円単位で切り捨て表示
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
