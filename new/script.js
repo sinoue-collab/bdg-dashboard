@@ -1,15 +1,15 @@
 const COLORS = {
-  'BLUE ESTATE': '#0d2957',
-  'BLUE DESIGN': '#2f7fd1',
-  'BLUE LIFE':   '#1c8a53',
-  '青天堂':      '#b25b1e',
-  accent: '#0090BA',
-  sell: '#1a56db',
-  rent_brokerage: '#0891b2',
-  rent_mgmt: '#059669',
+  'BLUE ESTATE': '#0c2b4d',
+  'BLUE DESIGN': '#1f6fb2',
+  'BLUE LIFE':   '#1f8a76',
+  '青天堂':      '#a8632a',
+  accent: '#009ee1',
+  sell: '#1f6fb2',
+  rent_brokerage: '#009ee1',
+  rent_mgmt: '#1f8a76',
   wash_blue: '#0284c7',
   blue_hotels: '#6d28d9',
-  sga: '#7c3aed',
+  sga: '#55708c',
 };
 
 // WASH BLUE・BLUE HOTELS は freee 上は営業外収益だが管理会計上は事業売上として集計
@@ -121,7 +121,7 @@ async function loadAllData() {
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   const screen = document.getElementById(id);
   if (screen) screen.classList.add('active');
   const btn = document.querySelector(`[data-screen="${id}"]`);
@@ -735,7 +735,7 @@ function renderTrend() {
 // Init
 // ─────────────────────────────────────────────
 async function init() {
-  document.querySelectorAll('.nav-btn').forEach(btn => {
+  document.querySelectorAll('.nav-item[data-screen]').forEach(btn => {
     btn.addEventListener('click', () => showScreen(btn.dataset.screen));
   });
 
