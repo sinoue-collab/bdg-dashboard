@@ -343,6 +343,34 @@ def enrich_with_items(cur_data, company_id, access_token,
         if bulk_balances and 'items' in bulk_balances[0]:
             if debug:
                 print('    [DEBUG] → 一括パースモードで処理（per-item 呼び出しなし）')
+                # ── COGS 調査: bulk_balances の全エントリ構造を出力 ──
+                print('    [DEBUG] === COGS調査: bulk_balances 全エントリ ===')
+                for _b in bulk_balances:
+                    _nm  = _b.get('account_item_name') or '(null)'
+                    _cat = _b.get('account_category_name') or '(null)'
+                    _op  = _b.get('opening_balance') or 0
+                    _cl  = _b.get('closing_balance')  or 0
+                    _has = len(_b.get('items') or [])
+                    print(f'    [DEBUG]   cat={_cat!r:25s} name={_nm!r:30s} diff={_cl-_op:>12,}  items={_has}件')
+                print('    [DEBUG] === cur_data COGS breakdown ===')
+                for _a in cur_data['cogs']['breakdown']:
+                    print(f'    [DEBUG]   item={_a["item"]!r}  amount={_a["amount"]:,}')
+                print('    [DEBUG] === 売上原価カテゴリのbulkエントリ詳細 ===')
+                COGS_CATS = {'売上原価', '製品売上原価', '完成工事原価', '当期商品仕入', '売上原価合計'}
+                for _b in bulk_balances:
+                    _cat = _b.get('account_category_name') or ''
+                    _nm  = _b.get('account_item_name') or ''
+                    if _cat in COGS_CATS or _nm in COGS_CATS or '原価' in _cat or '原価' in _nm or '仕入' in _cat or '仕入' in _nm:
+                        _items = _b.get('items') or []
+                        _op = _b.get('opening_balance') or 0
+                        _cl = _b.get('closing_balance') or 0
+                        print(f'    [DEBUG]   cat={_cat!r}  name={_nm!r}  diff={_cl-_op:,}  items件数={len(_items)}')
+                        for _i in _items[:5]:
+                            _io = _i.get('opening_balance') or 0
+                            _ic = _i.get('closing_balance') or 0
+                            print(f'    [DEBUG]     item: name={(_i.get("name") or "")!r}  diff={_ic-_io:,}')
+                        if len(_items) > 5:
+                            print(f'    [DEBUG]     ... 他{len(_items)-5}件')
             for bal in bulk_balances:
                 acct_name  = bal.get('account_item_name') or ''
                 item_array = bal.get('items') or []
