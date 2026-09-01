@@ -20,6 +20,17 @@
     "当期商品仕入"
   ],
 
+  "non_op_biz_lines": {
+    "income": {
+      "WASH BLUE売上":   "WASH BLUE",
+      "BLUE HOTELS 売上": "BLUE HOTELS"
+    },
+    "expense": {
+      "WASH BLUE経費":   "WASH BLUE",
+      "BLUE HOTELS 経費": "BLUE HOTELS"
+    }
+  },
+
   "section_end_markers": [
     "売上高 計", "売上合計",
     "売上総損益金額", "売上総利益金額", "売上総損失金額",

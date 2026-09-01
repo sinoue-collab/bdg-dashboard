@@ -7,7 +7,15 @@ const COLORS = {
   sell: '#1a56db',
   rent_brokerage: '#0891b2',
   rent_mgmt: '#059669',
+  wash_blue: '#0284c7',
+  blue_hotels: '#6d28d9',
   sga: '#7c3aed',
+};
+
+// WASH BLUE・BLUE HOTELS は freee 上は営業外収益だが管理会計上は事業売上として集計
+const NON_OP_BIZ_LINES = {
+  income:  { 'WASH BLUE売上': 'WASH BLUE', 'BLUE HOTELS 売上': 'BLUE HOTELS' },
+  expense: { 'WASH BLUE経費': 'WASH BLUE', 'BLUE HOTELS 経費': 'BLUE HOTELS' },
 };
 
 const UNIT_KEYS = ['unit_blue_estate', 'unit_blue_design', 'unit_blue_life', 'unit_seitendo'];
@@ -39,6 +47,19 @@ function fmtPct(n) {
 function fmtDiffPct(a, b) {
   if (!b) return '—';
   return fmtPct(((a - b) / Math.abs(b)) * 100);
+}
+
+// 対象月の翌月25日を過ぎていれば「確定」、それ以前は「速報」
+function getDataStatus(period) {
+  if (!period) return null;
+  const [year, month] = period.split('-').map(Number);
+  const cutoff = new Date(year, month, 25); // monthは0-indexed → month番目 = 翌月25日
+  return new Date() >= cutoff ? '確定' : '速報';
+}
+function statusBadge(period) {
+  const s = getDataStatus(period);
+  if (!s) return '';
+  return `<span class="badge-${s === '確定' ? 'kakutei' : 'sokuho'}">${s}</span>`;
 }
 
 function getConfirmed(unitData) {
@@ -193,7 +214,7 @@ function renderTop() {
       <div class="company-card" style="border-top: 4px solid ${color}">
         <div class="company-card-header">
           <span class="company-name" style="color:${color}">${name}</span>
-          <span class="company-period">${period}</span>
+          <span class="company-period">${period}${statusBadge(period)}</span>
         </div>
         <div class="company-metrics">
           <div class="metric"><span class="metric-label">売上</span><span class="metric-value">${fmtYen(rev)}</span></div>
@@ -240,7 +261,7 @@ function renderBiz() {
       <button class="biz-tab disabled" disabled>BLUE LIFE<span class="badge-wip">準備中</span></button>
       <button class="biz-tab disabled" disabled>青天堂<span class="badge-wip">準備中</span></button>
     </div>
-    <div class="biz-note">事業ラインの区分は暫定的な分類です（freeeセグメント運用の検討中）</div>
+    <div class="biz-note">事業ラインの区分は暫定的な分類です（freeeセグメント運用の検討中）<br><span class="biz-note-sub">WASH BLUE・BLUE HOTELSの売上はfreee上は営業外収益に計上されていますが、管理会計上は事業売上として集計しています</span></div>
   `;
 
   el.innerHTML = companiesHtml + `
@@ -280,36 +301,48 @@ function renderBizContent() {
     return;
   }
 
-  // Build biz line breakdown from revenue
-  const lines = { '売買': { rev: [], cogs: [] }, '賃貸仲介': { rev: [], cogs: [] }, '賃貸管理': { rev: [], cogs: [] } };
+  // Build biz line breakdown（6ライン）
+  const lines = {
+    '売買':        { rev: [], cogs: [] },
+    '賃貸仲介':    { rev: [], cogs: [] },
+    '賃貸管理':    { rev: [], cogs: [] },
+    'WASH BLUE':   { rev: [], cogs: [] },
+    'BLUE HOTELS': { rev: [], cogs: [] },
+  };
 
+  // PL売上高 → 売買・賃貸仲介・賃貸管理
   for (const item of (targetData.revenue?.breakdown ?? [])) {
     const line = bizMap[item.item];
-    if (line && lines[line]) {
-      lines[line].rev.push(item);
-    }
+    if (line && lines[line]) lines[line].rev.push(item);
   }
+  // PL売上原価 → 各ライン（bizMapで名称一致、またはフォールバック文字列マッチ）
   for (const item of (targetData.cogs?.breakdown ?? [])) {
-    const line = bizMap[item.item];
-    if (line && lines[line]) {
-      lines[line].cogs.push(item);
-    } else {
-      // fallback: assign cogs by item name matching
-      for (const l of Object.keys(lines)) {
-        if (item.item.includes(l === '売買' ? '売買' : l === '賃貸仲介' ? '賃貸仲介' : '賃貸管理')) {
-          lines[l].cogs.push(item);
-          break;
-        }
-      }
-    }
+    const line = bizMap[item.item] ?? Object.keys(lines).find(l => item.item.includes(l));
+    if (line && lines[line]) lines[line].cogs.push(item);
+  }
+  // 営業外収益 → WASH BLUE / BLUE HOTELS 売上
+  for (const item of (targetData.non_op_income?.breakdown ?? [])) {
+    const line = NON_OP_BIZ_LINES.income[item.item];
+    if (line && lines[line]) lines[line].rev.push(item);
+  }
+  // 営業外費用 → WASH BLUE / BLUE HOTELS 費用（原価相当として扱う）
+  for (const item of (targetData.non_op_expense?.breakdown ?? [])) {
+    const line = NON_OP_BIZ_LINES.expense[item.item];
+    if (line && lines[line]) lines[line].cogs.push(item);
   }
 
-  const sgaTotal = targetData.sga?.total ?? 0;
+  const sgaTotal     = targetData.sga?.total ?? 0;
   const sgaBreakdown = targetData.sga?.breakdown ?? [];
 
-  const lineColors = { '売買': COLORS.sell, '賃貸仲介': COLORS.rent_brokerage, '賃貸管理': COLORS.rent_mgmt };
+  const lineColors = {
+    '売買':        COLORS.sell,
+    '賃貸仲介':    COLORS.rent_brokerage,
+    '賃貸管理':    COLORS.rent_mgmt,
+    'WASH BLUE':   COLORS.wash_blue,
+    'BLUE HOTELS': COLORS.blue_hotels,
+  };
 
-  // Left panel tiles
+  // Left panel tiles（5事業ライン）
   const tilesHtml = Object.entries(lines).map(([lineName, lineData]) => {
     const rev  = lineData.rev.reduce((s, i) => s + i.amount, 0);
     const cogs = lineData.cogs.reduce((s, i) => s + i.amount, 0);
@@ -327,10 +360,11 @@ function renderBizContent() {
     `;
   }).join('');
 
-  const sgaTileSelected = selectedBizLine === 'sga';
-  const sgaTileHtml = `
-    <div class="biz-tile ${sgaTileSelected ? 'selected' : ''}" data-line="sga" style="border-left: 4px solid ${COLORS.sga}">
-      <div class="biz-tile-name" style="color:${COLORS.sga}">共通経費（販管費）</div>
+  // 本部タイル（販管費 = 共通費）
+  const honbuSelected = selectedBizLine === '本部';
+  const honbuTileHtml = `
+    <div class="biz-tile ${honbuSelected ? 'selected' : ''}" data-line="本部" style="border-left: 4px solid ${COLORS.sga}">
+      <div class="biz-tile-name" style="color:${COLORS.sga}">本部（共通費）</div>
       <div class="biz-tile-row"><span>販管費合計</span><span>${fmtYen(sgaTotal)}</span></div>
       <div class="biz-tile-note">事業ライン配分なし</div>
     </div>
@@ -340,7 +374,7 @@ function renderBizContent() {
     <div class="biz-layout">
       <div class="biz-left">
         ${tilesHtml}
-        ${sgaTileHtml}
+        ${honbuTileHtml}
       </div>
       <div class="biz-right" id="biz-detail">
         ${selectedBizLine ? renderBizDetail(selectedBizLine, lines, sgaBreakdown) : '<p class="biz-hint">左の事業ラインをクリックしてください</p>'}
@@ -367,7 +401,7 @@ function renderBizContent() {
 }
 
 function renderBizDetail(lineName, lines, sgaBreakdown) {
-  if (lineName === 'sga') {
+  if (lineName === '本部') {
     const rows = sgaBreakdown.map(item => `
       <tr class="acc-trigger">
         <td class="acc-td">${item.item}</td>
@@ -387,7 +421,14 @@ function renderBizDetail(lineName, lines, sgaBreakdown) {
 
   const lineData = lines[lineName];
   if (!lineData) return '';
-  const color = { '売買': COLORS.sell, '賃貸仲介': COLORS.rent_brokerage, '賃貸管理': COLORS.rent_mgmt }[lineName];
+  const lineColors = {
+    '売買':        COLORS.sell,
+    '賃貸仲介':    COLORS.rent_brokerage,
+    '賃貸管理':    COLORS.rent_mgmt,
+    'WASH BLUE':   COLORS.wash_blue,
+    'BLUE HOTELS': COLORS.blue_hotels,
+  };
+  const color = lineColors[lineName];
 
   const revRows = lineData.rev.map(item => `
     <tr class="acc-trigger">
@@ -429,6 +470,27 @@ function renderBizDetail(lineName, lines, sgaBreakdown) {
     ` : ''}
     <div class="gp-summary">粗利 = ${fmtYen(rev)} - ${fmtYen(cogs)} = <strong>${fmtYen(gp)}</strong></div>
   `;
+}
+
+function buildByItemRows(budgetItems, actualItems, targetMonth) {
+  const allNames = new Set([
+    ...Object.keys(budgetItems),
+    ...actualItems.map(b => b.name),
+  ]);
+  return Array.from(allNames).map(name => {
+    const budgetAmt = budgetItems[name]?.monthly_budget?.[targetMonth] ?? null;
+    const actualEntry = actualItems.find(b => b.name === name);
+    const actualAmt = actualEntry?.amount ?? 0;
+    const diff = budgetAmt != null ? budgetAmt - actualAmt : null;
+    return `
+      <tr>
+        <td>${name}</td>
+        <td class="td-right">${budgetAmt != null ? fmtYen(budgetAmt) : '—'}</td>
+        <td class="td-right">${actualAmt ? fmtYen(actualAmt) : '—'}</td>
+        <td class="td-right ${diff != null && diff < 0 ? 'negative' : ''}">${diff != null ? fmtYen(diff) : '—'}</td>
+      </tr>
+    `;
+  }).join('');
 }
 
 // ─────────────────────────────────────────────
@@ -476,13 +538,18 @@ function renderBudget() {
       // by_item from actual
       const actualItem = actualBreakdown.find(b => b.item === acctName);
       const byItems = actualItem?.by_item ?? [];
+      const budgetItems = acctVal.items ?? {};
+      const hasDetail = byItems.length > 0 || Object.keys(budgetItems).length > 0;
 
-      const byItemsHtml = byItems.length > 0 ? `
+      const byItemsHtml = hasDetail ? `
         <tr class="acc-body">
-          <td colspan="5">
-            <ul class="by-item-list">
-              ${byItems.map(b => `<li><span>${b.name}</span><span>${fmtYen(b.amount)}</span></li>`).join('')}
-            </ul>
+          <td colspan="6">
+            <table class="by-item-budget-table">
+              <thead>
+                <tr><th>品目</th><th class="td-right">予算</th><th class="td-right">実績</th><th class="td-right">差額</th></tr>
+              </thead>
+              <tbody>${buildByItemRows(budgetItems, byItems, targetMonth)}</tbody>
+            </table>
           </td>
         </tr>
       ` : '';
@@ -494,7 +561,7 @@ function renderBudget() {
           <td class="td-right">${fmtYen(actualAmt || null)}</td>
           <td class="td-right ${diff != null && diff < 0 ? 'negative' : ''}">${diff != null ? fmtYen(diff) : '—'}</td>
           <td class="td-right">${rate !== '—' ? rate + '%' : '—'}</td>
-          ${byItems.length > 0 ? '<td class="acc-icon">▶</td>' : '<td></td>'}
+          ${hasDetail ? '<td class="acc-icon">▶</td>' : '<td></td>'}
         </tr>
         ${byItemsHtml}
       `;
@@ -542,7 +609,7 @@ function renderBudget() {
       <button class="biz-tab disabled" disabled>青天堂<span class="badge-wip">準備中</span></button>
     </div>
     <div class="budget-header">
-      <span class="budget-period-label">対象月: ${targetMonth}</span>
+      <span class="budget-period-label">対象月: ${targetMonth}${statusBadge(targetMonth)}</span>
     </div>
     ${sectionsHtml}
   `;
