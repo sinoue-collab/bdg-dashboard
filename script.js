@@ -410,9 +410,17 @@ function renderBizContent() {
       return [item.item, { rev: [item], cogs: [], color }];
     }));
 
-    for (const item of cogsItems) {
-      const key = Object.keys(lines).find(l => item.item.includes(l) || l.includes(item.item));
-      if (key) lines[key].cogs.push(item);
+    // COGS を売上構成比で按分（名称マッチングは機能しないため）
+    const totalCogsAmt = cogsItems.reduce((s, i) => s + i.amount, 0);
+    const totalRevAmt  = revItems.reduce((s, i)  => s + i.amount, 0);
+    if (totalCogsAmt > 0 && totalRevAmt > 0) {
+      for (const [, ld] of Object.entries(lines)) {
+        const lineRev = ld.rev.reduce((s, i) => s + i.amount, 0);
+        if (lineRev > 0) {
+          const allocated = Math.round(totalCogsAmt * lineRev / totalRevAmt);
+          ld.cogs.push({ item: '売上原価（按分）', amount: allocated });
+        }
+      }
     }
 
     detailColorFn = (name) => lineColorMap[name];

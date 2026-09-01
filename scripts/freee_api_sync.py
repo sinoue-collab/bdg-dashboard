@@ -560,32 +560,66 @@ def parse_balances(balances, mapping):
     for sec in result.values():
         sec['total'] = sum(i['amount'] for i in sec['breakdown'])
 
-    # ── Pass 2: null 名の COGS 項目を補完 ────────────────────────────────
-    # 建設業など、工事原価が account_item_name=null で返る場合への対応。
-    # COGS の breakdown が空の場合のみ、cogs_markers カテゴリの最大 null 名金額を使う。
-    if result['cogs']['total'] == 0:
-        cogs_null: dict[str, int] = {}
-        for row in balances:
-            name     = (row.get('account_item_name')     or '').strip()
-            category = (row.get('account_category_name') or '').strip()
-            opening  = row.get('opening_balance', 0) or 0
-            closing  = row.get('closing_balance',  0) or 0
-            amount   = closing - opening
-            if name or not amount:
-                continue
-            if category in cogs_markers:
-                # 複数の null 名行がある場合は最大値（= セクション合計）を採用
-                cogs_null[category] = max(cogs_null.get(category, 0), abs(int(amount)))
-        # 売上原価（最上位合計）がある場合はそれだけを採用し、
-        # 製品売上原価・完成工事原価 等の下位カテゴリとのダブルカウントを防ぐ。
-        if cogs_null.get('売上原価', 0) > 0:
-            result['cogs']['breakdown'].append({'item': '売上原価', 'amount': cogs_null['売上原価']})
-        else:
-            for cat, amt in cogs_null.items():
-                result['cogs']['breakdown'].append({'item': cat, 'amount': amt})
-        result['cogs']['total'] = sum(i['amount'] for i in result['cogs']['breakdown'])
+    # ── Pass 2: null 名の COGS 集計行を常時チェック（replace 方式）────────────
+    # freee では account_item_name=null の行がセクション合計（親行）として返ることがある。
+    # 建設業など月中に少額の named 明細だけ先に入力されるケースで、Pass 1 合計が過小に
+    # なっても、null 集計行の方が大きければ置換して正しい合計を採用する。
+    cogs_null: dict[str, int] = {}
+    for row in balances:
+        name     = (row.get('account_item_name')     or '').strip()
+        category = (row.get('account_category_name') or '').strip()
+        opening  = row.get('opening_balance', 0) or 0
+        closing  = row.get('closing_balance',  0) or 0
+        amount   = closing - opening
+        if name or not amount:
+            continue
+        if category in cogs_markers:
+            # 複数の null 名行がある場合は最大値（= セクション合計）を採用
+            cogs_null[category] = max(cogs_null.get(category, 0), abs(int(amount)))
+
+    # ダブルカウント防止: 売上原価（最上位）があればそれだけを採用
+    if cogs_null.get('売上原価', 0) > 0:
+        null_items = [{'item': '売上原価', 'amount': cogs_null['売上原価']}]
+    else:
+        null_items = [{'item': cat, 'amount': amt} for cat, amt in cogs_null.items()]
+    null_total  = sum(i['amount'] for i in null_items)
+    pass1_total = result['cogs']['total']
+
+    if null_total > pass1_total:
+        # null 集計行の方が大きい → Pass 1 named 行を捨てて置換（replace）
+        # _pass2_replaced フラグで将来の構造変化を検知できるようにする
+        result['cogs']['breakdown']       = null_items
+        result['cogs']['total']           = null_total
+        result['cogs']['_pass2_replaced'] = True
+        print(f'    [COGS] Pass2 replace: null={null_total:,} > named={pass1_total:,}  → null側を採用')
+    # else: Pass 1 の named 行のまま（pass1 >= null の場合は Pass1 が正確）
 
     return result
+
+
+def apply_cogs_reclassify(data, co_name, mapping):
+    """
+    freee_mapping.json の cogs_reclassify.non_op_expense_to_cogs に基づき、
+    営業外費用に誤分類されている勘定科目を COGS に振り替える（会社別設定）。
+    振替後に total を再計算する。summary の再計算は呼び出し元で行うこと。
+    """
+    rules        = mapping.get('cogs_reclassify', {}).get('non_op_expense_to_cogs', {})
+    target_items = set(rules.get(co_name, []))
+    if not target_items:
+        return
+
+    moved     = [i for i in data['non_op_expense']['breakdown'] if i['item'] in target_items]
+    remaining = [i for i in data['non_op_expense']['breakdown'] if i['item'] not in target_items]
+    if not moved:
+        return
+
+    data['non_op_expense']['breakdown'] = remaining
+    data['non_op_expense']['total']     = sum(i['amount'] for i in remaining)
+    data['cogs']['breakdown'].extend(moved)
+    data['cogs']['total']               = sum(i['amount'] for i in data['cogs']['breakdown'])
+
+    for m in moved:
+        print(f'    [COGS Reclassify] {co_name}: "{m["item"]}" {m["amount"]:,}円 → 営業外費用→COGS 振替')
 
 
 def compute_summary(parsed):
@@ -716,6 +750,7 @@ def main():
             ytd_bal, fs, cur_fy = fetch_ytd_probing(
                 company_id, access_token, cur_year, cur_month, debug=args.debug)
             ytd_data = parse_balances(ytd_bal, mapping)
+            apply_cogs_reclassify(ytd_data, co_name, mapping)  # C案: 営業外→COGS振替
             ytd_sum  = compute_summary(ytd_data)
 
             ytd_start_month = fs
@@ -730,6 +765,7 @@ def main():
             print(f'    当月    {cur_year}-{cur_month:02d}...')
             cur_bal  = fetch_trial_pl(company_id, access_token, cur_fy, cur_month, cur_month, debug=args.debug)
             cur_data = parse_balances(cur_bal, mapping)
+            apply_cogs_reclassify(cur_data, co_name, mapping)  # C案: 営業外→COGS振替
             cur_sum  = compute_summary(cur_data)
 
             # 部門別内訳を当月データに付与
@@ -761,6 +797,7 @@ def main():
             print(f'    前月    {prv_year}-{prv_month:02d}...')
             prv_bal  = fetch_trial_pl(company_id, access_token, prv_fy, prv_month, prv_month, debug=args.debug)
             prv_data = parse_balances(prv_bal, mapping)
+            apply_cogs_reclassify(prv_data, co_name, mapping)  # C案: 営業外→COGS振替
             prv_sum  = compute_summary(prv_data)
 
             # 前月にも品目別内訳を付与（当月がゼロの月初はこちらをS4で使用）

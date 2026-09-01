@@ -20,6 +20,12 @@
     "当期商品仕入"
   ],
 
+  "cogs_reclassify": {
+    "non_op_expense_to_cogs": {
+      "BLUE DESIGN": ["アフター工事"]
+    }
+  },
+
   "non_op_biz_lines": {
     "income": {
       "WASH BLUE売上":   "WASH BLUE",
