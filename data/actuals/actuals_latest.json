@@ -1,40 +1,132 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-09-01T09:29:58.589740+09:00",
+  "generated_at": "2026-09-01T14:54:45.331369+09:00",
   "note": "各経営単位の最新データ。freee_api_sync.py で生成。",
   "data": {
     "unit_blue_estate": {
       "period": "2026-09",
       "source_file": "Freee API",
       "revenue": {
-        "total": 0,
-        "breakdown": []
+        "total": 9091,
+        "breakdown": [
+          {
+            "item": "賃貸仲介付帯手数料",
+            "amount": 9091,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 9091,
+                "deprecated": true
+              },
+              {
+                "name": "賃貸仲介課",
+                "amount": 9091,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "東京海上ｳｴｽﾄ少額短期保険 代理店手数料",
+                "amount": 9091
+              }
+            ]
+          }
+        ]
       },
       "cogs": {
         "total": 0,
         "breakdown": []
       },
       "sga": {
-        "total": 0,
-        "breakdown": []
+        "total": 91,
+        "breakdown": [
+          {
+            "item": "租税公課",
+            "amount": 91,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 91,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 91,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "利息／国税",
+                "amount": 91
+              }
+            ]
+          }
+        ]
       },
       "non_op_income": {
-        "total": 0,
-        "breakdown": []
+        "total": 597,
+        "breakdown": [
+          {
+            "item": "受取利息",
+            "amount": 597,
+            "by_department": [
+              {
+                "name": "<本部事業部>",
+                "amount": 597,
+                "deprecated": true
+              },
+              {
+                "name": "本部事業部",
+                "amount": 597,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "受取利息",
+                "amount": 597
+              }
+            ]
+          }
+        ]
       },
       "non_op_expense": {
-        "total": 0,
-        "breakdown": []
+        "total": 76086,
+        "breakdown": [
+          {
+            "item": "WASH BLUE経費",
+            "amount": 76086,
+            "by_department": [
+              {
+                "name": "<不動産賃貸部>",
+                "amount": 76086,
+                "deprecated": true
+              },
+              {
+                "name": "×WASH BLUE事業課",
+                "amount": 76086,
+                "deprecated": true
+              }
+            ],
+            "by_item": [
+              {
+                "name": "ガス代（WASH BLUE）",
+                "amount": 76086
+              }
+            ]
+          }
+        ]
       },
       "_summary": {
-        "gross_profit": 0,
-        "op_profit": 0,
-        "ordinary_profit": 0
+        "gross_profit": 9091,
+        "op_profit": 9000,
+        "ordinary_profit": -66489
       },
       "previous_month": {
         "period": "2026-08",
         "revenue": {
-          "total": 2754401,
+          "total": 2805540,
           "breakdown": [
             {
               "item": "売買付帯手数料",
@@ -72,11 +164,11 @@
             },
             {
               "item": "賃貸仲介付帯手数料",
-              "amount": 591862,
+              "amount": 642201,
               "by_item": [
                 {
                   "name": "ｼﾞｪｲﾘｰｽ 保証事務手数料",
-                  "amount": 191209
+                  "amount": 241548
                 },
                 {
                   "name": "東京海上ｳｴｽﾄ少額短期保険 代理店手数料",
@@ -120,7 +212,7 @@
             },
             {
               "item": "賃貸管理付帯売上",
-              "amount": 1272041,
+              "amount": 1272841,
               "by_item": [
                 {
                   "name": "賃貸工事売上（賃貸工事）",
@@ -132,7 +224,7 @@
                 },
                 {
                   "name": "24Hサポート売上",
-                  "amount": 42500
+                  "amount": 43300
                 },
                 {
                   "name": "定期清掃売上（自社）",
@@ -156,13 +248,33 @@
           "total": 355652,
           "breakdown": [
             {
-              "item": "売上原価",
-              "amount": 355652
+              "item": "賃貸仲介付帯売上原価",
+              "amount": 45701,
+              "by_item": [
+                {
+                  "name": "鍵交換売上原価",
+                  "amount": 45701
+                }
+              ]
+            },
+            {
+              "item": "賃貸管理付帯売上原価",
+              "amount": 309951,
+              "by_item": [
+                {
+                  "name": "賃貸工事売上原価（賃貸工事）",
+                  "amount": 286155
+                },
+                {
+                  "name": "賃貸工事売上原価（光熱費）",
+                  "amount": 23796
+                }
+              ]
             }
           ]
         },
         "sga": {
-          "total": 5855740,
+          "total": 5991606,
           "breakdown": [
             {
               "item": "給料手当",
@@ -220,8 +332,12 @@
             },
             {
               "item": "採用費",
-              "amount": 6028,
+              "amount": 31183,
               "by_item": [
+                {
+                  "name": "飲食代",
+                  "amount": 25155
+                },
                 {
                   "name": "食事代",
                   "amount": 6028
@@ -303,6 +419,16 @@
               ]
             },
             {
+              "item": "研修費",
+              "amount": 3000,
+              "by_item": [
+                {
+                  "name": "アチーブメント月額会費",
+                  "amount": 3000
+                }
+              ]
+            },
+            {
               "item": "通信費",
               "amount": 71443,
               "by_item": [
@@ -330,11 +456,15 @@
             },
             {
               "item": "旅費交通費",
-              "amount": 86069,
+              "amount": 149028,
               "by_item": [
                 {
                   "name": "電車代",
                   "amount": 81312
+                },
+                {
+                  "name": "交通料金",
+                  "amount": 62959
                 },
                 {
                   "name": "駐車場代",
@@ -436,19 +566,19 @@
             },
             {
               "item": "車両費",
-              "amount": 49813,
+              "amount": 53759,
               "by_item": [
                 {
                   "name": "ガソリン代（社長）",
                   "amount": 15512
                 },
                 {
-                  "name": "ガソリン代（ｳﾞｨｯﾂ50-50）",
-                  "amount": 7713
+                  "name": "ガソリン代（軽ﾄﾗｯｸ50-50）",
+                  "amount": 11251
                 },
                 {
-                  "name": "ガソリン代（軽ﾄﾗｯｸ50-50）",
-                  "amount": 7305
+                  "name": "ガソリン代（ｳﾞｨｯﾂ50-50）",
+                  "amount": 7713
                 },
                 {
                   "name": "ガソリン代（N-BOX50-50）",
@@ -470,7 +600,7 @@
             },
             {
               "item": "システム利用料",
-              "amount": 1019500,
+              "amount": 1057302,
               "by_item": [
                 {
                   "name": "freee会計アドバンスプラン年払い",
@@ -486,7 +616,7 @@
                 },
                 {
                   "name": "GOOGLE",
-                  "amount": 78315
+                  "amount": 78715
                 },
                 {
                   "name": "売買革命",
@@ -502,7 +632,7 @@
                 },
                 {
                   "name": "CLAUDE.AI",
-                  "amount": 24093
+                  "amount": 27467
                 },
                 {
                   "name": "Cybozu",
@@ -515,6 +645,10 @@
                 {
                   "name": "FIVES 不動産ビジネスセンター",
                   "amount": 14970
+                },
+                {
+                  "name": "ホームワイン",
+                  "amount": 13273
                 },
                 {
                   "name": "アイコンサポート",
@@ -545,12 +679,28 @@
                   "amount": 8860
                 },
                 {
+                  "name": "Apple",
+                  "amount": 6729
+                },
+                {
                   "name": "ANTHROPIC",
                   "amount": 4944
                 },
                 {
                   "name": "Typeless Pro",
                   "amount": 4518
+                },
+                {
+                  "name": "ルートエス",
+                  "amount": 3546
+                },
+                {
+                  "name": "Notion",
+                  "amount": 3373
+                },
+                {
+                  "name": "OPEN AI",
+                  "amount": 3343
                 },
                 {
                   "name": "Canva",
@@ -569,6 +719,14 @@
                   "amount": 2400
                 },
                 {
+                  "name": "Netflix",
+                  "amount": 2082
+                },
+                {
+                  "name": "NewsPicks",
+                  "amount": 1682
+                },
+                {
                   "name": "note",
                   "amount": 455
                 }
@@ -576,7 +734,7 @@
             },
             {
               "item": "消耗品費",
-              "amount": 66517,
+              "amount": 67027,
               "by_item": [
                 {
                   "name": "1階事務所ｺﾋﾟｰ使用料",
@@ -588,11 +746,21 @@
                 },
                 {
                   "name": "事務消耗品",
-                  "amount": 14064
+                  "amount": 14574
                 },
                 {
                   "name": "2階事務所ｺﾋﾟｰ使用料",
                   "amount": 1100
+                }
+              ]
+            },
+            {
+              "item": "水道光熱費",
+              "amount": 2494,
+              "by_item": [
+                {
+                  "name": "ガス代（事務所）",
+                  "amount": 2494
                 }
               ]
             },
@@ -774,7 +942,7 @@
           ]
         },
         "non_op_expense": {
-          "total": 1621472,
+          "total": 1780274,
           "breakdown": [
             {
               "item": "営業外土地使用料",
@@ -912,8 +1080,12 @@
             },
             {
               "item": "支払利息",
-              "amount": 382659,
+              "amount": 541461,
               "by_item": [
+                {
+                  "name": "【佐銀】証貸8000万（原1471-1）",
+                  "amount": 83836
+                },
                 {
                   "name": "【西銀】BLUE LIFE 借入分",
                   "amount": 70000
@@ -935,6 +1107,10 @@
                   "amount": 41366
                 },
                 {
+                  "name": "【佐銀】18500万（idom）",
+                  "amount": 30059
+                },
+                {
                   "name": "【西銀】証貸1,300万",
                   "amount": 24334
                 },
@@ -947,28 +1123,48 @@
                   "amount": 21554
                 },
                 {
+                  "name": "【佐銀】当貸2,135万（R8.2.20）",
+                  "amount": 15793
+                },
+                {
                   "name": "【西銀】証貸1,100万",
                   "amount": 11231
                 },
                 {
+                  "name": "【佐銀】新型当座貸越2400万（R7.9.24）",
+                  "amount": 10652
+                },
+                {
+                  "name": "【佐銀】当貸1,276万（R7.11.7）",
+                  "amount": 9438
+                },
+                {
                   "name": "【福銀】6800万（山の脇共同住",
                   "amount": 5734
+                },
+                {
+                  "name": "【佐銀】当貸650万",
+                  "amount": 4808
+                },
+                {
+                  "name": "【佐銀】当貸570万（R7.10.27）",
+                  "amount": 4216
                 }
               ]
             }
           ]
         },
         "_summary": {
-          "gross_profit": 2398749,
-          "op_profit": -3456991,
-          "ordinary_profit": 1709042
+          "gross_profit": 2449888,
+          "op_profit": -3541718,
+          "ordinary_profit": 1465513
         }
       },
       "ytd": {
         "period": "2026-01〜2026-09",
         "source_file": "Freee API",
         "revenue": {
-          "total": 150913733,
+          "total": 150973963,
           "breakdown": [
             {
               "item": "売買売上",
@@ -996,7 +1192,7 @@
             },
             {
               "item": "賃貸仲介付帯手数料",
-              "amount": 4568007
+              "amount": 4627437
             },
             {
               "item": "賃貸管理料",
@@ -1004,7 +1200,7 @@
             },
             {
               "item": "賃貸管理付帯売上",
-              "amount": 25999416
+              "amount": 26000216
             },
             {
               "item": "賃貸管理付帯手数料",
@@ -1016,13 +1212,25 @@
           "total": 71896883,
           "breakdown": [
             {
-              "item": "売上原価",
-              "amount": 71896883
+              "item": "売買売上原価",
+              "amount": 54220304
+            },
+            {
+              "item": "売買付帯売上原価",
+              "amount": 60520
+            },
+            {
+              "item": "賃貸仲介付帯売上原価",
+              "amount": 1244106
+            },
+            {
+              "item": "賃貸管理付帯売上原価",
+              "amount": 16371953
             }
           ]
         },
         "sga": {
-          "total": 104488060,
+          "total": 104624009,
           "breakdown": [
             {
               "item": "給料手当",
@@ -1046,7 +1254,7 @@
             },
             {
               "item": "採用費",
-              "amount": 1400707
+              "amount": 1425862
             },
             {
               "item": "外注費",
@@ -1070,7 +1278,7 @@
             },
             {
               "item": "研修費",
-              "amount": 408901
+              "amount": 411901
             },
             {
               "item": "通信費",
@@ -1078,7 +1286,7 @@
             },
             {
               "item": "旅費交通費",
-              "amount": 1636102
+              "amount": 1699053
             },
             {
               "item": "交際費",
@@ -1102,19 +1310,19 @@
             },
             {
               "item": "車両費",
-              "amount": 2111942
+              "amount": 2115888
             },
             {
               "item": "システム利用料",
-              "amount": 7323014
+              "amount": 7360816
             },
             {
               "item": "消耗品費",
-              "amount": 1494420
+              "amount": 1494930
             },
             {
               "item": "水道光熱費",
-              "amount": 313822
+              "amount": 316316
             },
             {
               "item": "保険料",
@@ -1122,7 +1330,7 @@
             },
             {
               "item": "租税公課",
-              "amount": 3400280
+              "amount": 3400371
             },
             {
               "item": "支払手数料",
@@ -1147,7 +1355,7 @@
           ]
         },
         "non_op_income": {
-          "total": 68060174,
+          "total": 68060771,
           "breakdown": [
             {
               "item": "会社間紹介料売上",
@@ -1171,7 +1379,7 @@
             },
             {
               "item": "受取利息",
-              "amount": 110606
+              "amount": 111203
             },
             {
               "item": "受取配当金",
@@ -1184,7 +1392,7 @@
           ]
         },
         "non_op_expense": {
-          "total": 40306175,
+          "total": 40541063,
           "breakdown": [
             {
               "item": "営業外土地使用料",
@@ -1208,7 +1416,7 @@
             },
             {
               "item": "WASH BLUE経費",
-              "amount": 2539293
+              "amount": 2615379
             },
             {
               "item": "BLUE HOTELS 経費",
@@ -1228,14 +1436,14 @@
             },
             {
               "item": "支払利息",
-              "amount": 4834834
+              "amount": 4993636
             }
           ]
         },
         "_summary": {
-          "gross_profit": 79016850,
-          "op_profit": -25471210,
-          "ordinary_profit": 2282789
+          "gross_profit": 79077080,
+          "op_profit": -25546929,
+          "ordinary_profit": 1972779
         }
       }
     },
@@ -1251,7 +1459,7 @@
         "breakdown": []
       },
       "sga": {
-        "total": 389461,
+        "total": 389717,
         "breakdown": [
           {
             "item": "減価償却費",
@@ -1273,6 +1481,23 @@
                 "amount": 140528
               }
             ]
+          },
+          {
+            "item": "支払手数料",
+            "amount": 256,
+            "by_department": [
+              {
+                "name": "本社統括課（運営管理課）",
+                "amount": 256,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "振込手数料",
+                "amount": 256
+              }
+            ]
           }
         ]
       },
@@ -1286,8 +1511,8 @@
       },
       "_summary": {
         "gross_profit": 0,
-        "op_profit": -389461,
-        "ordinary_profit": -389461
+        "op_profit": -389717,
+        "ordinary_profit": -389717
       },
       "previous_month": {
         "period": "2026-08",
@@ -1363,16 +1588,16 @@
           ]
         },
         "cogs": {
-          "total": 44727,
+          "total": 57432,
           "breakdown": [
             {
               "item": "売上原価",
-              "amount": 44727
+              "amount": 57432
             }
           ]
         },
         "sga": {
-          "total": 4786599,
+          "total": 4809390,
           "breakdown": [
             {
               "item": "給料手当",
@@ -1570,11 +1795,15 @@
             },
             {
               "item": "旅費交通費",
-              "amount": 31903,
+              "amount": 45994,
               "by_item": [
                 {
                   "name": "交通料金",
                   "amount": 27273
+                },
+                {
+                  "name": "出張宿泊費",
+                  "amount": 14091
                 },
                 {
                   "name": "タクシー代",
@@ -1642,11 +1871,11 @@
             },
             {
               "item": "車両費",
-              "amount": 28468,
+              "amount": 37168,
               "by_item": [
                 {
                   "name": "ガソリン代",
-                  "amount": 28468
+                  "amount": 37168
                 }
               ]
             },
@@ -1837,9 +2066,9 @@
           ]
         },
         "_summary": {
-          "gross_profit": 565293,
-          "op_profit": -4221306,
-          "ordinary_profit": -4337255
+          "gross_profit": 552588,
+          "op_profit": -4256802,
+          "ordinary_profit": -4372751
         }
       },
       "ytd": {
@@ -1875,16 +2104,16 @@
           ]
         },
         "cogs": {
-          "total": 49157275,
+          "total": 49169980,
           "breakdown": [
             {
               "item": "売上原価",
-              "amount": 49157275
+              "amount": 49169980
             }
           ]
         },
         "sga": {
-          "total": 41061863,
+          "total": 41030364,
           "breakdown": [
             {
               "item": "給料手当",
@@ -1936,7 +2165,7 @@
             },
             {
               "item": "旅費交通費",
-              "amount": 701606
+              "amount": 715697
             },
             {
               "item": "交際費",
@@ -1960,7 +2189,7 @@
             },
             {
               "item": "車両費",
-              "amount": 825791
+              "amount": 834491
             },
             {
               "item": "消耗品費",
@@ -1968,7 +2197,7 @@
             },
             {
               "item": "水道光熱費",
-              "amount": 629584
+              "amount": 575038
             },
             {
               "item": "保険料",
@@ -1984,7 +2213,7 @@
             },
             {
               "item": "支払手数料",
-              "amount": 616209
+              "amount": 616465
             },
             {
               "item": "諸会費",
@@ -2031,9 +2260,9 @@
           ]
         },
         "_summary": {
-          "gross_profit": 13824342,
-          "op_profit": -27237521,
-          "ordinary_profit": -23551371
+          "gross_profit": 13811637,
+          "op_profit": -27218727,
+          "ordinary_profit": -23532577
         }
       }
     },

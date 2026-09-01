@@ -1,6 +1,6 @@
 {
   "schema_version": "2.1",
-  "generated_at": "2026-09-01T09:29:58.589740+09:00",
+  "generated_at": "2026-09-01T14:54:45.331369+09:00",
   "data_periods": {
     "BLUE ESTATE": "2026-09",
     "BLUE DESIGN": "2026-09",
@@ -12,25 +12,25 @@
       "latest_month": "2026-09",
       "prior_month": "2026-08",
       "latest": {
-        "revenue": 0,
-        "gross_profit": 0,
-        "sga_total": 0,
-        "op_profit": 0,
-        "ordinary_profit": 0
+        "revenue": 9091,
+        "gross_profit": 9091,
+        "sga_total": 91,
+        "op_profit": 9000,
+        "ordinary_profit": -66489
       },
       "prior": {
-        "revenue": 2754401,
-        "gross_profit": 2398749,
-        "sga_total": 5855740,
-        "op_profit": -3456991,
-        "ordinary_profit": 1709042
+        "revenue": 2805540,
+        "gross_profit": 2449888,
+        "sga_total": 5991606,
+        "op_profit": -3541718,
+        "ordinary_profit": 1465513
       },
       "ytd": {
-        "revenue": 150913733,
-        "gross_profit": 79016850,
-        "sga_total": 104488060,
-        "op_profit": -25471210,
-        "ordinary_profit": 2282789
+        "revenue": 150973963,
+        "gross_profit": 79077080,
+        "sga_total": 104624009,
+        "op_profit": -25546929,
+        "ordinary_profit": 1972779
       }
     },
     "BLUE DESIGN": {
@@ -39,23 +39,23 @@
       "latest": {
         "revenue": 0,
         "gross_profit": 0,
-        "sga_total": 389461,
-        "op_profit": -389461,
-        "ordinary_profit": -389461
+        "sga_total": 389717,
+        "op_profit": -389717,
+        "ordinary_profit": -389717
       },
       "prior": {
         "revenue": 610020,
-        "gross_profit": 565293,
-        "sga_total": 4786599,
-        "op_profit": -4221306,
-        "ordinary_profit": -4337255
+        "gross_profit": 552588,
+        "sga_total": 4809390,
+        "op_profit": -4256802,
+        "ordinary_profit": -4372751
       },
       "ytd": {
         "revenue": 62981617,
-        "gross_profit": 13824342,
-        "sga_total": 41061863,
-        "op_profit": -27237521,
-        "ordinary_profit": -23551371
+        "gross_profit": 13811637,
+        "sga_total": 41030364,
+        "op_profit": -27218727,
+        "ordinary_profit": -23532577
       }
     },
     "BLUE LIFE": {
