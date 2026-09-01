@@ -308,9 +308,13 @@ def _finalize_by_item(cur_data, SECTION_KEYS):
 
 
 def enrich_with_items(cur_data, company_id, access_token,
-                      cur_fy, cur_month, items, mapping, debug=False):
+                      cur_fy, cur_month, items, mapping, debug=False,
+                      start_month=None):
     """
-    cur_data の各 breakdown アイテムに by_item を付与する（当月のみ）。
+    cur_data の各 breakdown アイテムに by_item を付与する。
+
+    start_month を指定すると start_month〜cur_month の累計（YTD）で取得する。
+    省略時は cur_month 単月。
 
     まず breakdown_display_type=item で1回のみ試算表を取得し、レスポンスの
     balances に items サブ配列が含まれる場合は一括パースする（API呼び出し1回）。
@@ -319,13 +323,14 @@ def enrich_with_items(cur_data, company_id, access_token,
     """
     SECTION_KEYS = ['revenue', 'cogs', 'sga', 'non_op_income', 'non_op_expense']
     MAX_ITEMS_FALLBACK = 80  # フォールバック時の上限（タイムアウト対策）
+    _start = start_month if start_month is not None else cur_month
 
     # ── ① 一括取得: breakdown_display_type=item で試みる ─────────────
     try:
         bulk_resp = freee_get('/api/1/reports/trial_pl', access_token, {
             'company_id':             company_id,
             'fiscal_year':            cur_fy,
-            'start_month':            cur_month,
+            'start_month':            _start,
             'end_month':              cur_month,
             'breakdown_display_type': 'item',
         })
@@ -432,7 +437,7 @@ def enrich_with_items(cur_data, company_id, access_token,
             try:
                 itm_bal  = fetch_trial_pl(
                     company_id, access_token,
-                    cur_fy, cur_month, cur_month,
+                    cur_fy, _start, cur_month,
                     item_id=itm_id,
                 )
                 itm_data = parse_balances(itm_bal, mapping)
@@ -743,6 +748,14 @@ def main():
             enrich_with_items(
                 cur_data, company_id, access_token,
                 cur_fy, cur_month, items_master, mapping, debug=args.debug,
+            )
+
+            # 品目別内訳をYTDデータにも付与（年度累計ドリルダウン用）
+            print(f'    品目別内訳取得中（YTD）...')
+            enrich_with_items(
+                ytd_data, company_id, access_token,
+                cur_fy, cur_month, items_master, mapping, debug=args.debug,
+                start_month=fs,
             )
 
             print(f'    前月    {prv_year}-{prv_month:02d}...')

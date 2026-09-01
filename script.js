@@ -29,14 +29,14 @@ const UNIT_NAMES = {
 let appData = {};
 let currentScreen = 's-top';
 let bizPeriod = 'month';
+let budgetPeriod = 'month';
 let selectedBizLine = null;
 
 function fmtYen(n) {
   if (n == null) return '—';
   const abs = Math.abs(n);
   const sign = n < 0 ? '▲' : '';
-  if (abs >= 10_000) return sign + Math.floor(abs / 10_000).toLocaleString() + '万円';
-  return sign + abs.toLocaleString() + '円';
+  return sign + Math.round(abs).toLocaleString() + '円';
 }
 
 function fmtPct(n) {
@@ -210,6 +210,12 @@ function renderTop() {
     const dod = (todayRev != null && yesterdayRev != null) ? fmtDiffPct(todayRev, yesterdayRev) : '—';
     const wow = (todayRev != null && lastWeekRev != null)  ? fmtDiffPct(todayRev, lastWeekRev)  : '—';
 
+    const ytd    = unit?.ytd;
+    const ytdRev = ytd?.revenue?._total ?? ytd?.revenue?.total ?? 0;
+    const ytdGp  = ytd?._summary?.gross_profit ?? 0;
+    const ytdOp  = ytd?._summary?.op_profit ?? 0;
+    const ytdPeriod = ytd?.period ?? '—';
+
     return `
       <div class="company-card">
         <div class="company-card-header" style="background:${color}">
@@ -217,10 +223,17 @@ function renderTop() {
           <div class="company-period">${period}${statusBadge(period)}</div>
         </div>
         <div class="company-card-body">
+          <div class="company-section-label">直近確定月</div>
           <div class="company-metrics">
             <div class="metric"><span class="metric-label">売上</span><span class="metric-value">${fmtYen(rev)}</span></div>
             <div class="metric"><span class="metric-label">粗利</span><span class="metric-value">${fmtYen(gp)}</span></div>
             <div class="metric"><span class="metric-label">営業利益</span><span class="metric-value ${op < 0 ? 'negative' : ''}">${fmtYen(op)}</span></div>
+          </div>
+          <div class="company-section-label" style="margin-top:10px">年度累計（${ytdPeriod}）</div>
+          <div class="company-metrics">
+            <div class="metric"><span class="metric-label">売上</span><span class="metric-value">${fmtYen(ytdRev)}</span></div>
+            <div class="metric"><span class="metric-label">粗利</span><span class="metric-value">${fmtYen(ytdGp)}</span></div>
+            <div class="metric"><span class="metric-label">営業利益</span><span class="metric-value ${ytdOp < 0 ? 'negative' : ''}">${fmtYen(ytdOp)}</span></div>
           </div>
           <div class="company-diffs">
             <div class="diff-item"><span class="diff-label">前月比</span><span class="diff-value">${mom}</span></div>
@@ -461,23 +474,27 @@ function renderBizDetail(lineName, lines, sgaBreakdown) {
   };
   const color = lineColors[lineName];
 
-  const revRows = lineData.rev.map(item => `
-    <tr class="acc-trigger">
+  const revRows = lineData.rev.map(item => {
+    const hasItems = item.by_item?.length > 0;
+    return `
+    <tr class="${hasItems ? 'acc-trigger' : ''}">
       <td class="acc-td">${item.item}</td>
       <td class="td-right">${fmtYen(item.amount)}</td>
-      <td class="acc-icon">▶</td>
+      <td>${hasItems ? '<span class="acc-icon">▶</span>' : ''}</td>
     </tr>
-    ${item.by_item ? `<tr class="acc-body"><td colspan="3"><ul class="by-item-list">${item.by_item.map(b => `<li><span>${b.name}</span><span>${fmtYen(b.amount)}</span></li>`).join('')}</ul></td></tr>` : ''}
-  `).join('');
+    ${hasItems ? `<tr class="acc-body"><td colspan="3"><ul class="by-item-list">${item.by_item.map(b => `<li><span>${b.name}</span><span>${fmtYen(b.amount)}</span></li>`).join('')}</ul></td></tr>` : ''}
+  `;}).join('');
 
-  const cogsRows = lineData.cogs.map(item => `
-    <tr class="acc-trigger">
+  const cogsRows = lineData.cogs.map(item => {
+    const hasItems = item.by_item?.length > 0;
+    return `
+    <tr class="${hasItems ? 'acc-trigger' : ''}">
       <td class="acc-td">${item.item}</td>
       <td class="td-right">${fmtYen(item.amount)}</td>
-      <td class="acc-icon">▶</td>
+      <td>${hasItems ? '<span class="acc-icon">▶</span>' : ''}</td>
     </tr>
-    ${item.by_item ? `<tr class="acc-body"><td colspan="3"><ul class="by-item-list">${item.by_item.map(b => `<li><span>${b.name}</span><span>${fmtYen(b.amount)}</span></li>`).join('')}</ul></td></tr>` : ''}
-  `).join('');
+    ${hasItems ? `<tr class="acc-body"><td colspan="3"><ul class="by-item-list">${item.by_item.map(b => `<li><span>${b.name}</span><span>${fmtYen(b.amount)}</span></li>`).join('')}</ul></td></tr>` : ''}
+  `;}).join('');
 
   const rev  = lineData.rev.reduce((s, i) => s + i.amount, 0);
   const cogs = lineData.cogs.reduce((s, i) => s + i.amount, 0);
@@ -503,13 +520,16 @@ function renderBizDetail(lineName, lines, sgaBreakdown) {
   `;
 }
 
-function buildByItemRows(budgetItems, actualItems, targetMonth) {
+function buildByItemRows(budgetItems, actualItems, targetMonth, isYtd) {
   const allNames = new Set([
     ...Object.keys(budgetItems),
     ...actualItems.map(b => b.name),
   ]);
   return Array.from(allNames).map(name => {
-    const budgetAmt = budgetItems[name]?.monthly_budget?.[targetMonth] ?? null;
+    const bv = budgetItems[name];
+    const budgetAmt = isYtd
+      ? (bv?.annual_budget ?? null)
+      : (bv?.monthly_budget?.[targetMonth] ?? null);
     const actualEntry = actualItems.find(b => b.name === name);
     const actualAmt = actualEntry?.amount ?? 0;
     const diff = budgetAmt != null ? budgetAmt - actualAmt : null;
@@ -540,8 +560,13 @@ function renderBudget() {
 
   const unit = actuals.data.unit_blue_estate;
   const confirmed = getConfirmed(unit);
-  const actualData = confirmed.data;
-  const targetMonth = confirmed.period;
+  const isYtd = budgetPeriod === 'ytd';
+
+  const actualData   = isYtd ? unit.ytd       : confirmed.data;
+  const targetMonth  = isYtd ? unit.ytd.period : confirmed.period;
+  const periodLabel  = isYtd
+    ? `年度累計（${targetMonth}）`
+    : `対象月: ${targetMonth}${statusBadge(targetMonth)}`;
 
   const sections = [
     { key: '売上高',   dataKey: 'revenue', label: '売上高' },
@@ -555,22 +580,20 @@ function renderBudget() {
     if (!cats) continue;
 
     const actualBreakdown = actualData?.[section.dataKey]?.breakdown ?? [];
-    const getActual = (name) => {
-      const found = actualBreakdown.find(b => b.item === name);
-      return found?.amount ?? 0;
-    };
+    const getActual = (name) => (actualBreakdown.find(b => b.item === name)?.amount ?? 0);
 
     const rows = Object.entries(cats).map(([acctName, acctVal]) => {
-      const budgetAmt = acctVal.monthly_budget?.[targetMonth] ?? null;
+      const budgetAmt = isYtd
+        ? (acctVal.annual_budget ?? null)
+        : (acctVal.monthly_budget?.[targetMonth] ?? null);
       const actualAmt = getActual(acctName);
       const diff = budgetAmt != null ? budgetAmt - actualAmt : null;
       const rate = (budgetAmt && actualAmt) ? ((actualAmt / budgetAmt) * 100).toFixed(1) : '—';
 
-      // by_item from actual
       const actualItem = actualBreakdown.find(b => b.item === acctName);
-      const byItems = actualItem?.by_item ?? [];
+      const byItems    = actualItem?.by_item ?? [];
       const budgetItems = acctVal.items ?? {};
-      const hasDetail = byItems.length > 0 || Object.keys(budgetItems).length > 0;
+      const hasDetail  = byItems.length > 0 || Object.keys(budgetItems).length > 0;
 
       const byItemsHtml = hasDetail ? `
         <tr class="acc-body">
@@ -579,7 +602,7 @@ function renderBudget() {
               <thead>
                 <tr><th>品目</th><th class="td-right">予算</th><th class="td-right">実績</th><th class="td-right">差額</th></tr>
               </thead>
-              <tbody>${buildByItemRows(budgetItems, byItems, targetMonth)}</tbody>
+              <tbody>${buildByItemRows(budgetItems, byItems, targetMonth, isYtd)}</tbody>
             </table>
           </td>
         </tr>
@@ -598,10 +621,11 @@ function renderBudget() {
       `;
     }).join('');
 
-    // Section total
-    const budgetTotal = Object.values(cats).reduce((s, v) => s + (v.monthly_budget?.[targetMonth] ?? 0), 0);
+    const budgetTotal = isYtd
+      ? Object.values(cats).reduce((s, v) => s + (v.annual_budget ?? 0), 0)
+      : Object.values(cats).reduce((s, v) => s + (v.monthly_budget?.[targetMonth] ?? 0), 0);
     const actualTotal = actualData?.[section.dataKey]?.total ?? 0;
-    const totalDiff = budgetTotal - actualTotal;
+    const totalDiff   = budgetTotal - actualTotal;
 
     sectionsHtml += `
       <div class="budget-section">
@@ -610,7 +634,7 @@ function renderBudget() {
           <thead>
             <tr>
               <th>科目</th>
-              <th class="td-right">予算</th>
+              <th class="td-right">${isYtd ? '年間予算' : '予算'}</th>
               <th class="td-right">実績</th>
               <th class="td-right">差額</th>
               <th class="td-right">達成率</th>
@@ -639,11 +663,22 @@ function renderBudget() {
       <button class="biz-tab disabled" disabled>BLUE LIFE<span class="badge-wip">準備中</span></button>
       <button class="biz-tab disabled" disabled>青天堂<span class="badge-wip">準備中</span></button>
     </div>
+    <div class="budget-period-selector">
+      <button class="period-btn ${!isYtd ? 'active' : ''}" data-period="month">直近確定月</button>
+      <button class="period-btn ${isYtd  ? 'active' : ''}" data-period="ytd">年度累計</button>
+    </div>
     <div class="budget-header">
-      <span class="budget-period-label">対象月: ${targetMonth}${statusBadge(targetMonth)}</span>
+      <span class="budget-period-label">${periodLabel}</span>
     </div>
     ${sectionsHtml}
   `;
+
+  el.querySelectorAll('.period-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      budgetPeriod = btn.dataset.period;
+      renderBudget();
+    });
+  });
 
   el.querySelectorAll('.acc-trigger.budget-row').forEach(trigger => {
     trigger.addEventListener('click', () => {
