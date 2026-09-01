@@ -878,6 +878,18 @@ def main():
             shutil.copy2(ACTUALS_LATEST, ACTUALS_PREVIOUS)
             print(f'  ✓ actuals_previous.json に退避')
 
+            # freee 管轄外のユニット（青天堂など）を既存ファイルから引き継ぐ
+            try:
+                with open(ACTUALS_LATEST, encoding='utf-8') as f:
+                    existing = json.load(f)
+                freee_keys = set(actuals_data.keys())
+                for k, v in existing.get('data', {}).items():
+                    if k not in freee_keys:
+                        actuals_out['data'][k] = v
+                        print(f'  ✓ {k}: 既存データを引き継ぎ')
+            except Exception as e:
+                print(f'  ⚠️  既存データ引き継ぎ失敗: {e}')
+
         with open(ACTUALS_LATEST, 'w', encoding='utf-8') as f:
             json.dump(actuals_out, f, ensure_ascii=False, indent=2)
         print(f'  ✓ actuals_latest.json 更新')
