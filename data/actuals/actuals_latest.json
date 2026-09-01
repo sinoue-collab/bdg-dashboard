@@ -6276,6 +6276,656 @@
           "ordinary_profit": 648083
         }
       }
+    },
+    "unit_seitendo": {
+      "period": "2026-08",
+      "source_file": "data/imports/seitendo/2026-08_pl.csv",
+      "revenue": {
+        "total": 0,
+        "breakdown": [
+          {
+            "item": "売上値引",
+            "amount": -23000,
+            "by_item": [
+              {
+                "name": "【青天堂】チケット",
+                "amount": -23000
+              }
+            ]
+          },
+          {
+            "item": "売上高（飲食店）",
+            "amount": 23000,
+            "by_item": [
+              {
+                "name": "【青天堂】チケット",
+                "amount": 23000
+              }
+            ]
+          }
+        ]
+      },
+      "cogs": {
+        "total": 0,
+        "breakdown": []
+      },
+      "sga": {
+        "total": 109597,
+        "breakdown": [
+          {
+            "item": "水道光熱費",
+            "amount": 74591,
+            "by_item": [
+              {
+                "name": "電気代",
+                "amount": 74591
+              }
+            ]
+          },
+          {
+            "item": "地代家賃",
+            "amount": 25000,
+            "by_item": [
+              {
+                "name": "㈱BLUEESTATE",
+                "amount": 25000
+              }
+            ]
+          },
+          {
+            "item": "支払手数料",
+            "amount": 10006,
+            "by_item": [
+              {
+                "name": "クレジット手数料",
+                "amount": 10006
+              }
+            ]
+          }
+        ]
+      },
+      "non_op_income": {
+        "total": 0,
+        "breakdown": []
+      },
+      "non_op_expense": {
+        "total": 0,
+        "breakdown": []
+      },
+      "_summary": {
+        "gross_profit": 0,
+        "op_profit": -109597,
+        "ordinary_profit": -109597
+      },
+      "previous_month": {
+        "period": "2026-07",
+        "revenue": {
+          "total": 1841410,
+          "breakdown": [
+            {
+              "item": "売上値引",
+              "amount": -27600,
+              "by_item": [
+                {
+                  "name": "【青天堂】チケット",
+                  "amount": -27600
+                }
+              ]
+            },
+            {
+              "item": "売上高（飲食店）",
+              "amount": 1869010,
+              "by_item": [
+                {
+                  "name": "【青天堂】飲食",
+                  "amount": 1792000
+                },
+                {
+                  "name": "【青天堂】物販",
+                  "amount": 49410
+                },
+                {
+                  "name": "【青天堂】チケット",
+                  "amount": 27600
+                }
+              ]
+            }
+          ]
+        },
+        "cogs": {
+          "total": 652645,
+          "breakdown": [
+            {
+              "item": "売上原価",
+              "amount": 652645,
+              "by_item": [
+                {
+                  "name": "食材",
+                  "amount": 613473
+                },
+                {
+                  "name": "飲料",
+                  "amount": 39172
+                }
+              ]
+            }
+          ]
+        },
+        "sga": {
+          "total": 1501281,
+          "breakdown": [
+            {
+              "item": "給料手当",
+              "amount": 433485,
+              "by_item": [
+                {
+                  "name": "正社員基本給",
+                  "amount": 280000
+                },
+                {
+                  "name": "正社員時間外労働手当",
+                  "amount": 52364
+                },
+                {
+                  "name": "正社員賞与",
+                  "amount": 100000
+                },
+                {
+                  "name": "正社員深夜労働手当",
+                  "amount": 1121
+                }
+              ]
+            },
+            {
+              "item": "雑給",
+              "amount": 822118,
+              "by_item": [
+                {
+                  "name": "アルバイトパート基本給",
+                  "amount": 460075
+                },
+                {
+                  "name": "アルバイトパート賞与",
+                  "amount": 350000
+                },
+                {
+                  "name": "アルバイトパート時間外労働手当",
+                  "amount": 11693
+                },
+                {
+                  "name": "アルバイトパート深夜労働手当",
+                  "amount": 350
+                }
+              ]
+            },
+            {
+              "item": "旅費交通費",
+              "amount": 26500,
+              "by_item": [
+                {
+                  "name": "通勤費",
+                  "amount": 25500
+                },
+                {
+                  "name": "車両精算",
+                  "amount": 1000
+                }
+              ]
+            },
+            {
+              "item": "水道光熱費",
+              "amount": 102455,
+              "by_item": [
+                {
+                  "name": "電気代",
+                  "amount": 56201
+                },
+                {
+                  "name": "ガス代",
+                  "amount": 30374
+                },
+                {
+                  "name": "水道代",
+                  "amount": 15880
+                }
+              ]
+            },
+            {
+              "item": "通信費",
+              "amount": 1155,
+              "by_item": [
+                {
+                  "name": "宅急便代",
+                  "amount": 1155
+                }
+              ]
+            },
+            {
+              "item": "地代家賃",
+              "amount": 25000,
+              "by_item": [
+                {
+                  "name": "㈱BLUEESTATE",
+                  "amount": 25000
+                }
+              ]
+            },
+            {
+              "item": "修繕維持費",
+              "amount": 14586,
+              "by_item": [
+                {
+                  "name": "店舗備品修繕費",
+                  "amount": 14586
+                }
+              ]
+            },
+            {
+              "item": "広告宣伝費",
+              "amount": 1566,
+              "by_item": [
+                {
+                  "name": "ホットペッパー",
+                  "amount": 1566
+                }
+              ]
+            },
+            {
+              "item": "消耗品費",
+              "amount": 18524,
+              "by_item": [
+                {
+                  "name": "厨房消耗品",
+                  "amount": 7827
+                },
+                {
+                  "name": "店舗消耗品",
+                  "amount": 10697
+                }
+              ]
+            },
+            {
+              "item": "リース料",
+              "amount": 6717,
+              "by_item": [
+                {
+                  "name": "インタネット設備費用",
+                  "amount": 6717
+                }
+              ]
+            },
+            {
+              "item": "システム利用料",
+              "amount": 462,
+              "by_item": [
+                {
+                  "name": "システム利用手数料",
+                  "amount": 462
+                }
+              ]
+            },
+            {
+              "item": "雑費",
+              "amount": 4990,
+              "by_item": [
+                {
+                  "name": "ダスキン",
+                  "amount": 4990
+                }
+              ]
+            },
+            {
+              "item": "支払手数料",
+              "amount": 43723,
+              "by_item": [
+                {
+                  "name": "クレジット手数料",
+                  "amount": 27223
+                },
+                {
+                  "name": "産業廃棄物収集",
+                  "amount": 16500
+                }
+              ]
+            }
+          ]
+        },
+        "non_op_income": {
+          "total": 5640,
+          "breakdown": [
+            {
+              "item": "雑収入",
+              "amount": 5640,
+              "by_item": [
+                {
+                  "name": "あんくるふじや返瓶",
+                  "amount": 5640
+                }
+              ]
+            }
+          ]
+        },
+        "non_op_expense": {
+          "total": 0,
+          "breakdown": []
+        },
+        "_summary": {
+          "gross_profit": 1188765,
+          "op_profit": -312516,
+          "ordinary_profit": -306876
+        }
+      },
+      "ytd": {
+        "period": "2026-02〜2026-07",
+        "source_file": "data/imports/seitendo/2026-08_pl.csv",
+        "revenue": {
+          "total": 11336880,
+          "breakdown": [
+            {
+              "item": "売上値引",
+              "amount": -101200,
+              "by_item": [
+                {
+                  "name": "【青天堂】チケット",
+                  "amount": -101200
+                }
+              ]
+            },
+            {
+              "item": "売上高（飲食店）",
+              "amount": 11438080,
+              "by_item": [
+                {
+                  "name": "【青天堂】飲食",
+                  "amount": 10635325
+                },
+                {
+                  "name": "【青天堂】物販",
+                  "amount": 505555
+                },
+                {
+                  "name": "【青天堂】チケット",
+                  "amount": 297200
+                }
+              ]
+            }
+          ]
+        },
+        "cogs": {
+          "total": 4110166,
+          "breakdown": [
+            {
+              "item": "売上原価",
+              "amount": 4110166,
+              "by_item": [
+                {
+                  "name": "食材",
+                  "amount": 3785141
+                },
+                {
+                  "name": "飲料",
+                  "amount": 325025
+                }
+              ]
+            }
+          ]
+        },
+        "sga": {
+          "total": 6649112,
+          "breakdown": [
+            {
+              "item": "給料手当",
+              "amount": 2116736,
+              "by_item": [
+                {
+                  "name": "正社員基本給",
+                  "amount": 1680000
+                },
+                {
+                  "name": "正社員時間外労働手当",
+                  "amount": 319579
+                },
+                {
+                  "name": "正社員賞与",
+                  "amount": 100000
+                },
+                {
+                  "name": "正社員有給取得",
+                  "amount": 8910
+                },
+                {
+                  "name": "正社員深夜労働手当",
+                  "amount": 8247
+                }
+              ]
+            },
+            {
+              "item": "雑給",
+              "amount": 3126023,
+              "by_item": [
+                {
+                  "name": "アルバイトパート基本給",
+                  "amount": 2688445
+                },
+                {
+                  "name": "アルバイトパート賞与",
+                  "amount": 350000
+                },
+                {
+                  "name": "アルバイトパート時間外労働手当",
+                  "amount": 72259
+                },
+                {
+                  "name": "アルバイトパート有給取得",
+                  "amount": 13920
+                },
+                {
+                  "name": "アルバイトパート深夜労働手当",
+                  "amount": 1399
+                }
+              ]
+            },
+            {
+              "item": "福利厚生費",
+              "amount": 9335,
+              "by_item": [
+                {
+                  "name": "会議飲食代",
+                  "amount": 7700
+                },
+                {
+                  "name": "手土産",
+                  "amount": 1635
+                }
+              ]
+            },
+            {
+              "item": "外注費",
+              "amount": 8400,
+              "by_item": [
+                {
+                  "name": "店舗サポート",
+                  "amount": 8400
+                }
+              ]
+            },
+            {
+              "item": "旅費交通費",
+              "amount": 159000,
+              "by_item": [
+                {
+                  "name": "通勤費",
+                  "amount": 153000
+                },
+                {
+                  "name": "車両精算",
+                  "amount": 6000
+                }
+              ]
+            },
+            {
+              "item": "水道光熱費",
+              "amount": 447210,
+              "by_item": [
+                {
+                  "name": "電気代",
+                  "amount": 258657
+                },
+                {
+                  "name": "ガス代",
+                  "amount": 146475
+                },
+                {
+                  "name": "水道代",
+                  "amount": 42078
+                }
+              ]
+            },
+            {
+              "item": "通信費",
+              "amount": 4620,
+              "by_item": [
+                {
+                  "name": "宅急便代",
+                  "amount": 4620
+                }
+              ]
+            },
+            {
+              "item": "地代家賃",
+              "amount": 150000,
+              "by_item": [
+                {
+                  "name": "㈱BLUEESTATE",
+                  "amount": 150000
+                }
+              ]
+            },
+            {
+              "item": "修繕維持費",
+              "amount": 17586,
+              "by_item": [
+                {
+                  "name": "店舗備品修繕費",
+                  "amount": 17586
+                }
+              ]
+            },
+            {
+              "item": "広告宣伝費",
+              "amount": 43336,
+              "by_item": [
+                {
+                  "name": "店舗のれん",
+                  "amount": 37180
+                },
+                {
+                  "name": "ホットペッパー",
+                  "amount": 6156
+                }
+              ]
+            },
+            {
+              "item": "消耗品費",
+              "amount": 178425,
+              "by_item": [
+                {
+                  "name": "厨房消耗品",
+                  "amount": 93922
+                },
+                {
+                  "name": "店舗消耗品",
+                  "amount": 57003
+                },
+                {
+                  "name": "厨房設備用品",
+                  "amount": 27500
+                }
+              ]
+            },
+            {
+              "item": "リース料",
+              "amount": 40796,
+              "by_item": [
+                {
+                  "name": "インタネット設備費用",
+                  "amount": 40796
+                }
+              ]
+            },
+            {
+              "item": "システム利用料",
+              "amount": 12210,
+              "by_item": [
+                {
+                  "name": "Airシフトシステム",
+                  "amount": 9900
+                },
+                {
+                  "name": "システム利用手数料",
+                  "amount": 2310
+                }
+              ]
+            },
+            {
+              "item": "雑費",
+              "amount": 28535,
+              "by_item": [
+                {
+                  "name": "ダスキン",
+                  "amount": 24950
+                },
+                {
+                  "name": "洗濯関連費",
+                  "amount": 3200
+                },
+                {
+                  "name": "（株）サニクリーン",
+                  "amount": 385
+                }
+              ]
+            },
+            {
+              "item": "支払手数料",
+              "amount": 306900,
+              "by_item": [
+                {
+                  "name": "クレジット手数料",
+                  "amount": 207900
+                },
+                {
+                  "name": "産業廃棄物収集",
+                  "amount": 99000
+                }
+              ]
+            }
+          ]
+        },
+        "non_op_income": {
+          "total": 40242,
+          "breakdown": [
+            {
+              "item": "雑収入",
+              "amount": 40242,
+              "by_item": [
+                {
+                  "name": "あんくるふじや返瓶",
+                  "amount": 40242
+                }
+              ]
+            }
+          ]
+        },
+        "non_op_expense": {
+          "total": 0,
+          "breakdown": []
+        },
+        "_summary": {
+          "gross_profit": 7226714,
+          "op_profit": 577602,
+          "ordinary_profit": 617844
+        }
+      }
     }
   }
 }
