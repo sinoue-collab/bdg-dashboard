@@ -1,0 +1,25 @@
+name: trial_cr 実地確認（指示書㉜・調査専用）
+
+on:
+  workflow_dispatch:
+
+jobs:
+  investigate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run trial_cr investigation
+        env:
+          FREEE_ACCESS_TOKEN:           ${{ secrets.FREEE_ACCESS_TOKEN }}
+          FREEE_REFRESH_TOKEN:          ${{ secrets.FREEE_REFRESH_TOKEN }}
+          FREEE_CLIENT_ID:              ${{ secrets.FREEE_CLIENT_ID }}
+          FREEE_CLIENT_SECRET:          ${{ secrets.FREEE_CLIENT_SECRET }}
+          FREEE_COMPANY_ID_BLUE_DESIGN: ${{ secrets.FREEE_COMPANY_ID_BLUE_DESIGN }}
+        run: python3 scripts/investigate_trial_cr.py
