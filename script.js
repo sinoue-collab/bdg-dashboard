@@ -460,15 +460,20 @@ function renderBizContent() {
       return [item.item, { rev: [item], cogs: [], color }];
     }));
 
-    // COGS を売上構成比で按分（名称マッチングは機能しないため）
+    // COGS を売上構成比で按分（Phase 2: 各原価科目の by_item を保持して案件ドリルダウンを可能に）
     const totalCogsAmt = cogsItems.reduce((s, i) => s + i.amount, 0);
     const totalRevAmt  = revItems.reduce((s, i)  => s + i.amount, 0);
     if (totalCogsAmt > 0 && totalRevAmt > 0) {
       for (const [, ld] of Object.entries(lines)) {
         const lineRev = ld.rev.reduce((s, i) => s + i.amount, 0);
         if (lineRev > 0) {
-          const allocated = Math.round(totalCogsAmt * lineRev / totalRevAmt);
-          ld.cogs.push({ item: '売上原価（按分）', amount: allocated });
+          for (const cogsItem of cogsItems) {
+            const allocated = Math.round(cogsItem.amount * lineRev / totalRevAmt);
+            if (allocated > 0) {
+              // by_item は会社全体の案件別実額（按分後の lineAmount との差は仕様）
+              ld.cogs.push({ item: cogsItem.item, amount: allocated, by_item: cogsItem.by_item });
+            }
+          }
         }
       }
     }

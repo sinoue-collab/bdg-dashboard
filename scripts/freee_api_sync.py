@@ -271,6 +271,102 @@ def enrich_with_departments(cur_data, company_id, access_token,
             dept_list.sort(key=lambda d: -d['amount'])
 
 
+def fetch_cogs_from_trial_cr(company_id, access_token, cur_fy, cal_start, cal_end, debug=False):
+    """
+    BLUE DESIGN 専用: trial_cr（製造原価報告書）から COGS 構造を構築する。
+
+    freee API の start_month / end_month はカレンダー月番号（4月始まりFYでも 8月=8）。
+    単月: cal_start == cal_end == カレンダー月番号
+    YTD:  cal_start == 会計期首カレンダー月、cal_end == 当月カレンダー月
+
+    戻り値: {'total': int, 'breakdown': [...], '_source': 'trial_cr'}
+    失敗時: None（呼び出し元で trial_pl フォールバックに切り替える）
+    """
+    try:
+        resp = freee_get('/api/1/reports/trial_cr', access_token, {
+            'company_id':             company_id,
+            'fiscal_year':            cur_fy,
+            'start_month':            cal_start,
+            'end_month':              cal_end,
+            'breakdown_display_type': 'item',
+        })
+    except RuntimeError as e:
+        print(f'    [trial_cr] 取得失敗: {e}')
+        return None
+
+    balances = resp.get('trial_cr', {}).get('balances', [])
+    if not balances:
+        print('    [trial_cr] balances が空')
+        return None
+
+    # 総製造費用（null 名行）を COGS 合計として採用
+    total = 0
+    for b in balances:
+        name     = (b.get('account_item_name') or '').strip()
+        category = (b.get('account_category_name') or '').strip()
+        op       = b.get('opening_balance', 0) or 0
+        cl       = b.get('closing_balance',  0) or 0
+        diff     = cl - op
+        if not name and category == '総製造費用' and diff:
+            total = abs(int(diff))
+            break
+
+    if total == 0:
+        print('    [trial_cr] 総製造費用が0 → フォールバック')
+        return None
+
+    # 案件別内訳: 材料費・製造経費カテゴリの named account の items を集計
+    COST_CATS = {'当期原材料仕入高', '製造経費'}
+    breakdown = []
+    for b in balances:
+        name     = (b.get('account_item_name') or '').strip()
+        category = (b.get('account_category_name') or '').strip()
+        op       = b.get('opening_balance', 0) or 0
+        cl       = b.get('closing_balance',  0) or 0
+        diff     = cl - op
+        items    = b.get('items') or []
+
+        if not name or category not in COST_CATS or not diff:
+            continue
+        amount = abs(int(diff))
+        if amount == 0:
+            continue
+
+        by_item = []
+        for itm in items:
+            inm = (itm.get('name') or itm.get('item_name') or '').strip()
+            iop = itm.get('opening_balance', 0) or 0
+            icl = itm.get('closing_balance',  0) or 0
+            idf = icl - iop
+            iamt = abs(int(idf)) if idf else 0
+            if inm and iamt > 0:
+                by_item.append({'name': inm, 'amount': iamt})
+
+        by_item.sort(key=lambda x: -x['amount'])
+
+        # 案件タグなし分を末尾に追加
+        item_sum = sum(i['amount'] for i in by_item)
+        untagged = amount - item_sum
+        if untagged > 100:
+            by_item.append({'name': '（案件未設定）', 'amount': untagged})
+
+        entry = {'item': name, 'amount': amount}
+        if by_item:
+            entry['by_item'] = by_item
+        breakdown.append(entry)
+
+    if debug:
+        print(f'    [trial_cr] total={total:,}  breakdown={len(breakdown)}件')
+        for b in breakdown:
+            print(f'      {b["item"]}: {b["amount"]:,}  by_item={len(b.get("by_item", []))}件')
+
+    return {
+        'total':     total,
+        'breakdown': breakdown,
+        '_source':   'trial_cr',
+    }
+
+
 def fetch_items_all(company_id, access_token):
     """全品目マスタを取得（ページネーション対応・全件）。"""
     all_items = []
@@ -294,8 +390,14 @@ def fetch_items_all(company_id, access_token):
 
 
 def _finalize_by_item(cur_data, SECTION_KEYS):
-    """by_item に（品目未設定）分を追加して金額降順ソート。"""
+    """by_item に（品目未設定）分を追加して金額降順ソート。
+    trial_cr 由来の COGS（_source='trial_cr'）は既に（案件未設定）を含むためスキップ。
+    """
+    cogs_from_trial_cr = cur_data.get('cogs', {}).get('_source') == 'trial_cr'
     for sk in SECTION_KEYS:
+        # trial_cr で取得した COGS breakdown は by_item が既に完成しているためスキップ
+        if sk == 'cogs' and cogs_from_trial_cr:
+            continue
         for acct in cur_data[sk]['breakdown']:
             item_list = acct.get('by_item')
             if not item_list:
@@ -750,6 +852,16 @@ def main():
             ytd_bal, fs, cur_fy = fetch_ytd_probing(
                 company_id, access_token, cur_year, cur_month, debug=args.debug)
             ytd_data = parse_balances(ytd_bal, mapping)
+            # BLUE DESIGN 専用: trial_cr で YTD COGS を上書き（カレンダー月番号で指定）
+            if co_name == 'BLUE DESIGN':
+                cr_ytd = fetch_cogs_from_trial_cr(
+                    company_id, access_token, cur_fy,
+                    cal_start=fs, cal_end=cur_month, debug=args.debug)
+                if cr_ytd:
+                    ytd_data['cogs'] = cr_ytd
+                    print(f'    [trial_cr] YTD COGS: {cr_ytd["total"]:,}（trial_crへ切替）')
+                else:
+                    print(f'    [trial_cr] YTD: フォールバック → trial_pl COGS を使用')
             apply_cogs_reclassify(ytd_data, co_name, mapping)  # C案: 営業外→COGS振替
             ytd_sum  = compute_summary(ytd_data)
 
@@ -765,6 +877,16 @@ def main():
             print(f'    当月    {cur_year}-{cur_month:02d}...')
             cur_bal  = fetch_trial_pl(company_id, access_token, cur_fy, cur_month, cur_month, debug=args.debug)
             cur_data = parse_balances(cur_bal, mapping)
+            # BLUE DESIGN 専用: trial_cr で当月 COGS を上書き（カレンダー月番号で指定）
+            if co_name == 'BLUE DESIGN':
+                cr_cur = fetch_cogs_from_trial_cr(
+                    company_id, access_token, cur_fy,
+                    cal_start=cur_month, cal_end=cur_month, debug=args.debug)
+                if cr_cur:
+                    cur_data['cogs'] = cr_cur
+                    print(f'    [trial_cr] 当月COGS: {cr_cur["total"]:,}（trial_crへ切替）')
+                else:
+                    print(f'    [trial_cr] 当月: フォールバック → trial_pl COGS を使用')
             apply_cogs_reclassify(cur_data, co_name, mapping)  # C案: 営業外→COGS振替
             cur_sum  = compute_summary(cur_data)
 
@@ -797,6 +919,16 @@ def main():
             print(f'    前月    {prv_year}-{prv_month:02d}...')
             prv_bal  = fetch_trial_pl(company_id, access_token, prv_fy, prv_month, prv_month, debug=args.debug)
             prv_data = parse_balances(prv_bal, mapping)
+            # BLUE DESIGN 専用: trial_cr で前月 COGS を上書き（カレンダー月番号で指定）
+            if co_name == 'BLUE DESIGN':
+                cr_prv = fetch_cogs_from_trial_cr(
+                    company_id, access_token, prv_fy,
+                    cal_start=prv_month, cal_end=prv_month, debug=args.debug)
+                if cr_prv:
+                    prv_data['cogs'] = cr_prv
+                    print(f'    [trial_cr] 前月COGS: {cr_prv["total"]:,}（trial_crへ切替）')
+                else:
+                    print(f'    [trial_cr] 前月: フォールバック → trial_pl COGS を使用')
             apply_cogs_reclassify(prv_data, co_name, mapping)  # C案: 営業外→COGS振替
             prv_sum  = compute_summary(prv_data)
 
