@@ -393,16 +393,12 @@ function renderBizContent() {
 
     const SEITENDO_PALETTE = { '飲食売上': '#a8632a', '物販売上': '#c4793a', 'チケット売上': '#7a4520' };
     const LINE_NAMES = ['飲食売上', '物販売上', 'チケット売上'];
-
-    // by_item からライン別売上を集計（売上値引チケットはマイナスで合算）
-    const lineRevMap = { '飲食売上': 0, '物販売上': 0, 'チケット売上': 0 };
-    for (const item of (targetData.revenue?.breakdown ?? [])) {
-      for (const bi of (item.by_item ?? [])) {
-        if (bi.name === '【青天堂】飲食')    lineRevMap['飲食売上']   += bi.amount;
-        if (bi.name === '【青天堂】物販')    lineRevMap['物販売上']   += bi.amount;
-        if (bi.name === '【青天堂】チケット') lineRevMap['チケット売上'] += bi.amount;
-      }
-    }
+    // freee 品目名 → 事業ライン名の対応
+    const ITEM_TO_LINE = {
+      '【青天堂】飲食':    '飲食売上',
+      '【青天堂】物販':    '物販売上',
+      '【青天堂】チケット': 'チケット売上',
+    };
 
     sgaTotal     = targetData.sga?.total     ?? 0;
     sgaBreakdown = targetData.sga?.breakdown ?? [];
@@ -410,10 +406,36 @@ function renderBizContent() {
     const lineColorMap = {};
     lines = Object.fromEntries(LINE_NAMES.map(name => {
       lineColorMap[name] = SEITENDO_PALETTE[name];
-      return [name, { rev: [{ item: name, amount: lineRevMap[name] }], cogs: [] }];
+      return [name, { rev: [], cogs: [] }];
     }));
 
-    // COGS を売上構成比で按分（食材・飲料は品目別に紐付けられないため）
+    // 売上：各勘定科目行を by_item でライン別にフィルタして実データとして保持
+    for (const acctRow of (targetData.revenue?.breakdown ?? [])) {
+      for (const lineName of LINE_NAMES) {
+        const filtered = (acctRow.by_item ?? []).filter(bi => ITEM_TO_LINE[bi.name] === lineName);
+        if (filtered.length === 0) continue;
+        const lineAmt = filtered.reduce((s, bi) => s + bi.amount, 0);
+        lines[lineName].rev.push({ item: acctRow.item, amount: lineAmt, by_item: filtered });
+      }
+    }
+
+    const lineRevMap = Object.fromEntries(LINE_NAMES.map(n => [
+      n, lines[n].rev.reduce((s, r) => s + r.amount, 0),
+    ]));
+
+    // COGS: 食材・飲料の実額比率を算出（ライン別には紐付けられないため按分）
+    let shokuzaiAmt = 0, inryoAmt = 0;
+    for (const row of (targetData.cogs?.breakdown ?? [])) {
+      for (const bi of (row.by_item ?? [])) {
+        if (bi.name === '食材') shokuzaiAmt += bi.amount;
+        if (bi.name === '飲料') inryoAmt   += bi.amount;
+      }
+    }
+    // by_item が取れない場合は全額を食材として扱う（fallback）
+    if (shokuzaiAmt === 0 && inryoAmt === 0) shokuzaiAmt = targetData.cogs?.total ?? 0;
+    const cogsByItemTotal = shokuzaiAmt + inryoAmt;
+
+    // COGS を売上構成比で按分し、食材（按分）・飲料（按分）の内訳を by_item で保持
     const totalCogsAmt = targetData.cogs?.total ?? 0;
     const totalRevAmt  = LINE_NAMES.reduce((s, n) => s + Math.max(lineRevMap[n], 0), 0);
     if (totalCogsAmt > 0 && totalRevAmt > 0) {
@@ -421,7 +443,15 @@ function renderBizContent() {
         const lineRev = Math.max(lineRevMap[name], 0);
         if (lineRev > 0) {
           const allocated = Math.round(totalCogsAmt * lineRev / totalRevAmt);
-          lines[name].cogs.push({ item: '売上原価（按分）', amount: allocated });
+          // 食材・飲料の実額比率で按分内訳を生成（推計値）
+          const byItem = [];
+          if (cogsByItemTotal > 0) {
+            const s = Math.round(allocated * shokuzaiAmt / cogsByItemTotal);
+            const d = allocated - s;
+            if (s > 0) byItem.push({ name: '食材（按分）', amount: s });
+            if (d > 0) byItem.push({ name: '飲料（按分）', amount: d });
+          }
+          lines[name].cogs.push({ item: '売上原価（按分）', amount: allocated, by_item: byItem });
         }
       }
     }
