@@ -161,6 +161,37 @@
         "revenue":   79752576,
         "op_profit": 29024376
       }
+    },
+    "青天堂": {
+      "note": "社長確認済みフラット予算（2026.09確定）。FY2026 = 2026-02〜2027-01（2月決算期）。原価率36%、販管費1,108,000円/月。",
+      "fy_start": "2026-02",
+      "line_budgets": {
+        "飲食売上":   1800000,
+        "物販売上":    80000,
+        "チケット売上": 30000
+      },
+      "cogs_rate": 0.36,
+      "budget_monthly": {
+        "revenue":         1910000,
+        "gross_profit":    1222400,
+        "sga_total":       1108000,
+        "op_profit":        114400,
+        "ordinary_profit":  114400
+      },
+      "budget_ytd": {
+        "revenue":         11460000,
+        "gross_profit":     7334400,
+        "sga_total":        6648000,
+        "op_profit":         686400,
+        "ordinary_profit":   686400
+      },
+      "annual_budget": {
+        "revenue":         22920000,
+        "gross_profit":    14668800,
+        "sga_total":       13296000,
+        "op_profit":        1372800,
+        "ordinary_profit":  1372800
+      }
     }
   }
 }

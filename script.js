@@ -784,7 +784,7 @@ function renderBudget() {
       <button class="biz-tab ${selectedBudgetCompany === 'BLUE ESTATE' ? 'active' : ''}" data-company="BLUE ESTATE">BLUE ESTATE</button>
       <button class="biz-tab ${selectedBudgetCompany === 'BLUE DESIGN' ? 'active' : ''}" data-company="BLUE DESIGN">BLUE DESIGN</button>
       <button class="biz-tab ${selectedBudgetCompany === 'BLUE LIFE'   ? 'active' : ''}" data-company="BLUE LIFE">BLUE LIFE</button>
-      <button class="biz-tab disabled" disabled>青天堂<span class="badge-wip">準備中</span></button>
+      <button class="biz-tab ${selectedBudgetCompany === '青天堂' ? 'active' : ''}" data-company="青天堂">青天堂</button>
     </div>
   `;
 
@@ -797,8 +797,112 @@ function renderBudget() {
 
   let bodyHtml = '';
 
+  // ── 青天堂: 事業ライン別予実 ──────────────────────────────────────
+  if (selectedBudgetCompany === '青天堂') {
+    const unit = actuals.data.unit_seitendo;
+    const confirmed = getConfirmed(unit);
+    const actualData  = isYtd ? unit?.ytd       : confirmed?.data;
+    const targetMonth = isYtd ? unit?.ytd?.period : confirmed?.period;
+    const periodLabel = isYtd
+      ? `年度累計（${targetMonth ?? '—'}）`
+      : `対象月: ${targetMonth ?? '—'}${statusBadge(targetMonth)}`;
+
+    const budgetCo = budget?.companies?.['青天堂'];
+    const lineBudgets  = budgetCo?.line_budgets  ?? {};
+    const cogsRate     = budgetCo?.cogs_rate     ?? 0.36;
+    const monthlySga   = budgetCo?.budget_monthly?.sga_total ?? 1108000;
+
+    // YTD期間の月数を fy_start と ytd.period 末尾から算出
+    let ytdMonths = 1;
+    if (isYtd && budgetCo?.fy_start) {
+      const ytdEnd = (unit?.ytd?.period ?? '').split('〜')[1] ?? '';
+      if (ytdEnd) {
+        const [fyY, fyM] = budgetCo.fy_start.split('-').map(Number);
+        const [ytdY, ytdM] = ytdEnd.split('-').map(Number);
+        ytdMonths = Math.max(1, (ytdY * 12 + ytdM) - (fyY * 12 + fyM) + 1);
+      }
+    }
+
+    const lineBudgetAmt = (name) => {
+      const monthly = lineBudgets[name] ?? 0;
+      return isYtd ? monthly * ytdMonths : monthly;
+    };
+
+    // ライン別実績を by_item から集計（renderBizContent と同じロジック）
+    const ITEM_TO_LINE = {
+      '【青天堂】飲食':    '飲食売上',
+      '【青天堂】物販':    '物販売上',
+      '【青天堂】チケット': 'チケット売上',
+    };
+    const LINE_NAMES = ['飲食売上', '物販売上', 'チケット売上'];
+    const lineRevActuals = Object.fromEntries(LINE_NAMES.map(n => [n, 0]));
+    for (const acctRow of (actualData?.revenue?.breakdown ?? [])) {
+      for (const bi of (acctRow.by_item ?? [])) {
+        const ln = ITEM_TO_LINE[bi.name];
+        if (ln) lineRevActuals[ln] += bi.amount;
+      }
+    }
+    const totalRevActual  = LINE_NAMES.reduce((s, n) => s + lineRevActuals[n], 0);
+    const totalRevBudget  = LINE_NAMES.reduce((s, n) => s + lineBudgetAmt(n), 0);
+
+    const budgetSga = isYtd ? monthlySga * ytdMonths : monthlySga;
+    const budgetCogs = Math.round(totalRevBudget * cogsRate);
+    const budgetGp   = totalRevBudget - budgetCogs;
+    const budgetOp   = budgetGp - budgetSga;
+
+    const makeRow = (label, bAmt, aAmt) => {
+      const diff = bAmt != null ? bAmt - aAmt : null;
+      const rate = (bAmt && aAmt) ? ((aAmt / bAmt) * 100).toFixed(1) : '—';
+      return `
+        <tr>
+          <td>${label}</td>
+          <td class="td-right">${bAmt != null ? fmtYen(bAmt) : '—'}</td>
+          <td class="td-right">${fmtYen(aAmt || null)}</td>
+          <td class="td-right ${diff != null && diff < 0 ? 'negative' : ''}">${diff != null ? fmtYen(diff) : '—'}</td>
+          <td class="td-right">${rate !== '—' ? rate + '%' : '—'}</td>
+        </tr>`;
+    };
+    const thead = `
+      <thead><tr>
+        <th>項目</th>
+        <th class="td-right">${isYtd ? '年度累計予算' : '予算'}</th>
+        <th class="td-right">実績</th>
+        <th class="td-right">差額</th>
+        <th class="td-right">達成率</th>
+      </tr></thead>`;
+
+    const revTotalDiff = totalRevBudget > 0 ? totalRevBudget - totalRevActual : null;
+    const revTotalRate = (totalRevBudget && totalRevActual) ? ((totalRevActual / totalRevBudget) * 100).toFixed(1) : '—';
+    const revRows = LINE_NAMES.map(n => makeRow(n, lineBudgetAmt(n), lineRevActuals[n])).join('') + `
+      <tr class="total-row">
+        <td>売上合計</td>
+        <td class="td-right">${fmtYen(totalRevBudget)}</td>
+        <td class="td-right">${fmtYen(totalRevActual || null)}</td>
+        <td class="td-right ${revTotalDiff != null && revTotalDiff < 0 ? 'negative' : ''}">${revTotalDiff != null ? fmtYen(revTotalDiff) : '—'}</td>
+        <td class="td-right">${revTotalRate !== '—' ? revTotalRate + '%' : '—'}</td>
+      </tr>`;
+
+    const summaryRows = [
+      { label: `売上原価（${(cogsRate*100).toFixed(0)}%基準）`, b: budgetCogs, a: actualData?.cogs?.total ?? 0 },
+      { label: '粗利',     b: budgetGp,  a: actualData?._summary?.gross_profit ?? 0 },
+      { label: '販管費',   b: budgetSga, a: actualData?.sga?.total ?? 0 },
+      { label: '営業利益', b: budgetOp,  a: actualData?._summary?.op_profit ?? 0 },
+    ].map(r => makeRow(r.label, r.b, r.a)).join('');
+
+    bodyHtml = `
+      <div class="budget-header"><span class="budget-period-label">${periodLabel}</span></div>
+      <div class="budget-section">
+        <div class="budget-section-title">売上内訳（事業ライン別）</div>
+        <table class="detail-table budget-table">${thead}<tbody>${revRows}</tbody></table>
+      </div>
+      <div class="budget-section">
+        <div class="budget-section-title">損益サマリー</div>
+        <table class="detail-table budget-table">${thead}<tbody>${summaryRows}</tbody></table>
+      </div>
+    `;
+
   // ── BLUE DESIGN / BLUE LIFE: サマリー予実 ─────────────────────────
-  if (selectedBudgetCompany !== 'BLUE ESTATE') {
+  } else if (selectedBudgetCompany !== 'BLUE ESTATE') {
     const unitKey = { 'BLUE DESIGN': 'unit_blue_design', 'BLUE LIFE': 'unit_blue_life' }[selectedBudgetCompany];
     const unit = actuals.data[unitKey];
     const confirmed = getConfirmed(unit);
