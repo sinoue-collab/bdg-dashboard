@@ -982,9 +982,82 @@ function renderBudget() {
       `;
     }).join('');
 
+    // ── BLUE LIFE: 販管費科目別内訳 ─────────────────────────────────
+    let sgaDetailHtml = '<p class="budget-note">科目別詳細は準備中です</p>';
+    if (selectedBudgetCompany === 'BLUE LIFE') {
+      const sgaItemsMonthly = budgetCo?.sga_items_monthly ?? {};
+
+      // 月次 or YTD合算で科目別予算を構築
+      const sgaItemsBudget = {};
+      if (isYtd) {
+        // YTD期間文字列 "2026-06〜2026-08" から月リストを生成して合算
+        const [ytdStart, ytdEnd] = (unit?.ytd?.period ?? '').split('〜');
+        if (ytdStart && ytdEnd) {
+          let [cy, cm] = ytdStart.split('-').map(Number);
+          const [ey, em] = ytdEnd.split('-').map(Number);
+          while (cy * 12 + cm <= ey * 12 + em) {
+            const mKey = `${cy}-${String(cm).padStart(2, '0')}`;
+            for (const [name, amt] of Object.entries(sgaItemsMonthly[mKey] ?? {})) {
+              if (name === '_note') continue;
+              sgaItemsBudget[name] = (sgaItemsBudget[name] ?? 0) + amt;
+            }
+            cm++; if (cm > 12) { cm = 1; cy++; }
+          }
+        }
+      } else {
+        Object.assign(sgaItemsBudget, sgaItemsMonthly[targetMonth] ?? {});
+      }
+
+      const sgaActualsMap = Object.fromEntries((actualData?.sga?.breakdown ?? []).map(b => [b.item, b.amount]));
+      const allSgaNames = [...new Set([...Object.keys(sgaItemsBudget), ...Object.keys(sgaActualsMap)])];
+      const sgaBudgetTotal = Object.values(sgaItemsBudget).reduce((s, v) => s + v, 0);
+      const sgaActualTotal = actualData?.sga?.total ?? 0;
+      const sgaTotalDiff   = sgaBudgetTotal - sgaActualTotal;
+      const sgaTotalRate   = (sgaBudgetTotal && sgaActualTotal) ? ((sgaActualTotal / sgaBudgetTotal) * 100).toFixed(1) : '—';
+
+      const sgaRows = allSgaNames.map(name => {
+        const bAmt = sgaItemsBudget[name] > 0 ? sgaItemsBudget[name] : null;
+        const aAmt = sgaActualsMap[name] ?? 0;
+        const diff = bAmt != null ? bAmt - aAmt : null;
+        const rate = (bAmt && aAmt) ? ((aAmt / bAmt) * 100).toFixed(1) : '—';
+        const noBudgeTag = bAmt == null ? ' <span class="no-budget-tag">予算なし</span>' : '';
+        return `
+          <tr>
+            <td>${name}${noBudgeTag}</td>
+            <td class="td-right">${bAmt != null ? fmtYen(bAmt) : '—'}</td>
+            <td class="td-right">${fmtYen(aAmt || null)}</td>
+            <td class="td-right ${diff != null && diff < 0 ? 'negative' : ''}">${diff != null ? fmtYen(diff) : '—'}</td>
+            <td class="td-right">${rate !== '—' ? rate + '%' : '—'}</td>
+          </tr>`;
+      }).join('');
+
+      sgaDetailHtml = `
+        <div class="budget-section">
+          <div class="budget-section-title">販管費内訳</div>
+          <table class="detail-table budget-table">
+            <thead><tr>
+              <th>科目</th>
+              <th class="td-right">${isYtd ? '年度累計予算' : '予算'}</th>
+              <th class="td-right">実績</th>
+              <th class="td-right">差額</th>
+              <th class="td-right">達成率</th>
+            </tr></thead>
+            <tbody>${sgaRows}</tbody>
+            <tfoot><tr class="total-row">
+              <td>販管費合計</td>
+              <td class="td-right">${fmtYen(sgaBudgetTotal)}</td>
+              <td class="td-right">${fmtYen(sgaActualTotal)}</td>
+              <td class="td-right ${sgaTotalDiff < 0 ? 'negative' : ''}">${fmtYen(sgaTotalDiff)}</td>
+              <td class="td-right">${sgaTotalRate !== '—' ? sgaTotalRate + '%' : '—'}</td>
+            </tr></tfoot>
+          </table>
+        </div>`;
+    }
+
     bodyHtml = `
       <div class="budget-header"><span class="budget-period-label">${periodLabel}</span></div>
       <div class="budget-section">
+        <div class="budget-section-title">損益サマリー</div>
         <table class="detail-table budget-table">
           <thead>
             <tr>
@@ -997,8 +1070,8 @@ function renderBudget() {
           </thead>
           <tbody>${summaryRows}</tbody>
         </table>
-        <p class="budget-note">科目別詳細は準備中です</p>
       </div>
+      ${sgaDetailHtml}
     `;
 
   } else {
