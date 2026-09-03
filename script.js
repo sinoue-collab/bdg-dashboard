@@ -808,9 +808,9 @@ function renderBudget() {
       : `対象月: ${targetMonth ?? '—'}${statusBadge(targetMonth)}`;
 
     const budgetCo = budget?.companies?.['青天堂'];
-    const lineBudgets  = budgetCo?.line_budgets  ?? {};
-    const cogsRate     = budgetCo?.cogs_rate     ?? 0.36;
-    const monthlySga   = budgetCo?.budget_monthly?.sga_total ?? 1108000;
+    const lineBudgets = budgetCo?.line_budgets ?? {};
+    const cogsItems   = budgetCo?.cogs_items   ?? {};
+    const sgaItems    = budgetCo?.sga_items    ?? {};
 
     // YTD期間の月数を fy_start と ytd.period 末尾から算出
     let ytdMonths = 1;
@@ -823,10 +823,9 @@ function renderBudget() {
       }
     }
 
-    const lineBudgetAmt = (name) => {
-      const monthly = lineBudgets[name] ?? 0;
-      return isYtd ? monthly * ytdMonths : monthly;
-    };
+    const monthlyToTarget = (monthly) => isYtd ? monthly * ytdMonths : monthly;
+    const lineBudgetAmt = (name) => monthlyToTarget(lineBudgets[name] ?? 0);
+    const itemBudgetAmt = (items, name) => monthlyToTarget(items[name] ?? 0);
 
     // ライン別実績を by_item から集計（renderBizContent と同じロジック）
     const ITEM_TO_LINE = {
@@ -842,13 +841,8 @@ function renderBudget() {
         if (ln) lineRevActuals[ln] += bi.amount;
       }
     }
-    const totalRevActual  = LINE_NAMES.reduce((s, n) => s + lineRevActuals[n], 0);
-    const totalRevBudget  = LINE_NAMES.reduce((s, n) => s + lineBudgetAmt(n), 0);
-
-    const budgetSga = isYtd ? monthlySga * ytdMonths : monthlySga;
-    const budgetCogs = Math.round(totalRevBudget * cogsRate);
-    const budgetGp   = totalRevBudget - budgetCogs;
-    const budgetOp   = budgetGp - budgetSga;
+    const totalRevActual = LINE_NAMES.reduce((s, n) => s + lineRevActuals[n], 0);
+    const totalRevBudget = LINE_NAMES.reduce((s, n) => s + lineBudgetAmt(n), 0);
 
     const makeRow = (label, bAmt, aAmt) => {
       const diff = bAmt != null ? bAmt - aAmt : null;
@@ -862,6 +856,18 @@ function renderBudget() {
           <td class="td-right">${rate !== '—' ? rate + '%' : '—'}</td>
         </tr>`;
     };
+    const makeTotalRow = (label, bAmt, aAmt) => {
+      const diff = bAmt - aAmt;
+      const rate = (bAmt && aAmt) ? ((aAmt / bAmt) * 100).toFixed(1) : '—';
+      return `
+        <tr class="total-row">
+          <td>${label}</td>
+          <td class="td-right">${fmtYen(bAmt)}</td>
+          <td class="td-right">${fmtYen(aAmt || null)}</td>
+          <td class="td-right ${diff < 0 ? 'negative' : ''}">${fmtYen(diff)}</td>
+          <td class="td-right">${rate !== '—' ? rate + '%' : '—'}</td>
+        </tr>`;
+    };
     const thead = `
       <thead><tr>
         <th>項目</th>
@@ -871,34 +877,63 @@ function renderBudget() {
         <th class="td-right">達成率</th>
       </tr></thead>`;
 
-    const revTotalDiff = totalRevBudget > 0 ? totalRevBudget - totalRevActual : null;
-    const revTotalRate = (totalRevBudget && totalRevActual) ? ((totalRevActual / totalRevBudget) * 100).toFixed(1) : '—';
-    const revRows = LINE_NAMES.map(n => makeRow(n, lineBudgetAmt(n), lineRevActuals[n])).join('') + `
-      <tr class="total-row">
-        <td>売上合計</td>
-        <td class="td-right">${fmtYen(totalRevBudget)}</td>
-        <td class="td-right">${fmtYen(totalRevActual || null)}</td>
-        <td class="td-right ${revTotalDiff != null && revTotalDiff < 0 ? 'negative' : ''}">${revTotalDiff != null ? fmtYen(revTotalDiff) : '—'}</td>
-        <td class="td-right">${revTotalRate !== '—' ? revTotalRate + '%' : '—'}</td>
-      </tr>`;
-
-    const summaryRows = [
-      { label: `売上原価（${(cogsRate*100).toFixed(0)}%基準）`, b: budgetCogs, a: actualData?.cogs?.total ?? 0 },
-      { label: '粗利',     b: budgetGp,  a: actualData?._summary?.gross_profit ?? 0 },
-      { label: '販管費',   b: budgetSga, a: actualData?.sga?.total ?? 0 },
-      { label: '営業利益', b: budgetOp,  a: actualData?._summary?.op_profit ?? 0 },
-    ].map(r => makeRow(r.label, r.b, r.a)).join('');
-
-    bodyHtml = `
-      <div class="budget-header"><span class="budget-period-label">${periodLabel}</span></div>
+    // ── 売上内訳 ──
+    const revRows = LINE_NAMES.map(n => makeRow(n, lineBudgetAmt(n), lineRevActuals[n])).join('')
+      + makeTotalRow('売上合計', totalRevBudget, totalRevActual);
+    const revSection = `
       <div class="budget-section">
         <div class="budget-section-title">売上内訳（事業ライン別）</div>
         <table class="detail-table budget-table">${thead}<tbody>${revRows}</tbody></table>
-      </div>
+      </div>`;
+
+    // ── 原価内訳（食材・飲料 by_item から集計）──
+    const cogsActualsMap = {};
+    for (const row of (actualData?.cogs?.breakdown ?? [])) {
+      for (const bi of (row.by_item ?? [])) {
+        cogsActualsMap[bi.name] = (cogsActualsMap[bi.name] ?? 0) + bi.amount;
+      }
+    }
+    const cogsItemNames = [...new Set([...Object.keys(cogsItems), ...Object.keys(cogsActualsMap)])];
+    const cogsBudgetTotal = cogsItemNames.reduce((s, n) => s + itemBudgetAmt(cogsItems, n), 0);
+    const cogsActualTotal = actualData?.cogs?.total ?? 0;
+    const cogsItemRows = cogsItemNames.map(n => makeRow(n, itemBudgetAmt(cogsItems, n) || null, cogsActualsMap[n] ?? 0)).join('')
+      + makeTotalRow('原価合計', cogsBudgetTotal, cogsActualTotal);
+    const cogsSection = `
+      <div class="budget-section">
+        <div class="budget-section-title">原価内訳</div>
+        <table class="detail-table budget-table">${thead}<tbody>${cogsItemRows}</tbody></table>
+      </div>`;
+
+    // ── 販管費内訳 ──
+    const sgaActualsMap = Object.fromEntries((actualData?.sga?.breakdown ?? []).map(b => [b.item, b.amount]));
+    const sgaItemNames  = [...new Set([...Object.keys(sgaItems), ...Object.keys(sgaActualsMap)])];
+    const sgaBudgetTotal = sgaItemNames.reduce((s, n) => s + itemBudgetAmt(sgaItems, n), 0);
+    const sgaActualTotal = actualData?.sga?.total ?? 0;
+    const sgaItemRows = sgaItemNames.map(n => makeRow(n, itemBudgetAmt(sgaItems, n) || null, sgaActualsMap[n] ?? 0)).join('')
+      + makeTotalRow('販管費合計', sgaBudgetTotal, sgaActualTotal);
+    const sgaSection = `
+      <div class="budget-section">
+        <div class="budget-section-title">販管費内訳</div>
+        <table class="detail-table budget-table">${thead}<tbody>${sgaItemRows}</tbody></table>
+      </div>`;
+
+    // ── 粗利・営業利益サマリー ──
+    const gpBudget = totalRevBudget - cogsBudgetTotal;
+    const gpActual = actualData?._summary?.gross_profit ?? 0;
+    const opBudget = gpBudget - sgaBudgetTotal;
+    const opActual = actualData?._summary?.op_profit ?? 0;
+    const summarySection = `
       <div class="budget-section">
         <div class="budget-section-title">損益サマリー</div>
-        <table class="detail-table budget-table">${thead}<tbody>${summaryRows}</tbody></table>
-      </div>
+        <table class="detail-table budget-table">${thead}<tbody>
+          ${makeRow('粗利',     gpBudget, gpActual)}
+          ${makeRow('営業利益', opBudget, opActual)}
+        </tbody></table>
+      </div>`;
+
+    bodyHtml = `
+      <div class="budget-header"><span class="budget-period-label">${periodLabel}</span></div>
+      ${revSection}${cogsSection}${sgaSection}${summarySection}
     `;
 
   // ── BLUE DESIGN / BLUE LIFE: サマリー予実 ─────────────────────────
