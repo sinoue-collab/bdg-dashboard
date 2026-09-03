@@ -191,12 +191,15 @@ function computeDataQualityAlerts(actuals) {
         message: `${name}（${period}）：粗利率${pct}%が想定レンジ（${rangeStr}）を外れています。` });
     }
 
-    // ルール5: freee同期停止の疑い（確定月が2ヶ月以上前）
-    if (period) {
-      const [py, pm] = period.split('-').map(Number);
-      if (nowYM - (py * 12 + pm) >= 2) {
+    // ルール5: freee同期停止の疑い（生の最新同期月が2ヶ月以上前）
+    // confirmed.period ではなく unit.period（フォールバック前の実際の同期月）を使う。
+    // confirmed.period は月初の確定月ロジックで前月にフォールバックするため誤検知しやすい。
+    const rawPeriod = unit?.period;
+    if (rawPeriod) {
+      const [rpy, rpm] = rawPeriod.split('-').map(Number);
+      if (nowYM - (rpy * 12 + rpm) >= 2) {
         alerts.push({ company: name, rule: 'sync_stale', severity: 'warning',
-          message: `${name}：直近確定月（${period}）が2ヶ月以上前のままです。freee同期が停止している可能性があります。` });
+          message: `${name}：freeeの最新データ（${rawPeriod}）が2ヶ月以上前のままです。同期が停止している可能性があります。` });
       }
     }
   }
