@@ -138,6 +138,73 @@ function showScreen(id) {
 }
 
 // ─────────────────────────────────────────────
+// データ品質アラート（フェーズ1: freee内データのみ）
+// ─────────────────────────────────────────────
+const GP_RANGE_ALERTS = {
+  unit_blue_design: { min: 0.10, max: 0.40 },
+  unit_seitendo:    { min: 0.50, max: 0.75 },
+  // BLUE ESTATE・BLUE LIFE は事業ライン混在のため対象外
+};
+
+function computeDataQualityAlerts(actuals) {
+  const alerts = [];
+  const now = new Date();
+  const nowYM = now.getFullYear() * 12 + (now.getMonth() + 1);
+
+  for (const key of UNIT_KEYS) {
+    const unit = actuals.data[key];
+    const name = UNIT_NAMES[key];
+    const confirmed = getConfirmed(unit);
+    const cd = confirmed.data;
+    const period = confirmed.period;
+    if (!cd) continue;
+
+    const rev  = cd.revenue?.total ?? 0;
+    const cogs = cd.cogs?.total ?? 0;
+    const gp   = cd._summary?.gross_profit ?? 0;
+    const gpr  = rev > 0 ? gp / rev : null;
+
+    // ルール1: 原価未計上の疑い
+    if (rev > 0 && cogs === 0) {
+      alerts.push({ company: name, rule: 'cogs_missing', severity: 'warning',
+        message: `${name}（${period}）：売上 ${fmtYen(rev)} に対して原価が0円です。原価が未計上の可能性があります。` });
+    }
+
+    // ルール2: 赤字原価（重度）
+    if (gp < 0) {
+      alerts.push({ company: name, rule: 'negative_gp', severity: 'critical',
+        message: `${name}（${period}）：粗利がマイナス（${fmtYen(gp)}）です。原価が売上を超えています。` });
+    }
+
+    // ルール3: 原価計上漏れの疑い（ルール1と排他）
+    if (cogs > 0 && gpr !== null && gpr > 0.95) {
+      alerts.push({ company: name, rule: 'cogs_underreported', severity: 'warning',
+        message: `${name}（${period}）：粗利率が${(gpr * 100).toFixed(1)}%と異常に高い値です。原価の計上漏れの可能性があります。` });
+    }
+
+    // ルール4: 会社別粗利率レンジ外れ（対象会社のみ）
+    const range = GP_RANGE_ALERTS[key];
+    if (range && rev > 0 && gpr !== null && (gpr < range.min || gpr > range.max)) {
+      const pct      = (gpr * 100).toFixed(1);
+      const rangeStr = `${(range.min * 100).toFixed(0)}%〜${(range.max * 100).toFixed(0)}%`;
+      alerts.push({ company: name, rule: 'gp_out_of_range', severity: 'warning',
+        message: `${name}（${period}）：粗利率${pct}%が想定レンジ（${rangeStr}）を外れています。` });
+    }
+
+    // ルール5: freee同期停止の疑い（確定月が2ヶ月以上前）
+    if (period) {
+      const [py, pm] = period.split('-').map(Number);
+      if (nowYM - (py * 12 + pm) >= 2) {
+        alerts.push({ company: name, rule: 'sync_stale', severity: 'warning',
+          message: `${name}：直近確定月（${period}）が2ヶ月以上前のままです。freee同期が停止している可能性があります。` });
+      }
+    }
+  }
+
+  return alerts;
+}
+
+// ─────────────────────────────────────────────
 // 画面1: 経営TOP
 // ─────────────────────────────────────────────
 function renderTop() {
@@ -273,7 +340,21 @@ function renderTop() {
     </div>
   `;
 
-  el.innerHTML = heroHtml + `<div class="company-cards">${cardHtml}</div>` + navCardsHtml;
+  const alerts = computeDataQualityAlerts(actuals);
+  const alertHtml = alerts.length > 0
+    ? `<div class="alert-section">
+        <div class="alert-section-label">データ品質アラート（${alerts.length}件）</div>
+        <div class="alert-list">
+          ${alerts.map(a => `
+            <div class="alert-item ${a.severity}">
+              <span class="alert-icon">${a.severity === 'critical' ? '🔴' : '⚠️'}</span>
+              <span>${a.message}</span>
+            </div>`).join('')}
+        </div>
+      </div>`
+    : `<div class="alert-section"><span class="alert-ok">✓ データ品質アラートなし</span></div>`;
+
+  el.innerHTML = heroHtml + `<div class="company-cards">${cardHtml}</div>` + alertHtml + navCardsHtml;
 
   el.querySelectorAll('.nav-card:not(.disabled)').forEach(card => {
     card.addEventListener('click', () => showScreen(card.dataset.nav));
