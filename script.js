@@ -146,6 +146,10 @@ const GP_RANGE_ALERTS = {
   // BLUE ESTATE・BLUE LIFE は事業ライン混在のため対象外
 };
 
+// R1（原価未計上の疑い）の除外会社
+// 介護報酬請求モデル等、構造的に売上原価が発生しない業態はここに追加する
+const R1_EXCLUDE_KEYS = ['unit_blue_life'];
+
 function computeDataQualityAlerts(actuals) {
   const alerts = [];
   const now = new Date();
@@ -164,8 +168,8 @@ function computeDataQualityAlerts(actuals) {
     const gp   = cd._summary?.gross_profit ?? 0;
     const gpr  = rev > 0 ? gp / rev : null;
 
-    // ルール1: 原価未計上の疑い
-    if (rev > 0 && cogs === 0) {
+    // ルール1: 原価未計上の疑い（構造的に原価が発生しない業態は除外）
+    if (!R1_EXCLUDE_KEYS.includes(key) && rev > 0 && cogs === 0) {
       alerts.push({ company: name, rule: 'cogs_missing', severity: 'warning',
         message: `${name}（${period}）：売上 ${fmtYen(rev)} に対して原価が0円です。原価が未計上の可能性があります。` });
     }
