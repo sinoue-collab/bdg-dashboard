@@ -1,6 +1,6 @@
 {
   "schema_version": "2.1",
-  "generated_at": "2026-09-04T08:09:59.995369+09:00",
+  "generated_at": "2026-09-05T07:56:24.596396+09:00",
   "data_periods": {
     "BLUE ESTATE": "2026-09",
     "BLUE DESIGN": "2026-09",
@@ -14,9 +14,9 @@
       "latest": {
         "revenue": 9891,
         "gross_profit": 9891,
-        "sga_total": 77971,
-        "op_profit": -68080,
-        "ordinary_profit": -143569
+        "sga_total": 78371,
+        "op_profit": -68480,
+        "ordinary_profit": -143969
       },
       "prior": {
         "revenue": 2805540,
@@ -28,9 +28,9 @@
       "ytd": {
         "revenue": 150974763,
         "gross_profit": 79077279,
-        "sga_total": 104709226,
-        "op_profit": -25631947,
-        "ordinary_profit": 1870306
+        "sga_total": 104709626,
+        "op_profit": -25632347,
+        "ordinary_profit": 1869906
       }
     },
     "BLUE DESIGN": {
@@ -39,23 +39,23 @@
       "latest": {
         "revenue": 38000,
         "gross_profit": 38000,
-        "sga_total": 391617,
-        "op_profit": -353617,
-        "ordinary_profit": -353617
+        "sga_total": 470525,
+        "op_profit": -432525,
+        "ordinary_profit": -432525
       },
       "prior": {
         "revenue": 610020,
         "gross_profit": 464555,
-        "sga_total": 4866461,
-        "op_profit": -4401906,
-        "ordinary_profit": -4429822
+        "sga_total": 6366461,
+        "op_profit": -5901906,
+        "ordinary_profit": -5929822
       },
       "ytd": {
         "revenue": 63019617,
-        "gross_profit": 13761604,
-        "sga_total": 41035293,
-        "op_profit": -27273689,
-        "ordinary_profit": -23499506
+        "gross_profit": 13593604,
+        "sga_total": 42614201,
+        "op_profit": -29020597,
+        "ordinary_profit": -25246414
       }
     },
     "BLUE LIFE": {
