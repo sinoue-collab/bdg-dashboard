@@ -1,15 +1,15 @@
 {
   "date": "2026-09-06",
-  "generated_at": "2026-09-06T01:20:32.486766+09:00",
+  "generated_at": "2026-09-06T07:44:19.986777+09:00",
   "data": {
     "unit_blue_estate": {
-      "period": "2026-08",
-      "prev_period": "2026-07",
-      "sync_date": "2026-09-06",
-      "effective_total": 79415069,
+      "period": "2026-09",
+      "prev_period": "2026-08",
+      "sync_date": "2026-09-05",
+      "effective_total": 3739894,
       "last_balance_total": 50540189,
-      "total": 85910477,
-      "prev_total": 92634503,
+      "total": 8484439,
+      "prev_total": 85910477,
       "accounts": [
         {
           "walletable_id": 3328387,
@@ -18,11 +18,11 @@
           "last_balance": 15075648,
           "update_date": "2026-09-04",
           "stale": false,
-          "balance": 32085157,
-          "prev_balance": 33187686,
-          "source": "sync",
-          "effective_balance": 15075648,
-          "fallback_reason": null
+          "balance": -60599527,
+          "prev_balance": 32085157,
+          "source": "bs",
+          "effective_balance": -60599527,
+          "fallback_reason": "overdraft"
         },
         {
           "walletable_id": 3328390,
@@ -30,9 +30,9 @@
           "type": "bank_account",
           "last_balance": 13635176,
           "update_date": "2026-08-23",
-          "stale": true,
-          "balance": 11967186,
-          "prev_balance": 16414421,
+          "stale": false,
+          "balance": 12225766,
+          "prev_balance": 11967186,
           "source": "sync",
           "effective_balance": 13635176,
           "fallback_reason": null
@@ -43,9 +43,9 @@
           "type": "bank_account",
           "last_balance": 5219218,
           "update_date": "2026-08-23",
-          "stale": true,
-          "balance": 454865,
-          "prev_balance": 574870,
+          "stale": false,
+          "balance": 7454425,
+          "prev_balance": 454865,
           "source": "sync",
           "effective_balance": 5219218,
           "fallback_reason": null
@@ -69,9 +69,9 @@
           "type": "bank_account",
           "last_balance": 6652835,
           "update_date": "2026-08-23",
-          "stale": true,
-          "balance": 680501,
-          "prev_balance": 110687,
+          "stale": false,
+          "balance": 8680501,
+          "prev_balance": 680501,
           "source": "sync",
           "effective_balance": 6652835,
           "fallback_reason": null
@@ -97,7 +97,7 @@
           "update_date": "2026-08-31",
           "stale": false,
           "balance": 3041067,
-          "prev_balance": 3871123,
+          "prev_balance": 3041067,
           "source": "sync",
           "effective_balance": 2538757,
           "fallback_reason": null
@@ -108,9 +108,9 @@
           "type": "bank_account",
           "last_balance": 29142834,
           "update_date": "2026-08-23",
-          "stale": true,
+          "stale": false,
           "balance": 29360529,
-          "prev_balance": 29560779,
+          "prev_balance": 29360529,
           "source": "sync",
           "effective_balance": 29142834,
           "fallback_reason": null
@@ -121,9 +121,9 @@
           "type": "bank_account",
           "last_balance": 3157062,
           "update_date": "2026-08-23",
-          "stale": true,
+          "stale": false,
           "balance": 3097062,
-          "prev_balance": 4385328,
+          "prev_balance": 3097062,
           "source": "sync",
           "effective_balance": 3157062,
           "fallback_reason": null
@@ -148,8 +148,8 @@
           "last_balance": 180050,
           "update_date": "2026-08-31",
           "stale": false,
-          "balance": 1969394,
-          "prev_balance": 1642493,
+          "balance": 1969900,
+          "prev_balance": 1969394,
           "source": "sync",
           "effective_balance": 180050,
           "fallback_reason": null
@@ -160,9 +160,9 @@
           "type": "bank_account",
           "last_balance": 1293611,
           "update_date": "2026-08-23",
-          "stale": true,
+          "stale": false,
           "balance": 734838,
-          "prev_balance": 152733,
+          "prev_balance": 734838,
           "source": "sync",
           "effective_balance": 1293611,
           "fallback_reason": null
@@ -175,7 +175,7 @@
           "update_date": "2023-06-30",
           "stale": false,
           "balance": 2519452,
-          "prev_balance": 2733957,
+          "prev_balance": 2519452,
           "source": "bs",
           "effective_balance": 2519452,
           "fallback_reason": "wallet"
@@ -183,13 +183,13 @@
       ]
     },
     "unit_blue_design": {
-      "period": "2026-08",
-      "prev_period": "2026-07",
-      "sync_date": "2026-09-06",
+      "period": "2026-09",
+      "prev_period": "2026-08",
+      "sync_date": "2026-09-05",
       "effective_total": 85270423,
       "last_balance_total": 79363793,
-      "total": 88033706,
-      "prev_total": 49610967,
+      "total": 85260541,
+      "prev_total": 88033706,
       "accounts": [
         {
           "walletable_id": 3232757,
@@ -198,8 +198,8 @@
           "last_balance": 17411683,
           "update_date": "2026-09-04",
           "stale": false,
-          "balance": 23276238,
-          "prev_balance": 40968773,
+          "balance": 17401801,
+          "prev_balance": 23276238,
           "source": "sync",
           "effective_balance": 17411683,
           "fallback_reason": null
@@ -211,8 +211,8 @@
           "last_balance": 2379780,
           "update_date": "2026-09-04",
           "stale": false,
-          "balance": 2415288,
-          "prev_balance": 525302,
+          "balance": 2379780,
+          "prev_balance": 2415288,
           "source": "sync",
           "effective_balance": 2379780,
           "fallback_reason": null
@@ -225,7 +225,7 @@
           "update_date": "2026-09-04",
           "stale": false,
           "balance": 600696,
-          "prev_balance": 128665,
+          "prev_balance": 600696,
           "source": "sync",
           "effective_balance": 600696,
           "fallback_reason": null
@@ -238,7 +238,7 @@
           "update_date": "2026-09-02",
           "stale": false,
           "balance": 22329367,
-          "prev_balance": 204029,
+          "prev_balance": 22329367,
           "source": "sync",
           "effective_balance": 22329367,
           "fallback_reason": null
@@ -251,7 +251,7 @@
           "update_date": "2026-09-04",
           "stale": false,
           "balance": 31977923,
-          "prev_balance": 1126973,
+          "prev_balance": 31977923,
           "source": "sync",
           "effective_balance": 31977923,
           "fallback_reason": null
@@ -264,7 +264,7 @@
           "update_date": "2024-03-26",
           "stale": false,
           "balance": 5500000,
-          "prev_balance": 5000000,
+          "prev_balance": 5500000,
           "source": "bs",
           "effective_balance": 5500000,
           "fallback_reason": "long_stale"
@@ -276,8 +276,8 @@
           "last_balance": 4664344,
           "update_date": "2026-09-04",
           "stale": false,
-          "balance": 1527564,
-          "prev_balance": 1205980,
+          "balance": 4664344,
+          "prev_balance": 1527564,
           "source": "sync",
           "effective_balance": 4664344,
           "fallback_reason": null
@@ -290,7 +290,7 @@
           "update_date": "2023-03-30",
           "stale": false,
           "balance": 406630,
-          "prev_balance": 451245,
+          "prev_balance": 406630,
           "source": "bs",
           "effective_balance": 406630,
           "fallback_reason": "wallet"
@@ -298,13 +298,13 @@
       ]
     },
     "unit_blue_life": {
-      "period": "2026-08",
-      "prev_period": "2026-07",
-      "sync_date": "2026-09-06",
+      "period": "2026-09",
+      "prev_period": "2026-08",
+      "sync_date": "2026-09-05",
       "effective_total": 395210,
       "last_balance_total": 3668562,
       "total": 3638393,
-      "prev_total": 2926551,
+      "prev_total": 3638393,
       "accounts": [
         {
           "walletable_id": 3835289,
@@ -314,7 +314,7 @@
           "update_date": "2026-09-04",
           "stale": false,
           "balance": -2164141,
-          "prev_balance": 155204,
+          "prev_balance": -2164141,
           "source": "bs",
           "effective_balance": -2164141,
           "fallback_reason": "overdraft"
@@ -327,7 +327,7 @@
           "update_date": "2026-08-18",
           "stale": true,
           "balance": 34237,
-          "prev_balance": 35613,
+          "prev_balance": 34237,
           "source": "sync",
           "effective_balance": 34237,
           "fallback_reason": null
@@ -340,7 +340,7 @@
           "update_date": "2026-09-04",
           "stale": false,
           "balance": 6206248,
-          "prev_balance": 2157739,
+          "prev_balance": 6206248,
           "source": "sync",
           "effective_balance": 2963065,
           "fallback_reason": null
@@ -353,7 +353,7 @@
           "update_date": "2026-09-04",
           "stale": false,
           "balance": -437951,
-          "prev_balance": 577995,
+          "prev_balance": -437951,
           "source": "bs",
           "effective_balance": -437951,
           "fallback_reason": "overdraft"
