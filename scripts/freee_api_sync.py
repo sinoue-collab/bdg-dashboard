@@ -610,60 +610,102 @@ def fetch_cash_balances(company_id, access_token,
                         cur_fy, cur_month, cur_year,
                         prv_fy, prv_month, prv_year):
     """
-    trial_bs から現金・預金残高を取得し、前月比を計算する。
-    walletables で口座タイプを確認し、
+    預金残高を取得する。
+    - 主表示: walletables.last_balance（銀行API同期残高）
+    - 参考  : trial_bs.closing_balance（月末確定値・当月・前月）
+
+    フィルタ:
       bank_account → 全件対象
       wallet       → 名前に「現金」を含むもののみ（倒産防止共済掛金等は除外）
       credit_card  → 全件除外
+
+    last_balance も trial_bs 残高も 0 の口座（解約済み等）は出力から除外。
+    update_date が STALE_DAYS 以上前の口座は stale=True で警告を付ける。
     """
-    # walletables で口座名 → type のマッピングを取得
+    from datetime import date as _date
+    STALE_DAYS = 14
+    today_str  = _date.today().isoformat()
+
+    # ── walletables（口座タイプ・同期残高・更新日）──────────
     try:
-        ws_resp = freee_get('/api/1/walletables', access_token, {'company_id': company_id})
-        type_map = {w['name']: w['type'] for w in ws_resp.get('walletables', [])}
+        ws_resp    = freee_get('/api/1/walletables', access_token,
+                               {'company_id': company_id, 'with_balance': 'true'})
+        walletables = ws_resp.get('walletables', [])
     except Exception:
-        type_map = {}
+        walletables = []
 
-    def _get_accounts(fy, month):
-        resp = freee_get('/api/1/reports/trial_bs', access_token, {
-            'company_id':  company_id,
-            'fiscal_year': fy,
-            'start_month': month,
-            'end_month':   month,
+    # ── trial_bs（月末確定値）──────────────────────────
+    def _get_bs_map(fy, month):
+        try:
+            resp = freee_get('/api/1/reports/trial_bs', access_token, {
+                'company_id':  company_id,
+                'fiscal_year': fy,
+                'start_month': month,
+                'end_month':   month,
+            })
+            return {
+                row['account_item_name']: row.get('closing_balance', 0) or 0
+                for row in resp.get('trial_bs', {}).get('balances', [])
+                if row.get('account_category_name') == '現金・預金'
+            }
+        except Exception:
+            return {}
+
+    cur_bs = _get_bs_map(cur_fy, cur_month)
+    prv_bs = _get_bs_map(prv_fy, prv_month)
+
+    # ── 口座リスト構築 ──────────────────────────────────
+    accounts = []
+    for w in walletables:
+        acc_type = w.get('type', '')
+        name     = w.get('name', '')
+
+        # フィルタ
+        if acc_type == 'credit_card':
+            continue
+        if acc_type == 'wallet' and '現金' not in name:
+            continue
+
+        last_balance = w.get('last_balance') or 0
+        update_date  = w.get('update_date')  or ''
+        balance      = cur_bs.get(name, 0)
+        prev_balance = prv_bs.get(name, 0)
+
+        # last_balance も trial_bs 残高も 0 の口座はスキップ（解約済み等）
+        if last_balance == 0 and balance == 0 and prev_balance == 0:
+            continue
+
+        # 同期停止チェック（14日以上更新なし）
+        stale = False
+        if update_date:
+            try:
+                days_old = (_date.fromisoformat(today_str) - _date.fromisoformat(update_date)).days
+                stale    = days_old >= STALE_DAYS
+            except Exception:
+                pass
+
+        accounts.append({
+            'name':         name,
+            'type':         acc_type,
+            'last_balance': last_balance,
+            'update_date':  update_date,
+            'stale':        stale,
+            'balance':      balance,      # trial_bs 当月末（参考）
+            'prev_balance': prev_balance, # trial_bs 前月末（参考）
         })
-        balances = resp.get('trial_bs', {}).get('balances', [])
-        accounts = []
-        for row in balances:
-            if row.get('account_category_name') != '現金・預金':
-                continue
-            name    = row.get('account_item_name', '')
-            balance = row.get('closing_balance', 0) or 0
-            acc_type = type_map.get(name, 'bank_account')
-            # フィルタ: credit_card は除外、wallet は「現金」を含むもののみ
-            if acc_type == 'credit_card':
-                continue
-            if acc_type == 'wallet' and '現金' not in name:
-                continue
-            accounts.append({'name': name, 'type': acc_type, 'balance': balance})
-        return accounts
 
-    cur_accounts = _get_accounts(cur_fy, cur_month)
-    prv_accounts = _get_accounts(prv_fy, prv_month)
-
-    prv_map = {a['name']: a['balance'] for a in prv_accounts}
-    for acc in cur_accounts:
-        acc['prev_balance'] = prv_map.get(acc['name'], 0)
-        acc['diff'] = acc['balance'] - acc['prev_balance']
-
-    total      = sum(a['balance'] for a in cur_accounts)
-    prev_total = sum(prv_map.values())
+    last_balance_total = sum(a['last_balance'] for a in accounts)
+    total              = sum(a['balance']      for a in accounts)
+    prev_total         = sum(a['prev_balance'] for a in accounts)
 
     return {
-        'period':      f'{cur_year}-{cur_month:02d}',
-        'prev_period': f'{prv_year}-{prv_month:02d}',
-        'accounts':    cur_accounts,
-        'total':       total,
-        'prev_total':  prev_total,
-        'diff':        total - prev_total,
+        'period':             f'{cur_year}-{cur_month:02d}',
+        'prev_period':        f'{prv_year}-{prv_month:02d}',
+        'sync_date':          today_str,
+        'last_balance_total': last_balance_total,
+        'total':              total,      # trial_bs 当月末合計（参考）
+        'prev_total':         prev_total, # trial_bs 前月末合計（参考）
+        'accounts':           accounts,
     }
 
 
