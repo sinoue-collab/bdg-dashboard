@@ -603,6 +603,71 @@ def fetch_trial_pl(company_id, access_token, fiscal_year, start_month, end_month
 
 
 # ─────────────────────────────────────────
+#  現金・預金残高取得
+# ─────────────────────────────────────────
+
+def fetch_cash_balances(company_id, access_token,
+                        cur_fy, cur_month, cur_year,
+                        prv_fy, prv_month, prv_year):
+    """
+    trial_bs から現金・預金残高を取得し、前月比を計算する。
+    walletables で口座タイプを確認し、
+      bank_account → 全件対象
+      wallet       → 名前に「現金」を含むもののみ（倒産防止共済掛金等は除外）
+      credit_card  → 全件除外
+    """
+    # walletables で口座名 → type のマッピングを取得
+    try:
+        ws_resp = freee_get('/api/1/walletables', access_token, {'company_id': company_id})
+        type_map = {w['name']: w['type'] for w in ws_resp.get('walletables', [])}
+    except Exception:
+        type_map = {}
+
+    def _get_accounts(fy, month):
+        resp = freee_get('/api/1/reports/trial_bs', access_token, {
+            'company_id':  company_id,
+            'fiscal_year': fy,
+            'start_month': month,
+            'end_month':   month,
+        })
+        balances = resp.get('trial_bs', {}).get('balances', [])
+        accounts = []
+        for row in balances:
+            if row.get('account_category_name') != '現金・預金':
+                continue
+            name    = row.get('account_item_name', '')
+            balance = row.get('closing_balance', 0) or 0
+            acc_type = type_map.get(name, 'bank_account')
+            # フィルタ: credit_card は除外、wallet は「現金」を含むもののみ
+            if acc_type == 'credit_card':
+                continue
+            if acc_type == 'wallet' and '現金' not in name:
+                continue
+            accounts.append({'name': name, 'type': acc_type, 'balance': balance})
+        return accounts
+
+    cur_accounts = _get_accounts(cur_fy, cur_month)
+    prv_accounts = _get_accounts(prv_fy, prv_month)
+
+    prv_map = {a['name']: a['balance'] for a in prv_accounts}
+    for acc in cur_accounts:
+        acc['prev_balance'] = prv_map.get(acc['name'], 0)
+        acc['diff'] = acc['balance'] - acc['prev_balance']
+
+    total      = sum(a['balance'] for a in cur_accounts)
+    prev_total = sum(prv_map.values())
+
+    return {
+        'period':      f'{cur_year}-{cur_month:02d}',
+        'prev_period': f'{prv_year}-{prv_month:02d}',
+        'accounts':    cur_accounts,
+        'total':       total,
+        'prev_total':  prev_total,
+        'diff':        total - prev_total,
+    }
+
+
+# ─────────────────────────────────────────
 #  試算表パース
 # ─────────────────────────────────────────
 
@@ -942,6 +1007,19 @@ def main():
             if cur_data['revenue']['total'] == 0:
                 print(f'    ⚠️  売上が0です。freee への入力が未完了か、科目マッピングを確認してください。')
 
+            # 現金・預金残高取得（trial_bs）
+            print(f'    現金・預金残高取得中...')
+            try:
+                cash_data = fetch_cash_balances(
+                    company_id, access_token,
+                    cur_fy, cur_month, cur_year,
+                    prv_fy, prv_month, prv_year,
+                )
+                print(f'      合計: {cash_data["total"]:,}（口座数: {len(cash_data["accounts"])}件）')
+            except Exception as ce:
+                print(f'      ⚠️  取得失敗: {ce}')
+                cash_data = None
+
         except Exception as e:
             print(f'    ✗ エラー: {e}')
             continue
@@ -976,6 +1054,7 @@ def main():
                 'non_op_expense': ytd_data['non_op_expense'],
                 '_summary':    ytd_sum,
             },
+            'cash': cash_data,
         }
 
         snapshot_companies[co_name] = {

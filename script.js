@@ -133,6 +133,7 @@ function showScreen(id) {
   if (id === 's-top')    renderTop();
   if (id === 's-biz')    renderBiz();
   if (id === 's-budget') renderBudget();
+  if (id === 's-cash')   renderCash();
   if (id === 's-goals')  renderGoals();
   if (id === 's-trend')  renderTrend();
 }
@@ -334,15 +335,15 @@ function renderTop() {
         <div class="nav-card-title">予実管理</div>
         <div class="nav-card-sub">予算vs実績・品目ドリルダウン</div>
       </div>
+      <div class="nav-card" data-nav="s-cash">
+        <div class="nav-card-icon">🏦</div>
+        <div class="nav-card-title">CASH</div>
+        <div class="nav-card-sub">預金残高・口座別内訳</div>
+      </div>
       <div class="nav-card disabled" data-nav="s-goals">
         <div class="nav-card-icon">🎯</div>
         <div class="nav-card-title">経営目標</div>
         <div class="nav-card-sub">すごい会議連携準備中</div>
-      </div>
-      <div class="nav-card disabled" data-nav="s-trend">
-        <div class="nav-card-icon">📈</div>
-        <div class="nav-card-title">年度比較</div>
-        <div class="nav-card-sub">前年度データ整備後に実装予定</div>
       </div>
     </div>
   `;
@@ -1210,7 +1211,134 @@ function renderBudget() {
 }
 
 // ─────────────────────────────────────────────
-// 画面4: 経営目標
+// 画面4: CASH（預金残高一覧）
+// ─────────────────────────────────────────────
+function renderCash() {
+  const el = document.getElementById('s-cash');
+  if (!el) return;
+
+  const { actuals } = appData;
+  if (!actuals) {
+    el.innerHTML = '<p class="error-msg">データ読み込みエラー</p>';
+    return;
+  }
+
+  const CASH_UNITS = [
+    { key: 'unit_blue_estate', name: 'BLUE ESTATE' },
+    { key: 'unit_blue_design', name: 'BLUE DESIGN' },
+    { key: 'unit_blue_life',   name: 'BLUE LIFE'   },
+  ];
+
+  // グループ合計
+  let groupTotal = 0, groupPrev = 0;
+  for (const { key } of CASH_UNITS) {
+    const cash = actuals.data[key]?.cash;
+    if (cash) { groupTotal += cash.total ?? 0; groupPrev += cash.prev_total ?? 0; }
+  }
+  const groupDiff  = groupTotal - groupPrev;
+  const period     = actuals.data['unit_blue_estate']?.cash?.period     ?? '—';
+  const prevPeriod = actuals.data['unit_blue_estate']?.cash?.prev_period ?? '—';
+
+  const heroHtml = `
+    <div class="hero-kpis">
+      <div class="hero-kpi">
+        <div class="hero-kpi-label">グループ現金・預金合計（${period}末）</div>
+        <div class="hero-kpi-value">${fmtYen(groupTotal)}</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-label">前月（${prevPeriod}末）</div>
+        <div class="hero-kpi-value">${fmtYen(groupPrev)}</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-label">前月比</div>
+        <div class="hero-kpi-value ${groupDiff < 0 ? 'negative' : ''}">${groupDiff >= 0 ? '+' : ''}${fmtYen(groupDiff)}</div>
+      </div>
+    </div>
+  `;
+
+  // 各社カード（アコーディオン）
+  const companiesHtml = CASH_UNITS.map(({ key, name }) => {
+    const cash      = actuals.data[key]?.cash;
+    const color     = COLORS[name] || COLORS.accent;
+    const total     = cash?.total     ?? 0;
+    const prevTotal = cash?.prev_total ?? 0;
+    const diff      = cash?.diff      ?? 0;
+    const accounts  = cash?.accounts  ?? [];
+
+    const diffCls = diff < 0 ? ' negative' : diff > 0 ? ' positive' : '';
+
+    const detailRows = accounts.map(acc => {
+      const dCls = acc.diff < 0 ? ' negative' : acc.diff > 0 ? ' positive' : '';
+      return `
+        <tr>
+          <td>${acc.name}</td>
+          <td class="td-right">${fmtYen(acc.balance)}</td>
+          <td class="td-right">${fmtYen(acc.prev_balance ?? null)}</td>
+          <td class="td-right${dCls}">${acc.diff >= 0 ? '+' : ''}${fmtYen(acc.diff)}</td>
+        </tr>`;
+    }).join('');
+
+    return `
+      <div class="cash-company-card">
+        <div class="cash-company-header" data-cash-key="${key}">
+          <div class="cash-company-badge" style="background:${color}"></div>
+          <div class="cash-company-name">${name}</div>
+          <div class="cash-company-total">${fmtYen(total)}</div>
+          <div class="cash-company-diff${diffCls}">${diff >= 0 ? '+' : ''}${fmtYen(diff)}</div>
+          <div class="cash-expand-icon">▶</div>
+        </div>
+        <div class="cash-detail" id="cash-detail-${key}">
+          <table class="detail-table cash-detail-table">
+            <thead><tr>
+              <th>口座名</th>
+              <th class="td-right">${cash?.period ?? ''}末</th>
+              <th class="td-right">${cash?.prev_period ?? ''}末</th>
+              <th class="td-right">差額</th>
+            </tr></thead>
+            <tbody>${detailRows}</tbody>
+            <tfoot><tr class="total-row">
+              <td>合計</td>
+              <td class="td-right">${fmtYen(total)}</td>
+              <td class="td-right">${fmtYen(prevTotal)}</td>
+              <td class="td-right${diffCls}">${diff >= 0 ? '+' : ''}${fmtYen(diff)}</td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </div>`;
+  }).join('');
+
+  const seitenHtml = `
+    <div class="cash-company-card cash-seitendo">
+      <div class="cash-company-header" style="cursor:default">
+        <div class="cash-company-badge" style="background:${COLORS['青天堂']}"></div>
+        <div class="cash-company-name" style="color:var(--ink-faint)">青天堂</div>
+        <div class="cash-seitendo-note">freee対象外のため表示できません</div>
+      </div>
+    </div>`;
+
+  el.innerHTML = heroHtml + `
+    <div class="cash-period-note">月次確定値（trial_bs）• 各月末時点の試算表残高</div>
+    <div class="cash-companies">
+      ${companiesHtml}
+      ${seitenHtml}
+    </div>
+  `;
+
+  // アコーディオン
+  el.querySelectorAll('.cash-company-header[data-cash-key]').forEach(header => {
+    header.addEventListener('click', () => {
+      const detail = document.getElementById(`cash-detail-${header.dataset.cashKey}`);
+      const icon   = header.querySelector('.cash-expand-icon');
+      if (detail) {
+        detail.classList.toggle('open');
+        if (icon) icon.textContent = detail.classList.contains('open') ? '▼' : '▶';
+      }
+    });
+  });
+}
+
+// ─────────────────────────────────────────────
+// 画面5: 経営目標
 // ─────────────────────────────────────────────
 function renderGoals() {
   const el = document.getElementById('s-goals');

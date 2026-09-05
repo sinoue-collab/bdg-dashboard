@@ -405,6 +405,30 @@
       font-size: 12px; color: var(--good); background: var(--good-soft);
       padding: 7px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;
     }
+
+    /* ── CASH 預金残高 ── */
+    .cash-period-note { font-size: 10px; color: var(--ink-faint); margin: -4px 0 16px; }
+    .cash-companies { display: flex; flex-direction: column; gap: 10px; }
+    .cash-company-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .cash-company-header {
+      padding: 14px 20px; cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+      transition: background .12s;
+    }
+    .cash-company-header:hover { background: var(--accent-soft); }
+    .cash-company-badge { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .cash-company-name { font-size: 14px; font-weight: 800; flex: 0 0 140px; }
+    .cash-company-total { font-size: 18px; font-weight: 900; font-family: var(--font-mono); flex: 1; }
+    .cash-company-diff { font-size: 12px; font-family: var(--font-mono); font-weight: 600; color: var(--ink-dim); min-width: 130px; text-align: right; }
+    .cash-company-diff.negative { color: var(--bad); }
+    .cash-company-diff.positive { color: var(--good); }
+    .cash-expand-icon { font-size: 11px; color: var(--ink-faint); margin-left: 8px; }
+    .cash-detail { display: none; border-top: 1px solid var(--border); padding: 4px 20px 16px; }
+    .cash-detail.open { display: block; }
+    .cash-detail-table { margin-top: 8px; }
+    .cash-seitendo .cash-company-header { cursor: default; }
+    .cash-seitendo-note { font-size: 12px; color: var(--ink-faint); flex: 1; }
+    .no-budget-tag { display: inline-block; background: var(--surface-2); color: var(--ink-faint); border: 1px solid var(--border); border-radius: 8px; font-size: 9px; font-weight: 700; padding: 1px 5px; margin-left: 4px; vertical-align: middle; }
   </style>
 </head>
 <body>
@@ -427,6 +451,7 @@
         <div class="nav-group-label">事業分析</div>
         <button class="nav-item" data-screen="s-biz">事業構造マップ</button>
         <button class="nav-item" data-screen="s-budget">予実管理</button>
+        <button class="nav-item" data-screen="s-cash">CASH</button>
       </div>
 
       <div class="nav-group">
@@ -452,6 +477,7 @@
     <div id="s-top"    class="screen active"></div>
     <div id="s-biz"    class="screen"></div>
     <div id="s-budget" class="screen"></div>
+    <div id="s-cash"   class="screen"></div>
     <div id="s-goals"  class="screen"></div>
     <div id="s-trend"  class="screen"></div>
   </main>

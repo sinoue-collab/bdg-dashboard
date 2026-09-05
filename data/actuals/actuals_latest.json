@@ -3533,6 +3533,113 @@
           "op_profit": -25632347,
           "ordinary_profit": 1869906
         }
+      },
+      "cash": {
+        "period": "2026-08",
+        "prev_period": "2026-07",
+        "accounts": [
+          {
+            "name": "現金",
+            "type": "wallet",
+            "balance": 2519452,
+            "prev_balance": 2733957,
+            "diff": -214505
+          },
+          {
+            "name": "現金(賃貸革命)",
+            "type": "bank_account",
+            "balance": 631060,
+            "prev_balance": 631060,
+            "diff": 0
+          },
+          {
+            "name": "2026/6/15",
+            "type": "bank_account",
+            "balance": 541919,
+            "prev_balance": 541919,
+            "diff": 0
+          },
+          {
+            "name": "佐賀（法人）（API） 635 ｶﾗﾂ支店 普通 ＊＊＊4755",
+            "type": "bank_account",
+            "balance": 32085157,
+            "prev_balance": 33187686,
+            "diff": -1102529
+          },
+          {
+            "name": "佐賀（法人）（API） 635 ｶﾗﾂ支店 普通 ＊＊＊7881",
+            "type": "bank_account",
+            "balance": 11967186,
+            "prev_balance": 16414421,
+            "diff": -4447235
+          },
+          {
+            "name": "唐津信金（法人）（API） 007 和多田支店 普通預金 ＊＊＊7081",
+            "type": "bank_account",
+            "balance": 454865,
+            "prev_balance": 574870,
+            "diff": -120005
+          },
+          {
+            "name": "佐賀（法人）（API） 642 ﾜﾀﾀﾞ支店 普通 ＊＊＊1693",
+            "type": "bank_account",
+            "balance": 680501,
+            "prev_balance": 110687,
+            "diff": 569814
+          },
+          {
+            "name": "普通預金_福岡（法人）1252921",
+            "type": "bank_account",
+            "balance": 3041067,
+            "prev_balance": 3871123,
+            "diff": -830056
+          },
+          {
+            "name": "普通預金_西日本・唐津（API）1430791",
+            "type": "bank_account",
+            "balance": 3097062,
+            "prev_balance": 4385328,
+            "diff": -1288266
+          },
+          {
+            "name": "普通預金_佐賀共栄・唐津　1102427",
+            "type": "bank_account",
+            "balance": 29360529,
+            "prev_balance": 29560779,
+            "diff": -200250
+          },
+          {
+            "name": "普通預金_唐津信金・和多田1155204",
+            "type": "bank_account",
+            "balance": 426,
+            "prev_balance": 426,
+            "diff": 0
+          },
+          {
+            "name": "GMOあおぞらネット（法人）（API） 102 法人第二営業部 普通預金（有利息） ***0723",
+            "type": "bank_account",
+            "balance": 1969394,
+            "prev_balance": 1642493,
+            "diff": 326901
+          },
+          {
+            "name": "楽天（法人） 253 第三営業支店 普通 ***5294",
+            "type": "bank_account",
+            "balance": 734838,
+            "prev_balance": 152733,
+            "diff": 582105
+          },
+          {
+            "name": "定期積金_佐銀積立 ライフ自由 1141",
+            "type": "bank_account",
+            "balance": 0,
+            "prev_balance": 0,
+            "diff": 0
+          }
+        ],
+        "total": 87083456,
+        "prev_total": 93807482,
+        "diff": -6724026
       }
     },
     "unit_blue_design": {
@@ -6206,6 +6313,71 @@
           "op_profit": -29020597,
           "ordinary_profit": -25246414
         }
+      },
+      "cash": {
+        "period": "2026-08",
+        "prev_period": "2026-07",
+        "accounts": [
+          {
+            "name": "現金",
+            "type": "wallet",
+            "balance": 406630,
+            "prev_balance": 451245,
+            "diff": -44615
+          },
+          {
+            "name": "普通預金_佐賀/唐津1788526",
+            "type": "bank_account",
+            "balance": 23276238,
+            "prev_balance": 40968773,
+            "diff": -17692535
+          },
+          {
+            "name": "普通預金_佐賀/和多田1196726",
+            "type": "bank_account",
+            "balance": 2415288,
+            "prev_balance": 525302,
+            "diff": 1889986
+          },
+          {
+            "name": "普通預金_鏡郵便局11271131",
+            "type": "bank_account",
+            "balance": 600696,
+            "prev_balance": 128665,
+            "diff": 472031
+          },
+          {
+            "name": "普通預金_西日本シティ1299081",
+            "type": "bank_account",
+            "balance": 22329367,
+            "prev_balance": 204029,
+            "diff": 22125338
+          },
+          {
+            "name": "普通預金_福岡/唐津",
+            "type": "bank_account",
+            "balance": 31977923,
+            "prev_balance": 1126973,
+            "diff": 30850950
+          },
+          {
+            "name": "住信ＳＢＩネット（法人） 106 代表口座 円普通預金 ***9798",
+            "type": "bank_account",
+            "balance": 1527564,
+            "prev_balance": 1205980,
+            "diff": 321584
+          },
+          {
+            "name": "定期預金_佐賀/唐津支店",
+            "type": "bank_account",
+            "balance": 5500000,
+            "prev_balance": 5000000,
+            "diff": 500000
+          }
+        ],
+        "total": 88033706,
+        "prev_total": 49610967,
+        "diff": 38422739
       }
     },
     "unit_blue_life": {
@@ -7031,6 +7203,43 @@
           "op_profit": 226166,
           "ordinary_profit": 648083
         }
+      },
+      "cash": {
+        "period": "2026-08",
+        "prev_period": "2026-07",
+        "accounts": [
+          {
+            "name": "GMOあおぞらネット（法人）（API） 101 法人営業部 普通預金（有利息） ***1577",
+            "type": "bank_account",
+            "balance": -2164141,
+            "prev_balance": 155204,
+            "diff": -2319345
+          },
+          {
+            "name": "西日本シティ 唐津支店 3118340",
+            "type": "bank_account",
+            "balance": 34237,
+            "prev_balance": 35613,
+            "diff": -1376
+          },
+          {
+            "name": "佐賀（法人）（API） 635 ｶﾗﾂ支店 普通 ***7360",
+            "type": "bank_account",
+            "balance": 6206248,
+            "prev_balance": 2157739,
+            "diff": 4048509
+          },
+          {
+            "name": "唐津信金（法人） 007 和多田支店 普通預金 ***6287",
+            "type": "bank_account",
+            "balance": -437951,
+            "prev_balance": 577995,
+            "diff": -1015946
+          }
+        ],
+        "total": 3638393,
+        "prev_total": 2926551,
+        "diff": 711842
       }
     },
     "unit_seitendo": {
