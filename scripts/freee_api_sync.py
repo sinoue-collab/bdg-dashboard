@@ -610,26 +610,27 @@ def fetch_cash_balances(company_id, access_token,
                         cur_fy, cur_month, cur_year,
                         prv_fy, prv_month, prv_year):
     """
-    預金残高を取得する。
-    - 主表示: walletables.last_balance（銀行API同期残高）
-    - 参考  : trial_bs.closing_balance（月末確定値・当月・前月）
-
-    フィルタ:
-      bank_account → 全件対象
-      wallet       → 名前に「現金」を含むもののみ（倒産防止共済掛金等は除外）
-      credit_card  → 全件除外
-
-    last_balance も trial_bs 残高も 0 の口座（解約済み等）は出力から除外。
-    update_date が STALE_DAYS 以上前の口座は stale=True で警告を付ける。
+    各口座の「現在値」を下記の優先ルールで決定する:
+      1. wallet（現金）          → 常に trial_bs 確定値（銀行同期対象外）
+      2. trial_bs 当月末 < 0    → 当座貸越のため trial_bs 確定値
+      3. update_date が90日以上前 → 長期未同期のため trial_bs 確定値にフォールバック
+      4. それ以外                → last_balance（銀行API同期残高）を採用
+    フィールド:
+      source          : 'sync' | 'bs'
+      effective_balance: 上記ルールで選んだ現在値
+      fallback_reason  : null | 'wallet' | 'overdraft' | 'long_stale'
+      stale            : source='sync' かつ update_date が14日以上前の場合 True
     """
     from datetime import date as _date
-    STALE_DAYS = 14
-    today_str  = _date.today().isoformat()
+    STALE_DAYS      = 14
+    LONG_STALE_DAYS = 90
+    today_str       = _date.today().isoformat()
+    today_date      = _date.fromisoformat(today_str)
 
     # ── walletables（口座タイプ・同期残高・更新日）──────────
     try:
-        ws_resp    = freee_get('/api/1/walletables', access_token,
-                               {'company_id': company_id, 'with_balance': 'true'})
+        ws_resp     = freee_get('/api/1/walletables', access_token,
+                                {'company_id': company_id, 'with_balance': 'true'})
         walletables = ws_resp.get('walletables', [])
     except Exception:
         walletables = []
@@ -660,7 +661,6 @@ def fetch_cash_balances(company_id, access_token,
         acc_type = w.get('type', '')
         name     = w.get('name', '')
 
-        # フィルタ
         if acc_type == 'credit_card':
             continue
         if acc_type == 'wallet' and '現金' not in name:
@@ -671,37 +671,58 @@ def fetch_cash_balances(company_id, access_token,
         balance      = cur_bs.get(name, 0)
         prev_balance = prv_bs.get(name, 0)
 
-        # last_balance も trial_bs 残高も 0 の口座はスキップ（解約済み等）
         if last_balance == 0 and balance == 0 and prev_balance == 0:
             continue
 
-        # 同期停止チェック（14日以上更新なし）
-        stale = False
-        if update_date:
+        # 優先ルールで source / effective_balance / fallback_reason を決定
+        if acc_type == 'wallet':
+            source, effective, fallback_reason = 'bs', balance, 'wallet'
+        elif balance < 0:
+            source, effective, fallback_reason = 'bs', balance, 'overdraft'
+        elif update_date:
             try:
-                days_old = (_date.fromisoformat(today_str) - _date.fromisoformat(update_date)).days
+                days_old = (today_date - _date.fromisoformat(update_date)).days
+                if days_old >= LONG_STALE_DAYS:
+                    source, effective, fallback_reason = 'bs', balance, 'long_stale'
+                else:
+                    source, effective, fallback_reason = 'sync', last_balance, None
+            except Exception:
+                source, effective, fallback_reason = 'sync', last_balance, None
+        else:
+            source, effective, fallback_reason = 'sync', last_balance, None
+
+        # stale: source='sync' かつ 14日以上前
+        stale = False
+        if source == 'sync' and update_date:
+            try:
+                days_old = (today_date - _date.fromisoformat(update_date)).days
                 stale    = days_old >= STALE_DAYS
             except Exception:
                 pass
 
         accounts.append({
-            'name':         name,
-            'type':         acc_type,
-            'last_balance': last_balance,
-            'update_date':  update_date,
-            'stale':        stale,
-            'balance':      balance,      # trial_bs 当月末（参考）
-            'prev_balance': prev_balance, # trial_bs 前月末（参考）
+            'name':              name,
+            'type':              acc_type,
+            'last_balance':      last_balance,
+            'update_date':       update_date,
+            'stale':             stale,
+            'balance':           balance,      # trial_bs 当月末（参考）
+            'prev_balance':      prev_balance, # trial_bs 前月末（参考）
+            'source':            source,
+            'effective_balance': effective,
+            'fallback_reason':   fallback_reason,
         })
 
-    last_balance_total = sum(a['last_balance'] for a in accounts)
-    total              = sum(a['balance']      for a in accounts)
-    prev_total         = sum(a['prev_balance'] for a in accounts)
+    effective_total    = sum(a['effective_balance'] for a in accounts)
+    last_balance_total = sum(a['last_balance']      for a in accounts)
+    total              = sum(a['balance']            for a in accounts)
+    prev_total         = sum(a['prev_balance']       for a in accounts)
 
     return {
         'period':             f'{cur_year}-{cur_month:02d}',
         'prev_period':        f'{prv_year}-{prv_month:02d}',
         'sync_date':          today_str,
+        'effective_total':    effective_total,
         'last_balance_total': last_balance_total,
         'total':              total,      # trial_bs 当月末合計（参考）
         'prev_total':         prev_total, # trial_bs 前月末合計（参考）
@@ -1057,7 +1078,9 @@ def main():
                     cur_fy, cur_month, cur_year,
                     prv_fy, prv_month, prv_year,
                 )
-                print(f'      合計: {cash_data["total"]:,}（口座数: {len(cash_data["accounts"])}件）')
+                n_sync = sum(1 for a in cash_data['accounts'] if a['source'] == 'sync')
+                n_bs   = sum(1 for a in cash_data['accounts'] if a['source'] == 'bs')
+                print(f'      現在値合計: {cash_data["effective_total"]:,}（口座数: {len(cash_data["accounts"])}件 / 同期:{n_sync} 確定値:{n_bs}）')
             except Exception as ce:
                 print(f'      ⚠️  取得失敗: {ce}')
                 cash_data = None

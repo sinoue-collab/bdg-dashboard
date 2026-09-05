@@ -1229,24 +1229,24 @@ function renderCash() {
     { key: 'unit_blue_life',   name: 'BLUE LIFE'   },
   ];
 
-  // グループ合計（同期残高 vs 前月末確定値）
-  let groupLastBalance = 0, groupPrevTotal = 0;
+  // グループ合計（現在値合計 vs 前月末確定値）
+  let groupEffective = 0, groupPrevTotal = 0;
   for (const { key } of CASH_UNITS) {
     const cash = actuals.data[key]?.cash;
     if (cash) {
-      groupLastBalance += cash.last_balance_total ?? 0;
-      groupPrevTotal   += cash.prev_total ?? 0;
+      groupEffective += cash.effective_total ?? 0;
+      groupPrevTotal += cash.prev_total      ?? 0;
     }
   }
-  const groupDiff  = groupLastBalance - groupPrevTotal;
+  const groupDiff  = groupEffective - groupPrevTotal;
   const prevPeriod = actuals.data['unit_blue_estate']?.cash?.prev_period ?? '—';
   const syncDate   = actuals.data['unit_blue_estate']?.cash?.sync_date   ?? '';
 
   const heroHtml = `
     <div class="hero-kpis">
       <div class="hero-kpi">
-        <div class="hero-kpi-label">グループ同期残高合計（同期日: ${syncDate}）</div>
-        <div class="hero-kpi-value">${fmtYen(groupLastBalance)}</div>
+        <div class="hero-kpi-label">グループ現在値合計（取得日: ${syncDate}）</div>
+        <div class="hero-kpi-value">${fmtYen(groupEffective)}</div>
       </div>
       <div class="hero-kpi">
         <div class="hero-kpi-label">前月末確定値（${prevPeriod}末）</div>
@@ -1259,28 +1259,44 @@ function renderCash() {
     </div>
   `;
 
+  // ソースバッジ＋備考を生成するヘルパー
+  function cashSourceCell(acc) {
+    if (acc.source === 'bs') {
+      const badge = '<span class="cash-badge cash-badge-bs">確定値</span>';
+      let note = '';
+      if (acc.fallback_reason === 'wallet')    note = '現金（同期対象外）';
+      else if (acc.fallback_reason === 'overdraft') note = '当座貸越のため確定値';
+      else if (acc.fallback_reason === 'long_stale')
+        note = `<span class="cash-stale-warn">⚠</span> 長期未同期（最終: ${acc.update_date || '—'}）`;
+      return `${badge} <span class="cash-update-date">${note}</span>`;
+    }
+    // source === 'sync'
+    const badge = '<span class="cash-badge cash-badge-sync">同期</span>';
+    const staleHtml = acc.stale
+      ? ` <span class="cash-stale-warn" title="14日以上更新なし">⚠</span>`
+      : '';
+    return `${badge} <span class="cash-update-date">${acc.update_date || '—'}${staleHtml}</span>`;
+  }
+
   // 各社カード（アコーディオン）
   const companiesHtml = CASH_UNITS.map(({ key, name }) => {
-    const cash         = actuals.data[key]?.cash;
-    const color        = COLORS[name] || COLORS.accent;
-    const lastBalTotal = cash?.last_balance_total ?? 0;
-    const prevTotal    = cash?.prev_total ?? 0;
-    const bsTotal      = cash?.total ?? 0;
-    const diff         = lastBalTotal - prevTotal;
-    const accounts     = cash?.accounts ?? [];
+    const cash      = actuals.data[key]?.cash;
+    const color     = COLORS[name] || COLORS.accent;
+    const effTotal  = cash?.effective_total ?? 0;
+    const prevTotal = cash?.prev_total ?? 0;
+    const bsTotal   = cash?.total ?? 0;
+    const diff      = effTotal - prevTotal;
+    const accounts  = cash?.accounts ?? [];
 
     const diffCls = diff < 0 ? ' negative' : diff > 0 ? ' positive' : '';
 
     const detailRows = accounts.map(acc => {
-      const staleHtml  = acc.stale
-        ? ' <span class="cash-stale-warn" title="14日以上更新なし">⚠</span>'
-        : '';
-      const updateDate = acc.update_date || '—';
+      const effCls = acc.effective_balance < 0 ? ' negative' : '';
       return `
         <tr>
           <td>${acc.name}</td>
-          <td class="td-right">${fmtYen(acc.last_balance)}</td>
-          <td class="td-right cash-update-date">${updateDate}${staleHtml}</td>
+          <td class="td-right${effCls}">${fmtYen(acc.effective_balance)}</td>
+          <td>${cashSourceCell(acc)}</td>
           <td class="td-right">${fmtYen(acc.balance)}</td>
           <td class="td-right">${fmtYen(acc.prev_balance ?? null)}</td>
         </tr>`;
@@ -1291,7 +1307,7 @@ function renderCash() {
         <div class="cash-company-header" data-cash-key="${key}">
           <div class="cash-company-badge" style="background:${color}"></div>
           <div class="cash-company-name">${name}</div>
-          <div class="cash-company-total">${fmtYen(lastBalTotal)}</div>
+          <div class="cash-company-total">${fmtYen(effTotal)}</div>
           <div class="cash-company-diff${diffCls}">${diff >= 0 ? '+' : ''}${fmtYen(diff)} vs 前月末</div>
           <div class="cash-expand-icon">▶</div>
         </div>
@@ -1299,15 +1315,15 @@ function renderCash() {
           <table class="detail-table cash-detail-table">
             <thead><tr>
               <th>口座名</th>
-              <th class="td-right">同期残高</th>
-              <th class="td-right">更新日</th>
+              <th class="td-right">現在値</th>
+              <th>ソース</th>
               <th class="td-right">月末確定（${cash?.period ?? ''}）</th>
               <th class="td-right">月末確定（${cash?.prev_period ?? ''}）</th>
             </tr></thead>
             <tbody>${detailRows}</tbody>
             <tfoot><tr class="total-row">
               <td>合計</td>
-              <td class="td-right">${fmtYen(lastBalTotal)}</td>
+              <td class="td-right">${fmtYen(effTotal)}</td>
               <td></td>
               <td class="td-right">${fmtYen(bsTotal)}</td>
               <td class="td-right">${fmtYen(prevTotal)}</td>
@@ -1327,7 +1343,7 @@ function renderCash() {
     </div>`;
 
   el.innerHTML = heroHtml + `
-    <div class="cash-period-note">同期残高: 銀行API連携の最新残高 • 月末確定値: freee試算表（trial_bs）の月末残高 • <span class="cash-stale-warn">⚠</span> 14日以上更新なし</div>
+    <div class="cash-period-note"><span class="cash-badge cash-badge-sync">同期</span> 銀行API連携残高 &nbsp; <span class="cash-badge cash-badge-bs">確定値</span> freee試算表月末確定値 &nbsp; <span class="cash-stale-warn">⚠</span> 14日以上更新なし</div>
     <div class="cash-companies">
       ${companiesHtml}
       ${seitenHtml}
