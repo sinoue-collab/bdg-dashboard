@@ -84,6 +84,15 @@ async function loadHistory(date) {
   } catch { return null; }
 }
 
+async function loadCashSnapshot(date) {
+  const d = date.toISOString().slice(0, 10);
+  try {
+    const r = await fetch(`data/cash/snapshots/${d}.json`);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
 function buildBizMap(budgetDetail) {
   const map = {};
   for (const [section, items] of Object.entries(budgetDetail.categories)) {
@@ -112,13 +121,15 @@ async function loadAllData() {
   const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
   const lastWeek  = new Date(today); lastWeek.setDate(today.getDate() - 7);
 
-  const [todayHist, yesterdayHist, lastWeekHist] = await Promise.all([
+  const [todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash] = await Promise.all([
     loadHistory(today),
     loadHistory(yesterday),
     loadHistory(lastWeek),
+    loadCashSnapshot(yesterday),
+    loadCashSnapshot(lastWeek),
   ]);
 
-  appData = { actuals, budget, budgetDetail, snapshot, todayHist, yesterdayHist, lastWeekHist };
+  appData = { actuals, budget, budgetDetail, snapshot, todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash };
 }
 
 function showScreen(id) {
@@ -1217,7 +1228,7 @@ function renderCash() {
   const el = document.getElementById('s-cash');
   if (!el) return;
 
-  const { actuals } = appData;
+  const { actuals, yesterdayCash, lastWeekCash } = appData;
   if (!actuals) {
     el.innerHTML = '<p class="error-msg">データ読み込みエラー</p>';
     return;
@@ -1229,7 +1240,26 @@ function renderCash() {
     { key: 'unit_blue_life',   name: 'BLUE LIFE'   },
   ];
 
-  // グループ合計（現在値合計 vs 前月末確定値）
+  // スナップショット合計（walletable_id ベース照合）
+  function snapGroupTotal(snap) {
+    if (!snap) return null;
+    let t = 0;
+    for (const { key } of CASH_UNITS) t += snap.data?.[key]?.effective_total ?? 0;
+    return t;
+  }
+  function snapCompanyTotal(snap, key) {
+    return snap?.data?.[key]?.effective_total ?? null;
+  }
+
+  // diff フォーマット（null → データ蓄積中）
+  function fmtCashDiff(diff, cls = '') {
+    if (diff === null) return '<span class="cash-diff-pending">— データ蓄積中</span>';
+    const sign = diff >= 0 ? '+' : '';
+    const col  = diff < 0 ? ' negative' : diff > 0 ? ' positive' : '';
+    return `<span class="${cls}${col}">${sign}${fmtYen(diff)}</span>`;
+  }
+
+  // グループ合計
   let groupEffective = 0, groupPrevTotal = 0;
   for (const { key } of CASH_UNITS) {
     const cash = actuals.data[key]?.cash;
@@ -1238,9 +1268,16 @@ function renderCash() {
       groupPrevTotal += cash.prev_total      ?? 0;
     }
   }
-  const groupDiff  = groupEffective - groupPrevTotal;
+  const groupMonthDiff = groupEffective - groupPrevTotal;
+  const groupDayDiff   = snapGroupTotal(yesterdayCash) !== null
+    ? groupEffective - snapGroupTotal(yesterdayCash) : null;
+  const groupWeekDiff  = snapGroupTotal(lastWeekCash) !== null
+    ? groupEffective - snapGroupTotal(lastWeekCash)  : null;
+
   const prevPeriod = actuals.data['unit_blue_estate']?.cash?.prev_period ?? '—';
   const syncDate   = actuals.data['unit_blue_estate']?.cash?.sync_date   ?? '';
+  const dayDate    = yesterdayCash?.date  ?? '';
+  const weekDate   = lastWeekCash?.date   ?? '';
 
   const heroHtml = `
     <div class="hero-kpis">
@@ -1254,7 +1291,17 @@ function renderCash() {
       </div>
       <div class="hero-kpi">
         <div class="hero-kpi-label">前月末確定値比</div>
-        <div class="hero-kpi-value ${groupDiff < 0 ? 'negative' : ''}">${groupDiff >= 0 ? '+' : ''}${fmtYen(groupDiff)}</div>
+        <div class="hero-kpi-value ${groupMonthDiff < 0 ? 'negative' : ''}">${groupMonthDiff >= 0 ? '+' : ''}${fmtYen(groupMonthDiff)}</div>
+      </div>
+    </div>
+    <div class="cash-snapshot-diffs">
+      <div class="cash-snapshot-diff">
+        <div class="cash-snapshot-label">前日比${dayDate ? '（' + dayDate + '）' : ''}</div>
+        <div class="cash-snapshot-value">${fmtCashDiff(groupDayDiff)}</div>
+      </div>
+      <div class="cash-snapshot-diff">
+        <div class="cash-snapshot-label">前週比${weekDate ? '（' + weekDate + '）' : ''}</div>
+        <div class="cash-snapshot-value">${fmtCashDiff(groupWeekDiff)}</div>
       </div>
     </div>
   `;
@@ -1264,17 +1311,15 @@ function renderCash() {
     if (acc.source === 'bs') {
       const badge = '<span class="cash-badge cash-badge-bs">確定値</span>';
       let note = '';
-      if (acc.fallback_reason === 'wallet')    note = '現金（同期対象外）';
+      if (acc.fallback_reason === 'wallet')         note = '現金（同期対象外）';
       else if (acc.fallback_reason === 'overdraft') note = '当座貸越のため確定値';
       else if (acc.fallback_reason === 'long_stale')
         note = `<span class="cash-stale-warn">⚠</span> 長期未同期（最終: ${acc.update_date || '—'}）`;
       return `${badge} <span class="cash-update-date">${note}</span>`;
     }
-    // source === 'sync'
-    const badge = '<span class="cash-badge cash-badge-sync">同期</span>';
+    const badge     = '<span class="cash-badge cash-badge-sync">同期</span>';
     const staleHtml = acc.stale
-      ? ` <span class="cash-stale-warn" title="14日以上更新なし">⚠</span>`
-      : '';
+      ? ` <span class="cash-stale-warn" title="14日以上更新なし">⚠</span>` : '';
     return `${badge} <span class="cash-update-date">${acc.update_date || '—'}${staleHtml}</span>`;
   }
 
@@ -1285,10 +1330,15 @@ function renderCash() {
     const effTotal  = cash?.effective_total ?? 0;
     const prevTotal = cash?.prev_total ?? 0;
     const bsTotal   = cash?.total ?? 0;
-    const diff      = effTotal - prevTotal;
     const accounts  = cash?.accounts ?? [];
 
-    const diffCls = diff < 0 ? ' negative' : diff > 0 ? ' positive' : '';
+    const monthDiff = effTotal - prevTotal;
+    const daySnapEff  = snapCompanyTotal(yesterdayCash, key);
+    const weekSnapEff = snapCompanyTotal(lastWeekCash,  key);
+    const dayDiff     = daySnapEff  !== null ? effTotal - daySnapEff  : null;
+    const weekDiff    = weekSnapEff !== null ? effTotal - weekSnapEff : null;
+
+    const monthCls = monthDiff < 0 ? ' negative' : monthDiff > 0 ? ' positive' : '';
 
     const detailRows = accounts.map(acc => {
       const effCls = acc.effective_balance < 0 ? ' negative' : '';
@@ -1308,8 +1358,12 @@ function renderCash() {
           <div class="cash-company-badge" style="background:${color}"></div>
           <div class="cash-company-name">${name}</div>
           <div class="cash-company-total">${fmtYen(effTotal)}</div>
-          <div class="cash-company-diff${diffCls}">${diff >= 0 ? '+' : ''}${fmtYen(diff)} vs 前月末</div>
+          <div class="cash-company-diff${monthCls}">${monthDiff >= 0 ? '+' : ''}${fmtYen(monthDiff)} vs 前月末</div>
           <div class="cash-expand-icon">▶</div>
+        </div>
+        <div class="cash-company-diffs">
+          <span><span class="cash-diff-label">前日比</span> ${fmtCashDiff(dayDiff)}</span>
+          <span><span class="cash-diff-label">前週比</span> ${fmtCashDiff(weekDiff)}</span>
         </div>
         <div class="cash-detail" id="cash-detail-${key}">
           <table class="detail-table cash-detail-table">

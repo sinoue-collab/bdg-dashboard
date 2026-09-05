@@ -64,6 +64,7 @@ ACTUALS_LATEST      = os.path.join(ACTUALS_DIR, 'actuals_latest.json')
 ACTUALS_PREVIOUS    = os.path.join(ACTUALS_DIR, 'actuals_previous.json')
 ACTUALS_MONTH_START = os.path.join(ACTUALS_DIR, 'actuals_month_start.json')
 DAILY_HISTORY_DIR   = os.path.join(ACTUALS_DIR, 'daily_history')
+CASH_SNAPSHOTS_DIR  = os.path.join(REPO_ROOT, 'data', 'cash', 'snapshots')
 SNAPSHOT_LATEST  = os.path.join(SNAPSHOT_DIR, 'snapshot_latest.json')
 
 
@@ -701,6 +702,7 @@ def fetch_cash_balances(company_id, access_token,
                 pass
 
         accounts.append({
+            'walletable_id':     w.get('id'),
             'name':              name,
             'type':              acc_type,
             'last_balance':      last_balance,
@@ -1217,6 +1219,18 @@ def main():
         daily_file  = os.path.join(DAILY_HISTORY_DIR, f'{today_str}.json')
         shutil.copy2(ACTUALS_LATEST, daily_file)
         print(f'  ✓ 日次履歴 data/actuals/daily_history/{today_str}.json 保存')
+
+        # Cash専用スナップショット保存
+        cash_snap = {'date': today_str, 'generated_at': now.isoformat(), 'data': {}}
+        for uk in ['unit_blue_estate', 'unit_blue_design', 'unit_blue_life']:
+            c = actuals_out['data'].get(uk, {}).get('cash')
+            if c:
+                cash_snap['data'][uk] = c
+        os.makedirs(CASH_SNAPSHOTS_DIR, exist_ok=True)
+        cash_snap_file = os.path.join(CASH_SNAPSHOTS_DIR, f'{today_str}.json')
+        with open(cash_snap_file, 'w', encoding='utf-8') as f:
+            json.dump(cash_snap, f, ensure_ascii=False, indent=2)
+        print(f'  ✓ CASHスナップショット data/cash/snapshots/{today_str}.json 保存')
 
     print()
     print('=' * 60)

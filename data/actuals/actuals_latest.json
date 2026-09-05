@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-09-06T01:03:09.528026+09:00",
+  "generated_at": "2026-09-06T01:20:32.486766+09:00",
   "note": "各経営単位の最新データ。freee_api_sync.py で生成。",
   "data": {
     "unit_blue_estate": {
@@ -5468,6 +5468,7 @@
         "prev_total": 92634503,
         "accounts": [
           {
+            "walletable_id": 3328387,
             "name": "佐賀（法人）（API） 635 ｶﾗﾂ支店 普通 ＊＊＊4755",
             "type": "bank_account",
             "last_balance": 15075648,
@@ -5480,6 +5481,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3328390,
             "name": "佐賀（法人）（API） 635 ｶﾗﾂ支店 普通 ＊＊＊7881",
             "type": "bank_account",
             "last_balance": 13635176,
@@ -5492,6 +5494,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3328397,
             "name": "唐津信金（法人）（API） 007 和多田支店 普通預金 ＊＊＊7081",
             "type": "bank_account",
             "last_balance": 5219218,
@@ -5504,6 +5507,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3328400,
             "name": "唐津信金（法人）（API） 007 和多田支店 当座預金 ***1883",
             "type": "bank_account",
             "last_balance": -29671126,
@@ -5516,6 +5520,7 @@
             "fallback_reason": "long_stale"
           },
           {
+            "walletable_id": 3379032,
             "name": "佐賀（法人）（API） 642 ﾜﾀﾀﾞ支店 普通 ＊＊＊1693",
             "type": "bank_account",
             "last_balance": 6652835,
@@ -5528,6 +5533,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3385833,
             "name": "通知預金_西日本・唐津　5000396",
             "type": "bank_account",
             "last_balance": 3316124,
@@ -5540,6 +5546,7 @@
             "fallback_reason": "long_stale"
           },
           {
+            "walletable_id": 3385834,
             "name": "普通預金_福岡（法人）1252921",
             "type": "bank_account",
             "last_balance": 2538757,
@@ -5552,6 +5559,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3455347,
             "name": "普通預金_佐賀共栄・唐津　1102427",
             "type": "bank_account",
             "last_balance": 29142834,
@@ -5564,6 +5572,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3455349,
             "name": "普通預金_西日本・唐津（API）1430791",
             "type": "bank_account",
             "last_balance": 3157062,
@@ -5576,6 +5585,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3455351,
             "name": "普通預金_唐津信金・和多田1155204",
             "type": "bank_account",
             "last_balance": 0,
@@ -5588,6 +5598,7 @@
             "fallback_reason": "long_stale"
           },
           {
+            "walletable_id": 3559984,
             "name": "GMOあおぞらネット（法人）（API） 102 法人第二営業部 普通預金（有利息） ***0723",
             "type": "bank_account",
             "last_balance": 180050,
@@ -5600,6 +5611,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3776840,
             "name": "楽天（法人） 253 第三営業支店 普通 ***5294",
             "type": "bank_account",
             "last_balance": 1293611,
@@ -5612,6 +5624,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 5333166,
             "name": "現金",
             "type": "wallet",
             "last_balance": 0,
@@ -9403,6 +9416,7 @@
         "prev_total": 49610967,
         "accounts": [
           {
+            "walletable_id": 3232757,
             "name": "普通預金_佐賀/唐津1788526",
             "type": "bank_account",
             "last_balance": 17411683,
@@ -9415,6 +9429,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3232760,
             "name": "普通預金_佐賀/和多田1196726",
             "type": "bank_account",
             "last_balance": 2379780,
@@ -9427,6 +9442,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3232763,
             "name": "普通預金_鏡郵便局11271131",
             "type": "bank_account",
             "last_balance": 600696,
@@ -9439,6 +9455,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3232799,
             "name": "普通預金_西日本シティ1299081",
             "type": "bank_account",
             "last_balance": 22329367,
@@ -9451,6 +9468,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3248630,
             "name": "普通預金_福岡/唐津",
             "type": "bank_account",
             "last_balance": 31977923,
@@ -9463,6 +9481,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 3263775,
             "name": "定期預金_佐賀/唐津支店",
             "type": "bank_account",
             "last_balance": 0,
@@ -9475,6 +9494,7 @@
             "fallback_reason": "long_stale"
           },
           {
+            "walletable_id": 3695865,
             "name": "住信ＳＢＩネット（法人） 106 代表口座 円普通預金 ***9798",
             "type": "bank_account",
             "last_balance": 4664344,
@@ -9487,6 +9507,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 5141300,
             "name": "現金",
             "type": "wallet",
             "last_balance": 0,
@@ -10877,6 +10898,7 @@
         "prev_total": 2926551,
         "accounts": [
           {
+            "walletable_id": 3835289,
             "name": "GMOあおぞらネット（法人）（API） 101 法人営業部 普通預金（有利息） ***1577",
             "type": "bank_account",
             "last_balance": 35973,
@@ -10889,6 +10911,7 @@
             "fallback_reason": "overdraft"
           },
           {
+            "walletable_id": 3931512,
             "name": "西日本シティ 唐津支店 3118340",
             "type": "bank_account",
             "last_balance": 34237,
@@ -10901,6 +10924,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 4144409,
             "name": "佐賀（法人）（API） 635 ｶﾗﾂ支店 普通 ***7360",
             "type": "bank_account",
             "last_balance": 2963065,
@@ -10913,6 +10937,7 @@
             "fallback_reason": null
           },
           {
+            "walletable_id": 4634987,
             "name": "唐津信金（法人） 007 和多田支店 普通預金 ***6287",
             "type": "bank_account",
             "last_balance": 635287,
