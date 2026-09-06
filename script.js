@@ -1769,6 +1769,26 @@ function renderTrend() {
 }
 
 // ─────────────────────────────────────────────
+// サイドバー最終更新日時
+// ─────────────────────────────────────────────
+function updateSidebarTimestamp() {
+  const el = document.getElementById('sidebar-updated-at');
+  if (!el) return;
+  const generatedAt = appData?.actuals?.generated_at;
+  if (!generatedAt) { el.innerHTML = ''; return; }
+
+  const ts = new Date(generatedAt);
+  const pad = n => String(n).padStart(2, '0');
+  const label = `${ts.getFullYear()}-${pad(ts.getMonth()+1)}-${pad(ts.getDate())} ${pad(ts.getHours())}:${pad(ts.getMinutes())}`;
+  const stale = (Date.now() - ts.getTime()) > 24 * 60 * 60 * 1000;
+
+  el.className = 'sidebar-updated' + (stale ? ' stale' : '');
+  el.innerHTML = `
+    <span class="sidebar-updated-label">${stale ? '⚠ ' : ''}最終更新</span>
+    <span class="sidebar-updated-time">${label}</span>`;
+}
+
+// ─────────────────────────────────────────────
 // Init
 // ─────────────────────────────────────────────
 async function init() {
@@ -1782,6 +1802,7 @@ async function init() {
     console.error('Data load failed:', e);
   }
 
+  updateSidebarTimestamp();
   showScreen('s-top');
 }
 

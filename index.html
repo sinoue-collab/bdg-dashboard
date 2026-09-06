@@ -488,6 +488,13 @@
     .cash-weekly-diff     { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
     .cash-weekly-diff.positive { color: var(--good); }
     .cash-weekly-diff.negative { color: var(--bad); }
+
+    /* ── サイドバー更新日時 ── */
+    .sidebar-updated      { font-size: 10px; color: var(--ink-faint); margin-bottom: 6px; line-height: 1.5; }
+    .sidebar-updated-label { display: block; }
+    .sidebar-updated-time  { font-family: var(--font-mono); font-size: 10px; }
+    .sidebar-updated.stale .sidebar-updated-label { color: #f59e0b; }
+    .sidebar-updated.stale .sidebar-updated-time  { color: #f59e0b; }
   </style>
 </head>
 <body>
@@ -527,6 +534,7 @@
     </nav>
 
     <div class="sidebar-footer">
+      <div id="sidebar-updated-at" class="sidebar-updated"></div>
       v2 BETA<br>
       <a href="legacy/" class="legacy-link">旧ダッシュボードはこちら</a>
     </div>
