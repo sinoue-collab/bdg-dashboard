@@ -1489,21 +1489,22 @@ function renderForecast() {
     return ytd + (budgetCo.budget_monthly?.[key] ?? 0) * remaining;
   }
 
-  function fmtRate(rate) {
-    if (rate === null || !isFinite(rate)) return '—';
-    return (rate * 100).toFixed(1) + '%';
-  }
-
-  function rateClass(rate, positive) {
-    if (rate === null || !isFinite(rate)) return '';
-    if (positive) {
-      if (rate >= 1.0) return 'forecast-rate-good';
-      if (rate >= 0.9) return 'forecast-rate-warn';
-      return 'forecast-rate-bad';
+  function rateDisplay(budget_ann, forecast) {
+    if (budget_ann === null || forecast === null) return { text: '—', cls: '' };
+    // 予算マイナス・着地プラス → 黒字化見込み（達成率の計算は意味をなさない）
+    if (budget_ann < 0 && forecast >= 0) return { text: '黒字化見込み', cls: 'forecast-rate-good' };
+    if (budget_ann === 0) return { text: '—', cls: '' };
+    const rate = forecast / budget_ann;
+    if (!isFinite(rate)) return { text: '—', cls: '' };
+    const pct = (rate * 100).toFixed(1) + '%';
+    if (budget_ann > 0) {
+      // 予算プラス：大きいほど良い
+      const cls = rate >= 1.0 ? 'forecast-rate-good' : rate >= 0.9 ? 'forecast-rate-warn' : 'forecast-rate-bad';
+      return { text: pct, cls };
     } else {
-      if (rate <= 1.0) return 'forecast-rate-good';
-      if (rate <= 1.1) return 'forecast-rate-warn';
-      return 'forecast-rate-bad';
+      // 予算マイナス・着地もマイナス：損失が予算以内なら良い（rate >= 1 = 損失拡大）
+      const cls = rate <= 1.0 ? 'forecast-rate-good' : rate <= 1.1 ? 'forecast-rate-warn' : 'forecast-rate-bad';
+      return { text: pct, cls };
     }
   }
 
@@ -1517,15 +1518,14 @@ function renderForecast() {
       const budget_ann = annualBudget(budgetCo, m.key);
       const forecast   = landingForecast(unit, budgetCo, m.key);
       const diff       = (forecast !== null && budget_ann !== null) ? forecast - budget_ann : null;
-      const rate       = (forecast !== null && budget_ann !== null && budget_ann !== 0) ? forecast / budget_ann : null;
-      const isProfit   = m.key !== 'revenue';
+      const { text: rateText, cls: rateCls } = rateDisplay(budget_ann, forecast);
       return `
         <tr>
           <td>${m.label}</td>
           <td>${fmtYen(budget_ann)}</td>
           <td>${fmtYen(forecast)}</td>
           <td class="${diffClass(diff)}">${diff !== null ? (diff >= 0 ? '+' : '') + fmtYen(diff) : '—'}</td>
-          <td class="${rateClass(rate, !isProfit || (budget_ann !== null && budget_ann > 0))}">${fmtRate(rate)}</td>
+          <td class="${rateCls}">${rateText}</td>
         </tr>`;
     }).join('');
   }
@@ -1581,14 +1581,17 @@ function renderForecast() {
       totalForecast += f;
     }
     const diff = anyNull ? null : totalForecast - totalBudget;
-    const rate = anyNull || totalBudget === 0 ? null : totalForecast / totalBudget;
+    const { text: rateText, cls: rateCls } = rateDisplay(
+      anyNull ? null : totalBudget,
+      anyNull ? null : totalForecast
+    );
     return `
       <tr>
         <td>${m.label}</td>
         <td>${fmtYen(anyNull ? null : totalBudget)}</td>
         <td>${fmtYen(anyNull ? null : totalForecast)}</td>
         <td class="${diffClass(diff)}">${diff !== null ? (diff >= 0 ? '+' : '') + fmtYen(diff) : '—'}</td>
-        <td class="${rateClass(rate, true)}">${fmtRate(rate)}</td>
+        <td class="${rateCls}">${rateText}</td>
       </tr>`;
   }).join('');
 
