@@ -469,6 +469,25 @@
     .forecast-header-badges { display: flex; align-items: center; gap: 6px; }
     .forecast-provisional-badge { font-size: 11px; font-weight: 700; color: #92400e; background: #fef3c7; border: 1px solid #f59e0b; padding: 3px 8px; border-radius: 6px; }
 
+    /* ── CASH 先週大口入出金 ── */
+    .wld-section      { margin: 16px 20px 4px; }
+    .wld-title        { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+    .wld-period       { font-size: 11px; font-weight: 400; color: var(--ink-faint); margin-left: 8px; }
+    .wld-companies    { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+    .wld-company      { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+    .wld-company-name { font-size: 12px; font-weight: 700; color: var(--ink-sub); margin-bottom: 8px; }
+    .wld-group-label  { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 4px; margin-top: 6px; }
+    .wld-group-label.in  { background: var(--good-soft); color: var(--good); }
+    .wld-group-label.out { background: var(--bad-soft);  color: var(--bad);  }
+    .wld-table        { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+    .wld-table td     { padding: 3px 4px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .wld-table tbody tr:last-child td { border-bottom: none; }
+    .wld-date         { color: var(--ink-faint); white-space: nowrap; width: 36px; }
+    .wld-amount       { font-family: var(--font-mono); font-size: 12px; color: var(--ink); white-space: nowrap; padding-right: 8px; }
+    .wld-name         { color: var(--ink); }
+    .wld-name-unknown { color: var(--ink-faint); font-style: italic; }
+    .wld-no-deals     { font-size: 12px; color: var(--ink-faint); }
+
     /* ── CASH 週次推移 ── */
     .cash-weekly-section  { margin: 16px 20px 20px; }
     .cash-weekly-title    { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }

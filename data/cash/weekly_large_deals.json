@@ -1,0 +1,182 @@
+{
+  "generated_at": "2026-09-06T23:51:54.342155+09:00",
+  "week_start": "2026-08-31",
+  "week_end": "2026-09-06",
+  "threshold": 500000,
+  "companies": {
+    "unit_blue_estate": {
+      "name": "BLUE ESTATE",
+      "deals": [
+        {
+          "date": "2026-08-31",
+          "amount": 23022415,
+          "type": "income",
+          "display_name": "ジェイリース(株)",
+          "partner_id": 69782088,
+          "account_category": "他流動負債／営業外収益"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 6510827,
+          "type": "income",
+          "display_name": "㈱ｵﾘｺﾌｫﾚﾝﾄｲﾝｼｭｱ",
+          "partner_id": 69781882,
+          "account_category": "他流動負債／営業外収益"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 1572059,
+          "type": "expense",
+          "display_name": "支払利息／長期借入金",
+          "partner_id": 96065322,
+          "account_category": "営業外費用／固定負債"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 1364657,
+          "type": "expense",
+          "display_name": "法定福利費",
+          "partner_id": 80985562,
+          "account_category": "販売管理費"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 897600,
+          "type": "income",
+          "display_name": "自社不動産家賃収入（課税）",
+          "partner_id": 69782566,
+          "account_category": "営業外収益"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 641700,
+          "type": "income",
+          "display_name": "自社不動産家賃収入（課税）／預り保証金",
+          "partner_id": 69782567,
+          "account_category": "営業外収益／固定負債"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 600000,
+          "type": "income",
+          "display_name": "自社不動産家賃収入（課税）",
+          "partner_id": 69782587,
+          "account_category": "営業外収益"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 527836,
+          "type": "expense",
+          "display_name": "支払利息／長期借入金",
+          "partner_id": 96065322,
+          "account_category": "営業外費用／固定負債"
+        },
+        {
+          "date": "2026-09-01",
+          "amount": 24000000,
+          "type": "expense",
+          "display_name": "短期借入金",
+          "partner_id": 96065322,
+          "account_category": "他流動負債"
+        },
+        {
+          "date": "2026-09-01",
+          "amount": 21350000,
+          "type": "expense",
+          "display_name": "短期借入金",
+          "partner_id": 96065322,
+          "account_category": "他流動負債"
+        },
+        {
+          "date": "2026-09-01",
+          "amount": 12760000,
+          "type": "expense",
+          "display_name": "短期借入金",
+          "partner_id": 96065322,
+          "account_category": "他流動負債"
+        },
+        {
+          "date": "2026-09-01",
+          "amount": 7300000,
+          "type": "expense",
+          "display_name": "短期借入金",
+          "partner_id": 96065322,
+          "account_category": "他流動負債"
+        },
+        {
+          "date": "2026-09-01",
+          "amount": 6500000,
+          "type": "expense",
+          "display_name": "短期借入金",
+          "partner_id": 96065322,
+          "account_category": "他流動負債"
+        },
+        {
+          "date": "2026-09-01",
+          "amount": 5700000,
+          "type": "expense",
+          "display_name": "短期借入金",
+          "partner_id": 96065322,
+          "account_category": "他流動負債"
+        }
+      ]
+    },
+    "unit_blue_design": {
+      "name": "BLUE DESIGN",
+      "deals": [
+        {
+          "date": "2026-08-31",
+          "amount": 20000000,
+          "type": "income",
+          "display_name": "佐賀銀行/唐津支店",
+          "partner_id": 62192406,
+          "account_category": "他流動負債"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 20000000,
+          "type": "income",
+          "display_name": "西日本シティ銀行/唐津支店",
+          "partner_id": 62192414,
+          "account_category": "他流動負債"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 20000000,
+          "type": "expense",
+          "display_name": "佐賀銀行/唐津支店",
+          "partner_id": 62192406,
+          "account_category": "他流動負債"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 1016645,
+          "type": "expense",
+          "display_name": "社会保険事務所",
+          "partner_id": 62192408,
+          "account_category": "販売管理費"
+        },
+        {
+          "date": "2026-08-31",
+          "amount": 546590,
+          "type": "expense",
+          "display_name": "運転資金",
+          "partner_id": 62192701,
+          "account_category": "営業外費用／固定負債"
+        },
+        {
+          "date": "2026-09-01",
+          "amount": 823287,
+          "type": "expense",
+          "display_name": "唐津税務署",
+          "partner_id": 62192402,
+          "account_category": "他流動負債"
+        }
+      ]
+    },
+    "unit_blue_life": {
+      "name": "BLUE LIFE",
+      "deals": []
+    }
+  }
+}

@@ -121,13 +121,15 @@ async function loadAllData() {
   const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
   const lastWeek  = new Date(today); lastWeek.setDate(today.getDate() - 7);
 
-  const [todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash] = await Promise.all([
+  const [todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash, weeklyDealsRes] = await Promise.all([
     loadHistory(today),
     loadHistory(yesterday),
     loadHistory(lastWeek),
     loadCashSnapshot(yesterday),
     loadCashSnapshot(lastWeek),
+    fetch('data/cash/weekly_large_deals.json').catch(() => null),
   ]);
+  const weeklyDeals = weeklyDealsRes?.ok ? await weeklyDealsRes.json() : null;
 
   // 過去8日曜のスナップショット（週次推移用）
   const sundays = [];
@@ -143,7 +145,7 @@ async function loadAllData() {
     .map((d, i) => ({ date: d.toISOString().slice(0, 10), snap: sundaySnaps[i] }))
     .filter(({ snap }) => snap !== null);
 
-  appData = { actuals, budget, budgetDetail, snapshot, todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash, weeklyCashSnaps };
+  appData = { actuals, budget, budgetDetail, snapshot, todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash, weeklyCashSnaps, weeklyDeals };
 }
 
 function showScreen(id) {
@@ -1416,6 +1418,68 @@ function renderCash() {
       </div>
     </div>`;
 
+  // ── 先週の大口入出金（実績振り返り）──────────────
+  function buildWeeklyDealsHtml() {
+    const wd = appData.weeklyDeals;
+    if (!wd) return '';
+
+    const weekLabel = `${wd.week_start} 〜 ${wd.week_end}`;
+
+    const unitOrder = [
+      { key: 'unit_blue_estate', label: 'BLUE ESTATE' },
+      { key: 'unit_blue_design', label: 'BLUE DESIGN' },
+      { key: 'unit_blue_life',   label: 'BLUE LIFE'   },
+    ];
+
+    const coSections = unitOrder.map(({ key, label }) => {
+      const co = wd.companies?.[key];
+      if (!co) return '';
+      const deals = co.deals ?? [];
+
+      if (deals.length === 0) {
+        return `
+          <div class="wld-company">
+            <div class="wld-company-name">${label}</div>
+            <div class="wld-no-deals">対象取引なし（50万円以上の入出金なし）</div>
+          </div>`;
+      }
+
+      const incomes  = deals.filter(d => d.type === 'income');
+      const expenses = deals.filter(d => d.type === 'expense');
+
+      function dealRows(list) {
+        return list.map(d => {
+          const nameHtml = d.display_name
+            ? `<span class="wld-name">${d.display_name}</span>`
+            : `<span class="wld-name wld-name-unknown">（取引先不明・${d.account_category || '仮受金等'}）</span>`;
+          return `
+            <tr>
+              <td class="wld-date">${d.date.slice(5)}</td>
+              <td class="td-right wld-amount">${fmtYen(d.amount)}</td>
+              <td>${nameHtml}</td>
+            </tr>`;
+        }).join('');
+      }
+
+      const inHtml  = incomes.length  ? `<div class="wld-group-label in">入金</div><table class="wld-table"><tbody>${dealRows(incomes)}</tbody></table>`  : '';
+      const outHtml = expenses.length ? `<div class="wld-group-label out">出金</div><table class="wld-table"><tbody>${dealRows(expenses)}</tbody></table>` : '';
+
+      return `
+        <div class="wld-company">
+          <div class="wld-company-name">${label}</div>
+          ${inHtml}${outHtml}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="wld-section">
+        <div class="wld-title">先週の大口入出金 実績振り返り
+          <span class="wld-period">${weekLabel}　50万円以上</span>
+        </div>
+        <div class="wld-companies">${coSections}</div>
+      </div>`;
+  }
+
   // ── 週次残高推移セクション ──────────────────────
   const weeks = appData.weeklyCashSnaps ?? [];
 
@@ -1485,6 +1549,7 @@ function renderCash() {
       ${companiesHtml}
       ${seitenHtml}
     </div>
+    ${buildWeeklyDealsHtml()}
     ${weeklyHtml}
   `;
 

@@ -65,6 +65,7 @@ ACTUALS_PREVIOUS    = os.path.join(ACTUALS_DIR, 'actuals_previous.json')
 ACTUALS_MONTH_START = os.path.join(ACTUALS_DIR, 'actuals_month_start.json')
 DAILY_HISTORY_DIR   = os.path.join(ACTUALS_DIR, 'daily_history')
 CASH_SNAPSHOTS_DIR  = os.path.join(REPO_ROOT, 'data', 'cash', 'snapshots')
+WEEKLY_LARGE_DEALS_FILE = os.path.join(REPO_ROOT, 'data', 'cash', 'weekly_large_deals.json')
 SNAPSHOT_LATEST  = os.path.join(SNAPSHOT_DIR, 'snapshot_latest.json')
 
 
@@ -733,6 +734,126 @@ def fetch_cash_balances(company_id, access_token,
 
 
 # ─────────────────────────────────────────
+#  週次大口入出金取得
+# ─────────────────────────────────────────
+
+def fetch_and_save_weekly_large_deals(company_ids_map, access_token, now, today_str,
+                                      threshold=500_000):
+    """
+    先週（月〜日）の50万円以上の取引を各社分取得し
+    data/cash/weekly_large_deals.json に保存する。
+    partner_id がある場合は取引先名、ない場合は勘定科目カテゴリで補完。
+    """
+    from datetime import date, timedelta
+    today = date.fromisoformat(today_str)
+    # 直近の日曜日を算出（月=0, 日=6）
+    wd = today.weekday()
+    days_back = (wd + 1) % 7  # 月曜なら1、日曜なら0
+    if days_back == 0:
+        last_sun = today
+    else:
+        last_sun = today - timedelta(days=days_back)
+    last_mon = last_sun - timedelta(days=6)
+    week_start = last_mon.isoformat()
+    week_end   = last_sun.isoformat()
+
+    print(f'  週次大口入出金: {week_start} 〜 {week_end}（50万円以上）')
+
+    result = {
+        'generated_at': now.isoformat(),
+        'week_start': week_start,
+        'week_end':   week_end,
+        'threshold':  threshold,
+        'companies':  {},
+    }
+
+    for unit_key, cfg in company_ids_map.items():
+        co_id   = cfg['company_id']
+        co_name = cfg['name']
+        try:
+            # 科目マップ
+            items_resp = freee_get('/api/1/account_items', access_token, {'company_id': co_id})
+            item_cat  = {x['id']: x.get('account_category', '') for x in items_resp.get('account_items', [])}
+            item_name = {x['id']: x.get('name', '')              for x in items_resp.get('account_items', [])}
+
+            # 取引先マップ（最大300件）
+            partners_resp = freee_get('/api/1/partners', access_token,
+                                      {'company_id': co_id, 'limit': 300})
+            partner_map = {x['id']: x['name'] for x in partners_resp.get('partners', [])}
+
+            # 取引一覧（ページネーション）
+            all_deals = []
+            offset = 0
+            while True:
+                resp = freee_get('/api/1/deals', access_token, {
+                    'company_id':       co_id,
+                    'start_issue_date': week_start,
+                    'end_issue_date':   week_end,
+                    'limit': 100, 'offset': offset,
+                })
+                batch = resp.get('deals', [])
+                all_deals.extend(batch)
+                total = resp.get('meta', {}).get('total_count', 0)
+                if len(all_deals) >= total or not batch:
+                    break
+                offset += 100
+
+            # 50万以上フィルタ・重複除去
+            seen   = set()
+            output = []
+            for deal in all_deals:
+                if deal['amount'] < threshold:
+                    continue
+                key = (deal['issue_date'], deal['amount'], deal['type'],
+                       deal.get('partner_id'))
+                if key in seen:
+                    continue
+                seen.add(key)
+
+                pid = deal.get('partner_id')
+                partner_name = partner_map.get(pid, '') if pid else ''
+
+                details = deal.get('details', [])
+                desc    = details[0].get('description', '') if details else ''
+                cats    = list({item_cat.get(d['account_item_id'], '')
+                                for d in details if d.get('account_item_id')})
+                acct_names = list({item_name.get(d['account_item_id'], '')
+                                   for d in details if d.get('account_item_id')})
+
+                # 取引相手の表示名を決定
+                if partner_name:
+                    display_name = partner_name
+                elif desc:
+                    display_name = desc
+                elif acct_names:
+                    display_name = '／'.join(sorted(set(acct_names)))
+                else:
+                    display_name = ''
+
+                output.append({
+                    'date':             deal['issue_date'],
+                    'amount':           deal['amount'],
+                    'type':             deal['type'],
+                    'display_name':     display_name,
+                    'partner_id':       pid,
+                    'account_category': '／'.join(sorted(set(cats))),
+                })
+
+            output.sort(key=lambda x: (x['date'], -x['amount']))
+            result['companies'][unit_key] = {'name': co_name, 'deals': output}
+            print(f'    [{co_name}] {len(output)}件（50万以上）/ 全{len(all_deals)}件')
+
+        except RuntimeError as e:
+            print(f'  ⚠️  [{co_name}] 週次deals取得失敗: {e}')
+            result['companies'][unit_key] = {'name': co_name, 'deals': [], 'error': str(e)}
+
+    os.makedirs(os.path.dirname(WEEKLY_LARGE_DEALS_FILE), exist_ok=True)
+    with open(WEEKLY_LARGE_DEALS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f'  ✓ 週次大口入出金 data/cash/weekly_large_deals.json 保存')
+
+
+# ─────────────────────────────────────────
 #  試算表パース
 # ─────────────────────────────────────────
 
@@ -966,6 +1087,7 @@ def main():
     print('【3/4】freee からデータ取得中...')
     actuals_data       = {}
     snapshot_companies = {}
+    company_ids_map    = {}  # unit_key → {company_id, name} （週次deals用）
 
     for co_name, cfg in COMPANIES.items():
         company_id_str = os.environ.get(cfg['env_key'], '')
@@ -974,6 +1096,7 @@ def main():
             continue
 
         company_id = int(company_id_str)
+        company_ids_map[cfg['unit_key']] = {'company_id': company_id, 'name': co_name}
         print(f'  [{co_name}] company_id={company_id}')
 
         try:
@@ -1219,6 +1342,9 @@ def main():
         daily_file  = os.path.join(DAILY_HISTORY_DIR, f'{today_str}.json')
         shutil.copy2(ACTUALS_LATEST, daily_file)
         print(f'  ✓ 日次履歴 data/actuals/daily_history/{today_str}.json 保存')
+
+        # 週次大口入出金（先週月〜日、50万円以上）を保存
+        fetch_and_save_weekly_large_deals(company_ids_map, access_token, now, today_str)
 
         # Cash専用スナップショット保存
         cash_snap = {'date': today_str, 'generated_at': now.isoformat(), 'data': {}}

@@ -77,6 +77,7 @@ jobs:
             data/actuals/actuals_month_start.json \
             data/actuals/daily_history/ \
             data/cash/snapshots/ \
+            data/cash/weekly_large_deals.json \
             data/dashboard_snapshots/snapshot_latest.json
           if git diff --staged --quiet; then
             echo "変更なし。コミットをスキップします。"
