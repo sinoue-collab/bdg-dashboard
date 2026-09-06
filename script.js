@@ -1437,10 +1437,10 @@ function renderForecast() {
   }
 
   const companies = [
-    { unitKey: 'unit_blue_estate', budgetKey: 'BLUE ESTATE', label: 'BLUE ESTATE' },
-    { unitKey: 'unit_blue_design', budgetKey: 'BLUE DESIGN', label: 'BLUE DESIGN' },
-    { unitKey: 'unit_blue_life',   budgetKey: 'BLUE LIFE',   label: 'BLUE LIFE'   },
-    { unitKey: 'unit_seitendo',    budgetKey: '青天堂',       label: '青天堂'       },
+    { unitKey: 'unit_blue_estate', budgetKey: 'BLUE ESTATE', label: 'BLUE ESTATE', provisional: true },
+    { unitKey: 'unit_blue_design', budgetKey: 'BLUE DESIGN', label: 'BLUE DESIGN', provisional: true },
+    { unitKey: 'unit_blue_life',   budgetKey: 'BLUE LIFE',   label: 'BLUE LIFE',   provisional: false },
+    { unitKey: 'unit_seitendo',    budgetKey: '青天堂',       label: '青天堂',       provisional: false },
   ];
 
   const metrics = [
@@ -1557,13 +1557,23 @@ function renderForecast() {
     const unit     = actuals.data[co.unitKey];
     const budgetCo = budget.companies[co.budgetKey];
     if (!unit || !budgetCo) return '';
+    const provisionalBadge = co.provisional
+      ? `<span class="forecast-provisional-badge">⚠ 暫定値</span>`
+      : '';
+    const provisionalNote = co.provisional
+      ? `<div class="forecast-note">※ 残り月の予算は月平均ベースの暫定値です。セールスフォース未連携のため、実際の受注・入金タイミングを反映できておらず、実態と乖離する可能性があります。</div>`
+      : '';
     return `
       <div class="forecast-card">
         <div class="forecast-card-header">
           <span class="forecast-card-name">${co.label}</span>
-          <span class="forecast-period-badge">${periodBadge(unit, budgetCo)}</span>
+          <div class="forecast-header-badges">
+            ${provisionalBadge}
+            <span class="forecast-period-badge">${periodBadge(unit, budgetCo)}</span>
+          </div>
         </div>
         ${tableHeader}${buildRows(unit, budgetCo)}${tableFooter}
+        ${provisionalNote}
       </div>`;
   }).join('');
 
