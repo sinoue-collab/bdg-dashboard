@@ -468,6 +468,26 @@
     .forecast-note { font-size: 11px; color: var(--ink-faint); padding: 8px 20px 10px; }
     .forecast-header-badges { display: flex; align-items: center; gap: 6px; }
     .forecast-provisional-badge { font-size: 11px; font-weight: 700; color: #92400e; background: #fef3c7; border: 1px solid #f59e0b; padding: 3px 8px; border-radius: 6px; }
+
+    /* ── CASH 週次推移 ── */
+    .cash-weekly-section  { margin: 16px 20px 20px; }
+    .cash-weekly-title    { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+    .cash-weekly-subtitle { font-size: 11px; font-weight: 400; color: var(--ink-faint); margin-left: 6px; }
+    .cash-weekly-sparse   { font-size: 12px; color: var(--ink-faint); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; }
+    .cash-weekly-empty    { font-size: 13px; color: var(--ink-faint); padding: 16px 0; }
+    .cash-weekly-scroll   { overflow-x: auto; }
+    .cash-weekly-table    { width: 100%; border-collapse: collapse; min-width: 600px; }
+    .cash-weekly-table th { font-size: 11px; color: var(--ink-faint); font-weight: 600; padding: 6px 12px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+    .cash-weekly-table th:first-child { text-align: left; }
+    .cash-weekly-table td { padding: 2px 12px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .cash-weekly-table tbody tr:last-child td { border-bottom: none; }
+    .cash-weekly-date     { font-size: 13px; font-weight: 700; color: var(--ink); padding-top: 10px !important; white-space: nowrap; }
+    .cash-weekly-dow      { font-size: 11px; color: var(--ink-faint); margin-left: 2px; }
+    .cash-weekly-cell     { padding-top: 8px !important; }
+    .cash-weekly-bal      { font-family: var(--font-mono); font-size: 13px; color: var(--ink); }
+    .cash-weekly-diff     { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+    .cash-weekly-diff.positive { color: var(--good); }
+    .cash-weekly-diff.negative { color: var(--bad); }
   </style>
 </head>
 <body>

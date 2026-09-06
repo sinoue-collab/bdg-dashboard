@@ -129,7 +129,21 @@ async function loadAllData() {
     loadCashSnapshot(lastWeek),
   ]);
 
-  appData = { actuals, budget, budgetDetail, snapshot, todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash };
+  // 過去8日曜のスナップショット（週次推移用）
+  const sundays = [];
+  const lastSun = new Date(today);
+  lastSun.setDate(today.getDate() - today.getDay()); // 直近日曜（今日が日曜なら today）
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(lastSun);
+    d.setDate(lastSun.getDate() - i * 7);
+    sundays.push(d);
+  }
+  const sundaySnaps = await Promise.all(sundays.map(d => loadCashSnapshot(d)));
+  const weeklyCashSnaps = sundays
+    .map((d, i) => ({ date: d.toISOString().slice(0, 10), snap: sundaySnaps[i] }))
+    .filter(({ snap }) => snap !== null);
+
+  appData = { actuals, budget, budgetDetail, snapshot, todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash, weeklyCashSnaps };
 }
 
 function showScreen(id) {
@@ -1402,12 +1416,76 @@ function renderCash() {
       </div>
     </div>`;
 
+  // ── 週次残高推移セクション ──────────────────────
+  const weeks = appData.weeklyCashSnaps ?? [];
+
+  function snapWeekGroup(snap) {
+    if (!snap) return null;
+    let t = 0;
+    for (const { key } of CASH_UNITS) t += snap.data?.[key]?.effective_total ?? 0;
+    return t;
+  }
+  function snapWeekCo(snap, key) {
+    return snap?.data?.[key]?.effective_total ?? null;
+  }
+  function weekDiffHtml(val, prev) {
+    if (prev === null || val === null) return `<div class="cash-weekly-diff">—</div>`;
+    const d = val - prev;
+    const cls = d < 0 ? 'negative' : d > 0 ? 'positive' : '';
+    return `<div class="cash-weekly-diff ${cls}">${d >= 0 ? '+' : ''}${fmtYen(d)}</div>`;
+  }
+
+  const weekRows = weeks.map(({ date, snap }, i) => {
+    const prevSnap = i + 1 < weeks.length ? weeks[i + 1].snap : null;
+    const [, wm, wd] = date.split('-').map(Number);
+    const gVal  = snapWeekGroup(snap);
+    const gPrev = snapWeekGroup(prevSnap);
+    const coTds = CASH_UNITS.map(({ key }) => {
+      const v = snapWeekCo(snap, key);
+      const p = snapWeekCo(prevSnap, key);
+      return `<td class="td-right cash-weekly-cell">
+        <div class="cash-weekly-bal">${fmtYen(v)}</div>
+        ${prevSnap !== null ? weekDiffHtml(v, p) : '<div class="cash-weekly-diff">—</div>'}
+      </td>`;
+    }).join('');
+    return `<tr>
+      <td class="cash-weekly-date">${wm}/${wd}<span class="cash-weekly-dow">日</span></td>
+      <td class="td-right cash-weekly-cell">
+        <div class="cash-weekly-bal">${fmtYen(gVal)}</div>
+        ${prevSnap !== null ? weekDiffHtml(gVal, gPrev) : '<div class="cash-weekly-diff">—</div>'}
+      </td>
+      ${coTds}
+    </tr>`;
+  }).join('');
+
+  const sparseNote = weeks.length < 3
+    ? `<div class="cash-weekly-sparse">📊 データ蓄積中（現在 ${weeks.length} 週分）— 日曜日ごとにデータが追加されます。</div>`
+    : '';
+
+  const weeklyHtml = `
+    <div class="cash-weekly-section">
+      <div class="cash-weekly-title">週次残高推移<span class="cash-weekly-subtitle">（日曜基準 / effective残高）</span></div>
+      ${sparseNote}
+      ${weeks.length > 0 ? `
+        <div class="cash-weekly-scroll">
+          <table class="cash-weekly-table">
+            <thead><tr>
+              <th>週末</th>
+              <th class="td-right">グループ計</th>
+              ${CASH_UNITS.map(u => `<th class="td-right">${u.name}</th>`).join('')}
+            </tr></thead>
+            <tbody>${weekRows}</tbody>
+          </table>
+        </div>` : `<div class="cash-weekly-empty">日曜日のスナップショットがまだありません。次の日曜日以降に表示されます。</div>`}
+    </div>`;
+
   el.innerHTML = heroHtml + `
     <div class="cash-period-note"><span class="cash-badge cash-badge-sync">同期</span> 銀行API連携残高 &nbsp; <span class="cash-badge cash-badge-bs">確定値</span> freee試算表月末確定値 &nbsp; <span class="cash-stale-warn">⚠</span> 14日以上更新なし</div>
     <div class="cash-companies">
       ${companiesHtml}
       ${seitenHtml}
     </div>
+    ${weeklyHtml}
   `;
 
   // アコーディオン
