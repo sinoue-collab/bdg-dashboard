@@ -441,6 +441,31 @@
     .cash-company-diffs  { display: flex; gap: 20px; padding: 4px 20px 8px; font-size: 12px; font-family: var(--font-mono); border-top: 1px solid var(--border); }
     .cash-diff-label     { color: var(--ink-faint); font-family: var(--font-sans, sans-serif); font-size: 11px; margin-right: 4px; }
     .no-budget-tag { display: inline-block; background: var(--surface-2); color: var(--ink-faint); border: 1px solid var(--border); border-radius: 8px; font-size: 9px; font-weight: 700; padding: 1px 5px; margin-left: 4px; vertical-align: middle; }
+
+    /* ── FORECAST ── */
+    .forecast-screen { padding: 24px; max-width: 960px; }
+    .forecast-header { margin-bottom: 20px; }
+    .forecast-title  { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .forecast-subtitle { font-size: 13px; color: var(--ink-faint); }
+    .forecast-cards  { display: flex; flex-direction: column; gap: 16px; }
+    .forecast-card   { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .forecast-card.group { border-color: var(--accent); }
+    .forecast-card-header { display: flex; align-items: baseline; justify-content: space-between; padding: 14px 20px 10px; border-bottom: 1px solid var(--border); }
+    .forecast-card-name  { font-size: 15px; font-weight: 700; color: var(--ink); }
+    .forecast-card.group .forecast-card-name { color: var(--accent); }
+    .forecast-period-badge { font-size: 11px; color: var(--ink-faint); background: var(--surface-2); padding: 3px 8px; border-radius: 6px; }
+    .forecast-table  { width: 100%; border-collapse: collapse; }
+    .forecast-table th { font-size: 11px; color: var(--ink-faint); font-weight: 600; padding: 8px 14px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .forecast-table th:first-child { text-align: left; }
+    .forecast-table td { font-size: 13px; padding: 9px 14px; text-align: right; border-bottom: 1px solid var(--border); font-family: var(--font-mono); white-space: nowrap; }
+    .forecast-table td:first-child { text-align: left; font-family: var(--font-sans, sans-serif); font-size: 13px; color: var(--ink-sub); font-weight: 500; }
+    .forecast-table tr:last-child td { border-bottom: none; }
+    .forecast-diff-pos { color: var(--green, #1db976); }
+    .forecast-diff-neg { color: var(--red, #e03131); }
+    .forecast-rate-good { color: var(--green, #1db976); font-weight: 600; }
+    .forecast-rate-warn { color: var(--yellow, #e67700); font-weight: 600; }
+    .forecast-rate-bad  { color: var(--red, #e03131); font-weight: 600; }
+    .forecast-note { font-size: 11px; color: var(--ink-faint); padding: 8px 20px 10px; }
   </style>
 </head>
 <body>
@@ -464,6 +489,7 @@
         <button class="nav-item" data-screen="s-biz">事業構造マップ</button>
         <button class="nav-item" data-screen="s-budget">予実管理</button>
         <button class="nav-item" data-screen="s-cash">CASH</button>
+        <button class="nav-item" data-screen="s-forecast">FORECAST</button>
       </div>
 
       <div class="nav-group">
@@ -490,8 +516,9 @@
     <div id="s-biz"    class="screen"></div>
     <div id="s-budget" class="screen"></div>
     <div id="s-cash"   class="screen"></div>
-    <div id="s-goals"  class="screen"></div>
-    <div id="s-trend"  class="screen"></div>
+    <div id="s-goals"    class="screen"></div>
+    <div id="s-trend"    class="screen"></div>
+    <div id="s-forecast" class="screen"></div>
   </main>
 
 </div>

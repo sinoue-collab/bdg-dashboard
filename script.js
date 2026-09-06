@@ -145,8 +145,9 @@ function showScreen(id) {
   if (id === 's-biz')    renderBiz();
   if (id === 's-budget') renderBudget();
   if (id === 's-cash')   renderCash();
-  if (id === 's-goals')  renderGoals();
-  if (id === 's-trend')  renderTrend();
+  if (id === 's-goals')    renderGoals();
+  if (id === 's-trend')    renderTrend();
+  if (id === 's-forecast') renderForecast();
 }
 
 // ─────────────────────────────────────────────
@@ -350,6 +351,11 @@ function renderTop() {
         <div class="nav-card-icon">🏦</div>
         <div class="nav-card-title">CASH</div>
         <div class="nav-card-sub">預金残高・口座別内訳</div>
+      </div>
+      <div class="nav-card" data-nav="s-forecast">
+        <div class="nav-card-icon">🔭</div>
+        <div class="nav-card-title">FORECAST</div>
+        <div class="nav-card-sub">着地見込み・達成率見込み</div>
       </div>
       <div class="nav-card disabled" data-nav="s-goals">
         <div class="nav-card-icon">🎯</div>
@@ -1418,7 +1424,199 @@ function renderCash() {
 }
 
 // ─────────────────────────────────────────────
-// 画面5: 経営目標
+// 画面5: FORECAST 着地見込み
+// ─────────────────────────────────────────────
+function renderForecast() {
+  const el = document.getElementById('s-forecast');
+  if (!el) return;
+
+  const { actuals, budget } = appData;
+  if (!actuals || !budget) {
+    el.innerHTML = '<p class="error-msg">データ読み込みエラー</p>';
+    return;
+  }
+
+  const companies = [
+    { unitKey: 'unit_blue_estate', budgetKey: 'BLUE ESTATE', label: 'BLUE ESTATE' },
+    { unitKey: 'unit_blue_design', budgetKey: 'BLUE DESIGN', label: 'BLUE DESIGN' },
+    { unitKey: 'unit_blue_life',   budgetKey: 'BLUE LIFE',   label: 'BLUE LIFE'   },
+    { unitKey: 'unit_seitendo',    budgetKey: '青天堂',       label: '青天堂'       },
+  ];
+
+  const metrics = [
+    { key: 'revenue',         label: '売上高' },
+    { key: 'gross_profit',    label: '粗利' },
+    { key: 'op_profit',       label: '営業利益' },
+    { key: 'ordinary_profit', label: '経常利益' },
+  ];
+
+  function ytdActual(unit, key) {
+    if (key === 'revenue') return unit?.ytd?.revenue?.total ?? null;
+    return unit?.ytd?._summary?.[key] ?? null;
+  }
+
+  function elapsedMonths(ytdPeriod) {
+    if (!ytdPeriod) return null;
+    const [start, end] = ytdPeriod.split('〜');
+    if (!start || !end) return null;
+    const [sy, sm] = start.split('-').map(Number);
+    const [ey, em] = end.split('-').map(Number);
+    return (ey * 12 + em) - (sy * 12 + sm) + 1;
+  }
+
+  function annualBudget(budgetCo, key) {
+    if (budgetCo.annual_budget) return budgetCo.annual_budget[key] ?? null;
+    if (budgetCo.monthly_plan) {
+      return Object.values(budgetCo.monthly_plan).reduce((s, m) => s + (m[key] ?? 0), 0);
+    }
+    return null;
+  }
+
+  function landingForecast(unit, budgetCo, key) {
+    const ytd = ytdActual(unit, key);
+    if (ytd === null) return null;
+    const ytdPeriod = unit?.ytd?.period;
+    const ytdEnd = ytdPeriod ? ytdPeriod.split('〜')[1] : null;
+    const elapsed = elapsedMonths(ytdPeriod);
+    if (elapsed === null) return null;
+    const remaining = 12 - elapsed;
+    if (budgetCo.monthly_plan && ytdEnd) {
+      const rest = Object.entries(budgetCo.monthly_plan)
+        .filter(([m]) => m > ytdEnd)
+        .reduce((s, [, v]) => s + (v[key] ?? 0), 0);
+      return ytd + rest;
+    }
+    return ytd + (budgetCo.budget_monthly?.[key] ?? 0) * remaining;
+  }
+
+  function fmtRate(rate) {
+    if (rate === null || !isFinite(rate)) return '—';
+    return (rate * 100).toFixed(1) + '%';
+  }
+
+  function rateClass(rate, positive) {
+    if (rate === null || !isFinite(rate)) return '';
+    if (positive) {
+      if (rate >= 1.0) return 'forecast-rate-good';
+      if (rate >= 0.9) return 'forecast-rate-warn';
+      return 'forecast-rate-bad';
+    } else {
+      if (rate <= 1.0) return 'forecast-rate-good';
+      if (rate <= 1.1) return 'forecast-rate-warn';
+      return 'forecast-rate-bad';
+    }
+  }
+
+  function diffClass(diff) {
+    if (diff === null) return '';
+    return diff >= 0 ? 'forecast-diff-pos' : 'forecast-diff-neg';
+  }
+
+  function buildRows(unit, budgetCo) {
+    return metrics.map(m => {
+      const budget_ann = annualBudget(budgetCo, m.key);
+      const forecast   = landingForecast(unit, budgetCo, m.key);
+      const diff       = (forecast !== null && budget_ann !== null) ? forecast - budget_ann : null;
+      const rate       = (forecast !== null && budget_ann !== null && budget_ann !== 0) ? forecast / budget_ann : null;
+      const isProfit   = m.key !== 'revenue';
+      return `
+        <tr>
+          <td>${m.label}</td>
+          <td>${fmtYen(budget_ann)}</td>
+          <td>${fmtYen(forecast)}</td>
+          <td class="${diffClass(diff)}">${diff !== null ? (diff >= 0 ? '+' : '') + fmtYen(diff) : '—'}</td>
+          <td class="${rateClass(rate, !isProfit || (budget_ann !== null && budget_ann > 0))}">${fmtRate(rate)}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  function periodBadge(unit, budgetCo) {
+    const ytdPeriod = unit?.ytd?.period;
+    const elapsed = elapsedMonths(ytdPeriod);
+    if (elapsed === null) return '';
+    const remaining = 12 - elapsed;
+    return `実績${elapsed}ヶ月 ＋ 予算${remaining}ヶ月`;
+  }
+
+  const tableHeader = `
+    <table class="forecast-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>年間予算</th>
+          <th>着地見込み</th>
+          <th>差異</th>
+          <th>達成率見込み</th>
+        </tr>
+      </thead>
+      <tbody>`;
+  const tableFooter = `</tbody></table>`;
+
+  // ── 各社カード ────────────────────────────────
+  const companyCards = companies.map(co => {
+    const unit     = actuals.data[co.unitKey];
+    const budgetCo = budget.companies[co.budgetKey];
+    if (!unit || !budgetCo) return '';
+    return `
+      <div class="forecast-card">
+        <div class="forecast-card-header">
+          <span class="forecast-card-name">${co.label}</span>
+          <span class="forecast-period-badge">${periodBadge(unit, budgetCo)}</span>
+        </div>
+        ${tableHeader}${buildRows(unit, budgetCo)}${tableFooter}
+      </div>`;
+  }).join('');
+
+  // ── グループ合計カード ────────────────────────
+  const groupRows = metrics.map(m => {
+    let totalBudget   = 0, totalForecast = 0, anyNull = false;
+    for (const co of companies) {
+      const unit     = actuals.data[co.unitKey];
+      const budgetCo = budget.companies[co.budgetKey];
+      if (!unit || !budgetCo) { anyNull = true; continue; }
+      const b = annualBudget(budgetCo, m.key);
+      const f = landingForecast(unit, budgetCo, m.key);
+      if (b === null || f === null) { anyNull = true; continue; }
+      totalBudget   += b;
+      totalForecast += f;
+    }
+    const diff = anyNull ? null : totalForecast - totalBudget;
+    const rate = anyNull || totalBudget === 0 ? null : totalForecast / totalBudget;
+    return `
+      <tr>
+        <td>${m.label}</td>
+        <td>${fmtYen(anyNull ? null : totalBudget)}</td>
+        <td>${fmtYen(anyNull ? null : totalForecast)}</td>
+        <td class="${diffClass(diff)}">${diff !== null ? (diff >= 0 ? '+' : '') + fmtYen(diff) : '—'}</td>
+        <td class="${rateClass(rate, true)}">${fmtRate(rate)}</td>
+      </tr>`;
+  }).join('');
+
+  const groupCard = `
+    <div class="forecast-card group">
+      <div class="forecast-card-header">
+        <span class="forecast-card-name">グループ合計</span>
+        <span class="forecast-period-badge">4社合算</span>
+      </div>
+      ${tableHeader}${groupRows}${tableFooter}
+      <div class="forecast-note">※ 各社の会計年度が異なります（BE:暦年 / BD:4月始 / BL:6月始 / 青天堂:2月始）。着地見込みは「YTD実績＋残り月の予算」で算出。</div>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="forecast-screen">
+      <div class="forecast-header">
+        <div class="forecast-title">FORECAST — 着地見込み</div>
+        <div class="forecast-subtitle">年間予算に対する着地見込みと達成率見込みを表示します。</div>
+      </div>
+      <div class="forecast-cards">
+        ${groupCard}
+        ${companyCards}
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// 画面6: 経営目標
 // ─────────────────────────────────────────────
 function renderGoals() {
   const el = document.getElementById('s-goals');
