@@ -1089,20 +1089,30 @@ def fetch_and_save_repayment_forecast(company_ids_map, access_token, now):
                     'acct_names':   list({item_name_map.get(aid, '') for aid in loan_ids}),
                 })
 
-            # グループ化: partner_id があればそれ、なければ勘定科目名
+            # 金額バケット: 上位2桁でまとめ、同勘定科目の異金額を別グループに分ける
+            def _amt_bucket(amt):
+                if amt == 0: return 0
+                mag = 10 ** max(0, len(str(int(amt))) - 2)
+                return round(amt / mag) * mag
+
+            # グループ化: (borrower_key + 金額帯) で同種・同規模の返済をまとめる
             groups = defaultdict(list)
             for d in loan_deals:
+                abkt = _amt_bucket(d['amount'])
                 if d['partner_id']:
-                    gk = ('partner', d['partner_id'],
-                          d['partner_name'] or '取引先ID:' + str(d['partner_id']))
+                    gk_id   = f'p_{d["partner_id"]}_{abkt}'
+                    gk_disp = d['partner_name'] or f'取引先ID:{d["partner_id"]}'
                 else:
                     acct_label = '／'.join(sorted(d['acct_names']))
-                    gk = ('account', acct_label, acct_label)
-                groups[gk].append(d)
+                    gk_id   = f'a_{acct_label}_{abkt}'
+                    # 金額規模を補足して可読性向上
+                    amt_label = f'約{abkt // 10000}万円' if abkt >= 10000 else f'約{abkt:,}円'
+                    gk_disp = f'{acct_label}（{amt_label}）'
+                groups[(gk_id, gk_disp)].append(d)
 
             # パターン検出
             estimated = []
-            for (key_type, key_id, display_name), records in groups.items():
+            for (gk_id, display_name), records in groups.items():
                 if len(records) < 3:
                     continue
 
