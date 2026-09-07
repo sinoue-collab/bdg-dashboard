@@ -9,6 +9,27 @@
       "breakdown": {
         "正社員": 13,
         "パートタイム": 3
+      },
+      "labor": {
+        "period": "2026-08",
+        "items": [
+          {
+            "name": "給料手当",
+            "amount": 2000000
+          },
+          {
+            "name": "退職金",
+            "amount": 72000
+          },
+          {
+            "name": "法定福利費",
+            "amount": 1291032
+          }
+        ],
+        "total": 3363032,
+        "revenue": 2805540,
+        "labor_ratio": 1.1987,
+        "rev_per_head": 175346
       }
     },
     "unit_blue_design": {
@@ -17,6 +38,27 @@
       "breakdown": {
         "正社員": 9,
         "パートタイム": 1
+      },
+      "labor": {
+        "period": "2026-08",
+        "items": [
+          {
+            "name": "給料手当",
+            "amount": 2000000
+          },
+          {
+            "name": "法定福利費",
+            "amount": 943020
+          },
+          {
+            "name": "福利厚生費",
+            "amount": 31678
+          }
+        ],
+        "total": 2974698,
+        "revenue": 610020,
+        "labor_ratio": 4.8764,
+        "rev_per_head": 61002
       }
     },
     "unit_blue_life": {
@@ -25,7 +67,27 @@
       "breakdown": {
         "正社員": 9,
         "パートタイム": 2
+      },
+      "labor": {
+        "period": "2026-08",
+        "items": [
+          {
+            "name": "福利厚生費",
+            "amount": 20000
+          }
+        ],
+        "total": 20000,
+        "revenue": 3291290,
+        "labor_ratio": 0.0061,
+        "rev_per_head": 299208
       }
     }
+  },
+  "group_total": {
+    "headcount": 37,
+    "labor_total": 6357730,
+    "revenue_total": 6706850,
+    "labor_ratio": 0.9479,
+    "rev_per_head": 181266
   }
 }

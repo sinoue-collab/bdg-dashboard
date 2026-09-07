@@ -867,9 +867,13 @@ def fetch_and_save_weekly_large_deals(company_ids_map, access_token, now, today_
     print(f'  ✓ 週次大口入出金 data/cash/weekly_large_deals.json 保存')
 
 
+LABOR_COST_KEYWORDS = ['給料', '給与', '賞与', '法定福利', '福利厚生', '退職', '役員報酬']
+
+
 def fetch_and_save_hr_employees(company_ids_map, access_token, now):
     """
-    freee人事労務APIから各社の在籍従業員数・雇用形態別内訳を取得し
+    freee人事労務APIから各社の在籍従業員数・雇用形態別内訳を取得し、
+    actuals_latest.json の直近確定月（previous_month）から人件費を集計して
     data/hr/employees_latest.json に保存する。
     retire_date が設定されている（退職済み）従業員は除外する。
     """
@@ -877,7 +881,34 @@ def fetch_and_save_hr_employees(company_ids_map, access_token, now):
     month = now.month
     today_str = now.strftime('%Y-%m-%d')
 
-    print(f'  人事データ取得: {year}年{month}月 在籍従業員')
+    print(f'  人事データ取得: {year}年{month}月 在籍従業員 + 人件費指標')
+
+    # actuals_latest.json から人件費・売上を取得（直近確定月 = previous_month）
+    actuals_by_unit = {}
+    try:
+        with open(ACTUALS_LATEST, encoding='utf-8') as f:
+            actuals_raw = json.load(f)
+        for uk, udata in actuals_raw.get('data', {}).items():
+            # previous_month を直近確定月として使用
+            ref = udata.get('previous_month', {})
+            period  = ref.get('period', '')
+            revenue = ref.get('revenue', {}).get('total') or 0
+            sga_bd  = ref.get('sga', {}).get('breakdown', [])
+            labor_items = [
+                {'name': it['item'], 'amount': it['amount']}
+                for it in sga_bd
+                if any(kw in it['item'] for kw in LABOR_COST_KEYWORDS)
+            ]
+            labor_total = sum(x['amount'] for x in labor_items)
+            actuals_by_unit[uk] = {
+                'period':      period,
+                'revenue':     revenue,
+                'labor_items': labor_items,
+                'labor_total': labor_total,
+            }
+        print(f'    actuals読み込み完了（{len(actuals_by_unit)}社）')
+    except Exception as e:
+        print(f'  ⚠️  actuals読み込み失敗（人件費指標をスキップ）: {e}')
 
     result = {
         'generated_at': now.isoformat(),
@@ -912,18 +943,48 @@ def fetch_and_save_hr_employees(company_ids_map, access_token, now):
                 label    = EMPLOYMENT_TYPE_LABELS.get(raw_type, raw_type)
                 breakdown[label] = breakdown.get(label, 0) + 1
 
+            headcount = len(active)
+
+            # 人件費・生産性指標
+            act = actuals_by_unit.get(unit_key, {})
+            labor_total = act.get('labor_total', 0)
+            revenue     = act.get('revenue', 0)
+            labor_ratio     = round(labor_total / revenue, 4) if revenue else None
+            rev_per_head    = round(revenue / headcount)      if headcount else None
+
             result['companies'][unit_key] = {
                 'name':      co_name,
-                'total':     len(active),
+                'total':     headcount,
                 'breakdown': breakdown,
+                'labor': {
+                    'period':         act.get('period', ''),
+                    'items':          act.get('labor_items', []),
+                    'total':          labor_total,
+                    'revenue':        revenue,
+                    'labor_ratio':    labor_ratio,
+                    'rev_per_head':   rev_per_head,
+                },
             }
-            print(f'    [{co_name}] 在籍{len(active)}名 / 全登録{len(employees)}名')
+            print(f'    [{co_name}] 在籍{headcount}名 / 人件費{labor_total:,}円 / 売上{revenue:,}円')
 
         except Exception as e:
             print(f'  ⚠️  [{co_name}] HR従業員取得失敗: {e}')
             result['companies'][unit_key] = {
                 'name': co_name, 'total': None, 'breakdown': {}, 'error': str(e),
+                'labor': {},
             }
+
+    # グループ合計（3社）
+    total_headcount  = sum(co.get('total') or 0 for co in result['companies'].values())
+    total_labor      = sum((co.get('labor') or {}).get('total', 0) for co in result['companies'].values())
+    total_revenue    = sum((co.get('labor') or {}).get('revenue', 0) for co in result['companies'].values())
+    result['group_total'] = {
+        'headcount':    total_headcount,
+        'labor_total':  total_labor,
+        'revenue_total': total_revenue,
+        'labor_ratio':  round(total_labor / total_revenue, 4) if total_revenue else None,
+        'rev_per_head': round(total_revenue / total_headcount) if total_headcount else None,
+    }
 
     os.makedirs(os.path.dirname(HR_EMPLOYEES_FILE), exist_ok=True)
     with open(HR_EMPLOYEES_FILE, 'w', encoding='utf-8') as f:

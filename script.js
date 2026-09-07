@@ -1855,8 +1855,21 @@ function renderHR() {
   ];
 
   const subtitleText = hr
-    ? `${hr.year}年${hr.month}月 在籍人数（退職者除く）`
+    ? `${hr.year}年${hr.month}月 在籍人数 / 人件費は直近確定月実績`
     : 'データ読込中...';
+
+  function fmtMan(n) {
+    if (n == null) return '—';
+    if (Math.abs(n) >= 10_000_000) return (n / 10_000_000).toFixed(1) + '千万';
+    if (Math.abs(n) >= 1_000_000)  return (n / 10_000).toFixed(0) + '万';
+    if (Math.abs(n) >= 10_000)     return (n / 10_000).toFixed(1) + '万';
+    return n.toLocaleString() + '円';
+  }
+
+  function fmtPct(ratio) {
+    if (ratio == null) return '—';
+    return (ratio * 100).toFixed(1) + '%';
+  }
 
   function buildBreakdownHtml(breakdown, total) {
     if (!breakdown || Object.keys(breakdown).length === 0) return '';
@@ -1871,6 +1884,33 @@ function renderHR() {
           </div>
         </div>`;
     }).join('');
+  }
+
+  function buildLaborHtml(labor) {
+    if (!labor || !labor.period) return '';
+    const periodLabel = labor.period ? `（${labor.period}実績）` : '';
+    const ratioVal    = labor.labor_ratio;
+    const ratioClass  = ratioVal == null ? '' : ratioVal > 0.8 ? 'hr-metric-bad' : ratioVal > 0.5 ? 'hr-metric-warn' : 'hr-metric-good';
+    const itemNames   = (labor.items || []).map(x => x.name).join('・') || '—';
+    return `
+      <div class="hr-labor-section">
+        <div class="hr-labor-period">人件費指標${periodLabel}</div>
+        <div class="hr-metrics">
+          <div class="hr-metric-row">
+            <span class="hr-metric-label">人件費合計</span>
+            <span class="hr-metric-val">${fmtMan(labor.total)}</span>
+          </div>
+          <div class="hr-metric-row">
+            <span class="hr-metric-label">人件費率</span>
+            <span class="hr-metric-val ${ratioClass}">${fmtPct(ratioVal)}</span>
+          </div>
+          <div class="hr-metric-row">
+            <span class="hr-metric-label">一人当たり売上</span>
+            <span class="hr-metric-val">${fmtMan(labor.rev_per_head)}</span>
+          </div>
+        </div>
+        <div class="hr-labor-items">集計科目: ${itemNames}</div>
+      </div>`;
   }
 
   const companyCardsHtml = COMPANIES.map(co => {
@@ -1910,22 +1950,38 @@ function renderHR() {
           <div class="hr-breakdown">
             ${buildBreakdownHtml(data.breakdown, data.total)}
           </div>
+          ${buildLaborHtml(data.labor)}
         </div>
       </div>`;
   }).join('');
 
-  const totalActive = hr
-    ? COMPANIES.reduce((sum, co) => sum + (hr.companies?.[co.key]?.total ?? 0), 0)
-    : null;
+  const grp = hr?.group_total ?? null;
+  const grpRatioClass = grp?.labor_ratio == null ? '' :
+    grp.labor_ratio > 0.8 ? 'hr-metric-bad' : grp.labor_ratio > 0.5 ? 'hr-metric-warn' : 'hr-metric-good';
 
   const totalCardHtml = `
     <div class="hr-card hr-total-card">
       <div class="hr-card-body">
         <div class="hr-total-label">3社合計（freee対象）</div>
         <div class="hr-total-row">
-          <span class="hr-total-num">${totalActive !== null ? totalActive : '—'}</span>
+          <span class="hr-total-num">${grp?.headcount ?? '—'}</span>
           <span class="hr-total-unit" style="color:rgba(255,255,255,.6)">名</span>
         </div>
+        ${grp ? `
+        <div class="hr-metrics hr-metrics-dark">
+          <div class="hr-metric-row">
+            <span class="hr-metric-label">合計人件費</span>
+            <span class="hr-metric-val">${fmtMan(grp.labor_total)}</span>
+          </div>
+          <div class="hr-metric-row">
+            <span class="hr-metric-label">人件費率</span>
+            <span class="hr-metric-val ${grpRatioClass}">${fmtPct(grp.labor_ratio)}</span>
+          </div>
+          <div class="hr-metric-row">
+            <span class="hr-metric-label">一人当たり売上</span>
+            <span class="hr-metric-val">${fmtMan(grp.rev_per_head)}</span>
+          </div>
+        </div>` : ''}
       </div>
     </div>`;
 
@@ -1935,7 +1991,7 @@ function renderHR() {
         <span class="hr-card-name st">青天堂</span>
       </div>
       <div class="hr-card-body">
-        <div class="hr-unavail-note">青天堂はfreee人事労務の対象外のため、在籍数を表示できません。</div>
+        <div class="hr-unavail-note">青天堂はfreee人事労務の対象外のため、在籍数・人件費を表示できません。</div>
       </div>
     </div>`;
 

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-09-06T07:44:19.986777+09:00",
+  "generated_at": "2026-09-06T23:51:54.342155+09:00",
   "note": "各経営単位の最新データ。freee_api_sync.py で生成。",
   "data": {
     "unit_blue_estate": {
@@ -3537,7 +3537,7 @@
       "cash": {
         "period": "2026-09",
         "prev_period": "2026-08",
-        "sync_date": "2026-09-05",
+        "sync_date": "2026-09-06",
         "effective_total": 3739894,
         "last_balance_total": 50540189,
         "total": 8484439,
@@ -3562,7 +3562,7 @@
             "type": "bank_account",
             "last_balance": 13635176,
             "update_date": "2026-08-23",
-            "stale": false,
+            "stale": true,
             "balance": 12225766,
             "prev_balance": 11967186,
             "source": "sync",
@@ -3575,7 +3575,7 @@
             "type": "bank_account",
             "last_balance": 5219218,
             "update_date": "2026-08-23",
-            "stale": false,
+            "stale": true,
             "balance": 7454425,
             "prev_balance": 454865,
             "source": "sync",
@@ -3601,7 +3601,7 @@
             "type": "bank_account",
             "last_balance": 6652835,
             "update_date": "2026-08-23",
-            "stale": false,
+            "stale": true,
             "balance": 8680501,
             "prev_balance": 680501,
             "source": "sync",
@@ -3640,7 +3640,7 @@
             "type": "bank_account",
             "last_balance": 29142834,
             "update_date": "2026-08-23",
-            "stale": false,
+            "stale": true,
             "balance": 29360529,
             "prev_balance": 29360529,
             "source": "sync",
@@ -3653,7 +3653,7 @@
             "type": "bank_account",
             "last_balance": 3157062,
             "update_date": "2026-08-23",
-            "stale": false,
+            "stale": true,
             "balance": 3097062,
             "prev_balance": 3097062,
             "source": "sync",
@@ -3692,7 +3692,7 @@
             "type": "bank_account",
             "last_balance": 1293611,
             "update_date": "2026-08-23",
-            "stale": false,
+            "stale": true,
             "balance": 734838,
             "prev_balance": 734838,
             "source": "sync",
@@ -6390,9 +6390,9 @@
       "cash": {
         "period": "2026-09",
         "prev_period": "2026-08",
-        "sync_date": "2026-09-05",
-        "effective_total": 85270423,
-        "last_balance_total": 79363793,
+        "sync_date": "2026-09-06",
+        "effective_total": 87670423,
+        "last_balance_total": 81763793,
         "total": 85260541,
         "prev_total": 88033706,
         "accounts": [
@@ -6426,13 +6426,13 @@
             "walletable_id": 3232763,
             "name": "普通預金_鏡郵便局11271131",
             "type": "bank_account",
-            "last_balance": 600696,
+            "last_balance": 3000696,
             "update_date": "2026-09-04",
             "stale": false,
             "balance": 600696,
             "prev_balance": 600696,
             "source": "sync",
-            "effective_balance": 600696,
+            "effective_balance": 3000696,
             "fallback_reason": null
           },
           {
@@ -6515,8 +6515,60 @@
         "breakdown": []
       },
       "sga": {
-        "total": 0,
-        "breakdown": []
+        "total": 9700,
+        "breakdown": [
+          {
+            "item": "システム利用料",
+            "amount": 2706,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 本部",
+                "amount": 2706,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "freee勤怠管理Plus年間契約料",
+                "amount": 2706
+              }
+            ]
+          },
+          {
+            "item": "旅費交通費",
+            "amount": 3519,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津南店",
+                "amount": 3519,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "車両費精算",
+                "amount": 3519
+              }
+            ]
+          },
+          {
+            "item": "消耗品費",
+            "amount": 3475,
+            "by_department": [
+              {
+                "name": "BLUE LIFE 唐津南店",
+                "amount": 3475,
+                "deprecated": false
+              }
+            ],
+            "by_item": [
+              {
+                "name": "事務消耗品",
+                "amount": 3475
+              }
+            ]
+          }
+        ]
       },
       "non_op_income": {
         "total": 0,
@@ -6528,8 +6580,8 @@
       },
       "_summary": {
         "gross_profit": 0,
-        "op_profit": 0,
-        "ordinary_profit": 0
+        "op_profit": -9700,
+        "ordinary_profit": -9700
       },
       "previous_month": {
         "period": "2026-08",
@@ -6561,7 +6613,7 @@
           "breakdown": []
         },
         "sga": {
-          "total": 1100121,
+          "total": 1120333,
           "breakdown": [
             {
               "item": "福利厚生費",
@@ -6635,11 +6687,15 @@
             },
             {
               "item": "車両費",
-              "amount": 183120,
+              "amount": 191440,
               "by_item": [
                 {
                   "name": "車検代（ヴォクシー2583）",
                   "amount": 98615
+                },
+                {
+                  "name": "ガソリン代（セレナ8-21）",
+                  "amount": 23435
                 },
                 {
                   "name": "ガソリン代（ヴォクシー41-45）",
@@ -6648,10 +6704,6 @@
                 {
                   "name": "ガソリン代（ヴォクシー25-83）",
                   "amount": 17247
-                },
-                {
-                  "name": "ガソリン代（セレナ8-21）",
-                  "amount": 15115
                 },
                 {
                   "name": "ガソリン代（ヴォクシー43-99）",
@@ -6664,6 +6716,16 @@
                 {
                   "name": "ガソリン代（ルーミー19-97）",
                   "amount": 7970
+                }
+              ]
+            },
+            {
+              "item": "消耗品費",
+              "amount": 5292,
+              "by_item": [
+                {
+                  "name": "事務消耗品",
+                  "amount": 5292
                 }
               ]
             },
@@ -6756,6 +6818,16 @@
                   "amount": 44000
                 }
               ]
+            },
+            {
+              "item": "賃借料",
+              "amount": 6600,
+              "by_item": [
+                {
+                  "name": "駐車場代",
+                  "amount": 6600
+                }
+              ]
             }
           ]
         },
@@ -6780,8 +6852,8 @@
         },
         "_summary": {
           "gross_profit": 3291290,
-          "op_profit": 2191169,
-          "ordinary_profit": 2193077
+          "op_profit": 2170957,
+          "ordinary_profit": 2172865
         }
       },
       "ytd": {
@@ -6819,7 +6891,7 @@
           "breakdown": []
         },
         "sga": {
-          "total": 10558817,
+          "total": 10605289,
           "breakdown": [
             {
               "item": "給料手当",
@@ -6979,7 +7051,7 @@
             },
             {
               "item": "システム利用料",
-              "amount": 284416,
+              "amount": 287122,
               "by_item": [
                 {
                   "name": "freee人事労務スタータープラン",
@@ -6995,7 +7067,7 @@
                 },
                 {
                   "name": "freee勤怠管理Plus年間契約料",
-                  "amount": 33000
+                  "amount": 35706
                 },
                 {
                   "name": "RehabCloudコックピット月額利用料",
@@ -7009,11 +7081,11 @@
             },
             {
               "item": "旅費交通費",
-              "amount": 4243,
+              "amount": 24322,
               "by_item": [
                 {
                   "name": "車両費精算",
-                  "amount": 3243
+                  "amount": 23322
                 },
                 {
                   "name": "ガソリン代（代車）",
@@ -7073,7 +7145,7 @@
             },
             {
               "item": "車両費",
-              "amount": 592348,
+              "amount": 600668,
               "by_item": [
                 {
                   "name": "車両修繕代（ヴォクシー41-45）",
@@ -7097,7 +7169,7 @@
                 },
                 {
                   "name": "ガソリン代（セレナ8-21）",
-                  "amount": 56920
+                  "amount": 65240
                 },
                 {
                   "name": "ガソリン代（セレナ35-89）",
@@ -7115,11 +7187,11 @@
             },
             {
               "item": "消耗品費",
-              "amount": 141308,
+              "amount": 150075,
               "by_item": [
                 {
                   "name": "事務消耗品",
-                  "amount": 95173
+                  "amount": 103940
                 },
                 {
                   "name": "コピー料金",
@@ -7244,6 +7316,16 @@
               ]
             },
             {
+              "item": "賃借料",
+              "amount": 6600,
+              "by_item": [
+                {
+                  "name": "駐車場代",
+                  "amount": 6600
+                }
+              ]
+            },
+            {
               "item": "新店舗立ち上げ費用",
               "amount": 308990,
               "by_item": [
@@ -7323,18 +7405,18 @@
         },
         "_summary": {
           "gross_profit": 10784983,
-          "op_profit": 226166,
-          "ordinary_profit": 648083
+          "op_profit": 179694,
+          "ordinary_profit": 601611
         }
       },
       "cash": {
         "period": "2026-09",
         "prev_period": "2026-08",
-        "sync_date": "2026-09-05",
-        "effective_total": 395210,
+        "sync_date": "2026-09-06",
+        "effective_total": 388610,
         "last_balance_total": 3668562,
-        "total": 3638393,
-        "prev_total": 3638393,
+        "total": 3631793,
+        "prev_total": 3631793,
         "accounts": [
           {
             "walletable_id": 3835289,
@@ -7382,10 +7464,10 @@
             "last_balance": 635287,
             "update_date": "2026-09-04",
             "stale": false,
-            "balance": -437951,
-            "prev_balance": -437951,
+            "balance": -444551,
+            "prev_balance": -444551,
             "source": "bs",
-            "effective_balance": -437951,
+            "effective_balance": -444551,
             "fallback_reason": "overdraft"
           }
         ]

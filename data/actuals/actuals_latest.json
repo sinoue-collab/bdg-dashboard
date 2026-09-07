@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1",
-  "generated_at": "2026-09-07T07:49:59.021798+09:00",
+  "generated_at": "2026-09-06T23:51:54.342155+09:00",
   "note": "各経営単位の最新データ。freee_api_sync.py で生成。",
   "data": {
     "unit_blue_estate": {
