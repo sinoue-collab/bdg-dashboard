@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-09-07T06:00:00+09:00",
+  "year": 2026,
+  "month": 9,
+  "companies": {
+    "unit_blue_estate": {
+      "name": "BLUE ESTATE",
+      "total": 16,
+      "breakdown": {
+        "正社員": 13,
+        "パートタイム": 3
+      }
+    },
+    "unit_blue_design": {
+      "name": "BLUE DESIGN",
+      "total": 10,
+      "breakdown": {
+        "正社員": 9,
+        "パートタイム": 1
+      }
+    },
+    "unit_blue_life": {
+      "name": "BLUE LIFE",
+      "total": 11,
+      "breakdown": {
+        "正社員": 9,
+        "パートタイム": 2
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-09-07T06:00:00+09:00",
+  "this_week_start": "2026-09-07",
+  "this_week_end": "2026-09-13",
+  "companies": {
+    "unit_blue_estate": {
+      "name": "BLUE ESTATE",
+      "estimated": []
+    },
+    "unit_blue_design": {
+      "name": "BLUE DESIGN",
+      "estimated": []
+    },
+    "unit_blue_life": {
+      "name": "BLUE LIFE",
+      "estimated": []
+    }
+  }
+}

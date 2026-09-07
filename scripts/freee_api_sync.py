@@ -66,7 +66,21 @@ ACTUALS_MONTH_START = os.path.join(ACTUALS_DIR, 'actuals_month_start.json')
 DAILY_HISTORY_DIR   = os.path.join(ACTUALS_DIR, 'daily_history')
 CASH_SNAPSHOTS_DIR  = os.path.join(REPO_ROOT, 'data', 'cash', 'snapshots')
 WEEKLY_LARGE_DEALS_FILE = os.path.join(REPO_ROOT, 'data', 'cash', 'weekly_large_deals.json')
+HR_EMPLOYEES_FILE       = os.path.join(REPO_ROOT, 'data', 'hr', 'employees_latest.json')
+WEEKLY_REPAYMENT_FILE   = os.path.join(REPO_ROOT, 'data', 'cash', 'weekly_repayment.json')
 SNAPSHOT_LATEST  = os.path.join(SNAPSHOT_DIR, 'snapshot_latest.json')
+
+FREEE_HR_BASE = 'https://api.freee.co.jp'
+
+# freee HR APIの employment_type → 表示名マッピング
+EMPLOYMENT_TYPE_LABELS = {
+    'employee':           '正社員',
+    'contract_employee':  '契約社員',
+    'part_time_employee': 'パートタイム',
+    'temporary_employee': '派遣社員',
+    'executive':          '役員',
+    'other':              'その他',
+}
 
 
 # ─────────────────────────────────────────
@@ -853,6 +867,253 @@ def fetch_and_save_weekly_large_deals(company_ids_map, access_token, now, today_
     print(f'  ✓ 週次大口入出金 data/cash/weekly_large_deals.json 保存')
 
 
+def fetch_and_save_hr_employees(company_ids_map, access_token, now):
+    """
+    freee人事労務APIから各社の在籍従業員数・雇用形態別内訳を取得し
+    data/hr/employees_latest.json に保存する。
+    retire_date が設定されている（退職済み）従業員は除外する。
+    """
+    year  = now.year
+    month = now.month
+    today_str = now.strftime('%Y-%m-%d')
+
+    print(f'  人事データ取得: {year}年{month}月 在籍従業員')
+
+    result = {
+        'generated_at': now.isoformat(),
+        'year':  year,
+        'month': month,
+        'companies': {},
+    }
+
+    for unit_key, cfg in company_ids_map.items():
+        co_id   = cfg['company_id']
+        co_name = cfg['name']
+        try:
+            url = (f'{FREEE_HR_BASE}/hr/api/v1/employees'
+                   f'?company_id={co_id}&year={year}&month={month}&limit=100')
+            req = urllib.request.Request(url)
+            req.add_header('Authorization', f'Bearer {access_token}')
+            req.add_header('Accept', 'application/json')
+            with urllib.request.urlopen(req) as resp:
+                data = json.loads(resp.read())
+
+            employees = data.get('employees', [])
+            active = []
+            for emp in employees:
+                retire = emp.get('retire_date') or ''
+                if retire and retire <= today_str:
+                    continue
+                active.append(emp)
+
+            breakdown = {}
+            for emp in active:
+                raw_type = (emp.get('profile_rule') or {}).get('employment_type', 'other')
+                label    = EMPLOYMENT_TYPE_LABELS.get(raw_type, raw_type)
+                breakdown[label] = breakdown.get(label, 0) + 1
+
+            result['companies'][unit_key] = {
+                'name':      co_name,
+                'total':     len(active),
+                'breakdown': breakdown,
+            }
+            print(f'    [{co_name}] 在籍{len(active)}名 / 全登録{len(employees)}名')
+
+        except Exception as e:
+            print(f'  ⚠️  [{co_name}] HR従業員取得失敗: {e}')
+            result['companies'][unit_key] = {
+                'name': co_name, 'total': None, 'breakdown': {}, 'error': str(e),
+            }
+
+    os.makedirs(os.path.dirname(HR_EMPLOYEES_FILE), exist_ok=True)
+    with open(HR_EMPLOYEES_FILE, 'w', encoding='utf-8') as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f'  ✓ 人事データ data/hr/employees_latest.json 保存')
+
+
+def fetch_and_save_repayment_forecast(company_ids_map, access_token, now):
+    """
+    過去6ヶ月の借入金（短期・長期）支出取引からパターンを検出し、
+    今週（月〜日）に推定される定期返済を data/cash/weekly_repayment.json に保存する。
+
+    判定基準:
+      - 同一グループ（partner_id または 勘定科目名）で3回以上
+      - 各発生の間隔が 25〜37日（約1ヶ月）
+      - 金額がグループ中央値の ±5% 以内
+      - 直近発生日 +1ヶ月 が今週（月〜日）に該当
+    """
+    from datetime import date, timedelta
+    from collections import defaultdict
+    import calendar as _calendar
+
+    today = date(now.year, now.month, now.day)
+
+    # 今週の月〜日
+    wd      = today.weekday()
+    this_mon = today - timedelta(days=wd)
+    this_sun = this_mon + timedelta(days=6)
+
+    # 過去 6ヶ月（約180日）
+    start_date = today - timedelta(days=180)
+
+    # 借入金関連の勘定科目キーワード（利息は除外）
+    LOAN_KEYWORDS    = ['短期借入金', '長期借入金', '1年以内返済長期借入金']
+    EXCLUDE_KEYWORDS = ['利息', '利子', '保証料']
+
+    print(f'  返済パターン検出: {start_date} 〜 {today}（今週 {this_mon}〜{this_sun}）')
+
+    result = {
+        'generated_at':    now.isoformat(),
+        'this_week_start': this_mon.isoformat(),
+        'this_week_end':   this_sun.isoformat(),
+        'companies':       {},
+    }
+
+    for unit_key, cfg in company_ids_map.items():
+        co_id   = cfg['company_id']
+        co_name = cfg['name']
+        try:
+            # 勘定科目マップ
+            items_resp = freee_get('/api/1/account_items', access_token, {'company_id': co_id})
+            item_name_map = {x['id']: x.get('name', '') for x in items_resp.get('account_items', [])}
+            loan_item_ids = {
+                x['id'] for x in items_resp.get('account_items', [])
+                if any(kw in x.get('name', '') for kw in LOAN_KEYWORDS)
+                and not any(ex in x.get('name', '') for ex in EXCLUDE_KEYWORDS)
+            }
+
+            # 取引先マップ
+            partners_resp = freee_get('/api/1/partners', access_token,
+                                      {'company_id': co_id, 'limit': 300})
+            partner_map = {x['id']: x['name'] for x in partners_resp.get('partners', [])}
+
+            # 過去6ヶ月の expense 取引を取得
+            all_deals = []
+            offset = 0
+            while True:
+                resp = freee_get('/api/1/deals', access_token, {
+                    'company_id':       co_id,
+                    'start_issue_date': start_date.isoformat(),
+                    'end_issue_date':   today.isoformat(),
+                    'type':             'expense',
+                    'limit': 100, 'offset': offset,
+                })
+                batch = resp.get('deals', [])
+                all_deals.extend(batch)
+                total = resp.get('meta', {}).get('total_count', 0)
+                if len(all_deals) >= total or not batch:
+                    break
+                offset += 100
+
+            # 借入金系の取引のみ抽出・重複除去
+            loan_deals = []
+            seen_keys  = set()
+            for deal in all_deals:
+                details  = deal.get('details', [])
+                loan_ids = [d['account_item_id'] for d in details
+                            if d.get('account_item_id') in loan_item_ids]
+                if not loan_ids:
+                    continue
+                key = (deal['issue_date'], deal['amount'], deal.get('partner_id'))
+                if key in seen_keys:
+                    continue
+                seen_keys.add(key)
+
+                pid = deal.get('partner_id')
+                loan_deals.append({
+                    'date':         deal['issue_date'],
+                    'amount':       deal['amount'],
+                    'partner_id':   pid,
+                    'partner_name': partner_map.get(pid, '') if pid else '',
+                    'acct_names':   list({item_name_map.get(aid, '') for aid in loan_ids}),
+                })
+
+            # グループ化: partner_id があればそれ、なければ勘定科目名
+            groups = defaultdict(list)
+            for d in loan_deals:
+                if d['partner_id']:
+                    gk = ('partner', d['partner_id'],
+                          d['partner_name'] or '取引先ID:' + str(d['partner_id']))
+                else:
+                    acct_label = '／'.join(sorted(d['acct_names']))
+                    gk = ('account', acct_label, acct_label)
+                groups[gk].append(d)
+
+            # パターン検出
+            estimated = []
+            for (key_type, key_id, display_name), records in groups.items():
+                if len(records) < 3:
+                    continue
+
+                records_sorted = sorted(records, key=lambda x: x['date'])
+                dates   = [date.fromisoformat(r['date']) for r in records_sorted]
+                amounts = [r['amount'] for r in records_sorted]
+
+                # 3回以上連続する月次発生（間隔 25〜37日）を探す
+                pattern_indices = None
+                for si in range(len(dates) - 2):
+                    run = [si]
+                    for i in range(si, len(dates) - 1):
+                        if 25 <= (dates[i + 1] - dates[i]).days <= 37:
+                            run.append(i + 1)
+                        else:
+                            break
+                    if len(run) >= 3:
+                        pattern_indices = run
+                        # 最長ランを採用するため継続
+                        break  # 最初に見つかった3+ランを使用
+
+                if not pattern_indices:
+                    continue
+
+                # 金額が中央値の ±5% 以内か確認
+                run_amounts = [amounts[i] for i in pattern_indices]
+                median_amt  = sorted(run_amounts)[len(run_amounts) // 2]
+                if median_amt == 0 or not all(
+                    abs(a - median_amt) / median_amt <= 0.05 for a in run_amounts
+                ):
+                    continue
+
+                # 次回推定日 = 直近発生日 + 1ヶ月同日
+                last_date  = dates[pattern_indices[-1]]
+                next_month = last_date.month + 1
+                next_year  = last_date.year
+                if next_month > 12:
+                    next_month = 1
+                    next_year += 1
+                max_day   = _calendar.monthrange(next_year, next_month)[1]
+                next_date = date(next_year, next_month, min(last_date.day, max_day))
+
+                # 今週（月〜日）に該当するか
+                if not (this_mon <= next_date <= this_sun):
+                    continue
+
+                last_rec = records_sorted[pattern_indices[-1]]
+                estimated.append({
+                    'estimated_date':   next_date.isoformat(),
+                    'estimated_amount': round(median_amt),
+                    'display_name':     display_name,
+                    'account_names':    last_rec['acct_names'],
+                    'last_occurrence':  last_rec['date'],
+                    'pattern_count':    len(pattern_indices),
+                })
+
+            estimated.sort(key=lambda x: x['estimated_date'])
+            result['companies'][unit_key] = {'name': co_name, 'estimated': estimated}
+            print(f'    [{co_name}] 借入金deals={len(loan_deals)}件 → 今週の定期返済{len(estimated)}件')
+
+        except RuntimeError as e:
+            print(f'  ⚠️  [{co_name}] 返済パターン検出失敗: {e}')
+            result['companies'][unit_key] = {
+                'name': co_name, 'estimated': [], 'error': str(e),
+            }
+
+    os.makedirs(os.path.dirname(WEEKLY_REPAYMENT_FILE), exist_ok=True)
+    with open(WEEKLY_REPAYMENT_FILE, 'w', encoding='utf-8') as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f'  ✓ 返済予定推定 data/cash/weekly_repayment.json 保存')
+
+
 # ─────────────────────────────────────────
 #  試算表パース
 # ─────────────────────────────────────────
@@ -1345,6 +1606,12 @@ def main():
 
         # 週次大口入出金（先週月〜日、50万円以上）を保存
         fetch_and_save_weekly_large_deals(company_ids_map, access_token, now, today_str)
+
+        # 人事データ（在籍従業員数・雇用形態別内訳）を保存
+        fetch_and_save_hr_employees(company_ids_map, access_token, now)
+
+        # 今週の定期返済予定（推定）を保存
+        fetch_and_save_repayment_forecast(company_ids_map, access_token, now)
 
         # Cash専用スナップショット保存
         cash_snap = {'date': today_str, 'generated_at': now.isoformat(), 'data': {}}

@@ -121,15 +121,19 @@ async function loadAllData() {
   const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
   const lastWeek  = new Date(today); lastWeek.setDate(today.getDate() - 7);
 
-  const [todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash, weeklyDealsRes] = await Promise.all([
+  const [todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash, weeklyDealsRes, weeklyRepaymentRes, hrRes] = await Promise.all([
     loadHistory(today),
     loadHistory(yesterday),
     loadHistory(lastWeek),
     loadCashSnapshot(yesterday),
     loadCashSnapshot(lastWeek),
     fetch('data/cash/weekly_large_deals.json').catch(() => null),
+    fetch('data/cash/weekly_repayment.json').catch(() => null),
+    fetch('data/hr/employees_latest.json').catch(() => null),
   ]);
-  const weeklyDeals = weeklyDealsRes?.ok ? await weeklyDealsRes.json() : null;
+  const weeklyDeals     = weeklyDealsRes?.ok     ? await weeklyDealsRes.json()     : null;
+  const weeklyRepayment = weeklyRepaymentRes?.ok ? await weeklyRepaymentRes.json() : null;
+  const hrData          = hrRes?.ok              ? await hrRes.json()              : null;
 
   // 過去8日曜のスナップショット（週次推移用）
   const sundays = [];
@@ -145,7 +149,7 @@ async function loadAllData() {
     .map((d, i) => ({ date: d.toISOString().slice(0, 10), snap: sundaySnaps[i] }))
     .filter(({ snap }) => snap !== null);
 
-  appData = { actuals, budget, budgetDetail, snapshot, todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash, weeklyCashSnaps, weeklyDeals };
+  appData = { actuals, budget, budgetDetail, snapshot, todayHist, yesterdayHist, lastWeekHist, yesterdayCash, lastWeekCash, weeklyCashSnaps, weeklyDeals, weeklyRepayment, hrData };
 }
 
 function showScreen(id) {
@@ -164,6 +168,7 @@ function showScreen(id) {
   if (id === 's-goals')    renderGoals();
   if (id === 's-trend')    renderTrend();
   if (id === 's-forecast') renderForecast();
+  if (id === 's-hr')       renderHR();
 }
 
 // ─────────────────────────────────────────────
@@ -372,6 +377,11 @@ function renderTop() {
         <div class="nav-card-icon">🔭</div>
         <div class="nav-card-title">FORECAST</div>
         <div class="nav-card-sub">着地見込み・達成率見込み</div>
+      </div>
+      <div class="nav-card" data-nav="s-hr">
+        <div class="nav-card-icon">👥</div>
+        <div class="nav-card-title">人事・生産性</div>
+        <div class="nav-card-sub">在籍人数・雇用形態別内訳</div>
       </div>
       <div class="nav-card disabled" data-nav="s-goals">
         <div class="nav-card-icon">🎯</div>
@@ -1480,6 +1490,63 @@ function renderCash() {
       </div>`;
   }
 
+  function buildRepaymentForecastHtml() {
+    const rp = appData.weeklyRepayment;
+    if (!rp) return '';
+
+    const weekLabel = `${rp.this_week_start} 〜 ${rp.this_week_end}`;
+    const unitOrder = [
+      { key: 'unit_blue_estate', label: 'BLUE ESTATE' },
+      { key: 'unit_blue_design', label: 'BLUE DESIGN' },
+      { key: 'unit_blue_life',   label: 'BLUE LIFE'   },
+    ];
+
+    const coSections = unitOrder.map(({ key, label }) => {
+      const co = rp.companies?.[key];
+      if (!co) return '';
+      const items = co.estimated ?? [];
+
+      if (items.length === 0) {
+        return `
+          <div class="rep-company">
+            <div class="rep-company-name">${label}</div>
+            <div class="rep-no-data">今週の推定返済なし</div>
+          </div>`;
+      }
+
+      const rows = items.map(it => {
+        const acctNote = it.account_names?.length
+          ? `（${it.account_names.join('・')}）`
+          : '';
+        return `
+          <tr>
+            <td class="rep-date">${it.estimated_date.slice(5)}</td>
+            <td class="td-right rep-amount">▼ ${fmtYen(it.estimated_amount)}</td>
+            <td class="rep-name">${it.display_name || acctNote || '—'}</td>
+          </tr>`;
+      }).join('');
+
+      return `
+        <div class="rep-company">
+          <div class="rep-company-name">${label}</div>
+          <table class="rep-table"><tbody>${rows}</tbody></table>
+        </div>`;
+    }).join('');
+
+    const hasAny = unitOrder.some(({ key }) => (rp.companies?.[key]?.estimated ?? []).length > 0);
+    if (!hasAny) return '';
+
+    return `
+      <div class="rep-section">
+        <div class="rep-title">今週の返済予定（推定）
+          <span class="rep-badge">⚡ 推定</span>
+          <span class="wld-period">${weekLabel}</span>
+        </div>
+        <div class="rep-note">過去の返済パターンからの予測です。大口・不定期の返済は含まれません。実際の引き落とし日・金額は異なる場合があります。</div>
+        <div class="rep-companies">${coSections}</div>
+      </div>`;
+  }
+
   // ── 週次残高推移セクション ──────────────────────
   const weeks = appData.weeklyCashSnaps ?? [];
 
@@ -1549,6 +1616,7 @@ function renderCash() {
       ${companiesHtml}
       ${seitenHtml}
     </div>
+    ${buildRepaymentForecastHtml()}
     ${buildWeeklyDealsHtml()}
     ${weeklyHtml}
   `;
@@ -1772,7 +1840,131 @@ function renderForecast() {
 }
 
 // ─────────────────────────────────────────────
-// 画面6: 経営目標
+// 画面6: 人事・生産性
+// ─────────────────────────────────────────────
+function renderHR() {
+  const el = document.getElementById('s-hr');
+  if (!el) return;
+
+  const hr = appData?.hrData;
+
+  const COMPANIES = [
+    { key: 'unit_blue_estate', label: 'BLUE ESTATE', cls: 'be' },
+    { key: 'unit_blue_design', label: 'BLUE DESIGN', cls: 'bd' },
+    { key: 'unit_blue_life',   label: 'BLUE LIFE',   cls: 'bl' },
+  ];
+
+  const subtitleText = hr
+    ? `${hr.year}年${hr.month}月 在籍人数（退職者除く）`
+    : 'データ読込中...';
+
+  function buildBreakdownHtml(breakdown, total) {
+    if (!breakdown || Object.keys(breakdown).length === 0) return '';
+    return Object.entries(breakdown).map(([label, cnt]) => {
+      const pct = total > 0 ? Math.round(cnt / total * 100) : 0;
+      return `
+        <div class="hr-breakdown-row">
+          <span class="hr-breakdown-label">${label}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="hr-breakdown-bar-wrap"><div class="hr-breakdown-bar" style="width:${pct}%"></div></div>
+            <span class="hr-breakdown-val">${cnt}名</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  const companyCardsHtml = COMPANIES.map(co => {
+    const data = hr?.companies?.[co.key];
+    if (!data) {
+      return `
+        <div class="hr-card">
+          <div class="hr-card-header">
+            <span class="hr-card-name ${co.cls}">${co.label}</span>
+          </div>
+          <div class="hr-card-body">
+            <div class="hr-unavail-note">データ取得中...</div>
+          </div>
+        </div>`;
+    }
+    if (data.error) {
+      return `
+        <div class="hr-card">
+          <div class="hr-card-header">
+            <span class="hr-card-name ${co.cls}">${co.label}</span>
+          </div>
+          <div class="hr-card-body">
+            <div class="hr-error-note">データ取得失敗: ${data.error}</div>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="hr-card">
+        <div class="hr-card-header">
+          <span class="hr-card-name ${co.cls}">${co.label}</span>
+        </div>
+        <div class="hr-card-body">
+          <div class="hr-total-row">
+            <span class="hr-total-num">${data.total}</span>
+            <span class="hr-total-unit">名</span>
+          </div>
+          <div class="hr-breakdown">
+            ${buildBreakdownHtml(data.breakdown, data.total)}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const totalActive = hr
+    ? COMPANIES.reduce((sum, co) => sum + (hr.companies?.[co.key]?.total ?? 0), 0)
+    : null;
+
+  const totalCardHtml = `
+    <div class="hr-card hr-total-card">
+      <div class="hr-card-body">
+        <div class="hr-total-label">3社合計（freee対象）</div>
+        <div class="hr-total-row">
+          <span class="hr-total-num">${totalActive !== null ? totalActive : '—'}</span>
+          <span class="hr-total-unit" style="color:rgba(255,255,255,.6)">名</span>
+        </div>
+      </div>
+    </div>`;
+
+  const seitenHtml = `
+    <div class="hr-card">
+      <div class="hr-card-header">
+        <span class="hr-card-name st">青天堂</span>
+      </div>
+      <div class="hr-card-body">
+        <div class="hr-unavail-note">青天堂はfreee人事労務の対象外のため、在籍数を表示できません。</div>
+      </div>
+    </div>`;
+
+  const generatedAt = hr?.generated_at
+    ? (() => {
+        const d = new Date(hr.generated_at);
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      })()
+    : null;
+
+  el.innerHTML = `
+    <div class="hr-screen">
+      <div class="hr-header">
+        <div class="hr-title">人事・生産性</div>
+        <div class="hr-subtitle">${subtitleText}</div>
+      </div>
+      <div class="hr-cards">
+        ${companyCardsHtml}
+        ${totalCardHtml}
+        ${seitenHtml}
+      </div>
+      ${generatedAt ? `<div class="hr-data-note">データ最終更新: ${generatedAt} JST（毎日自動同期）</div>` : ''}
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+// 画面7: 経営目標
 // ─────────────────────────────────────────────
 function renderGoals() {
   const el = document.getElementById('s-goals');
